@@ -1,23 +1,21 @@
 // app/page.tsx (or pages/index.tsx)
-'use client'
-import { useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 // Importing the components
-import Navbar from '../components/Navbar'
-import HeroSection from '../components/HeroSection'
-import FeaturesSection from '../components/FeaturesSection'
-import FAQSection from '../components/FAQSection'
-import PricingSection from '../components/PricingSection'
-import TestimonialsSection from '../components/TestimonialsSection'
-import Footer from '../components/Footer'
-import Loader from '@/components/Loader'
-  
+import Navbar from "../components/Navbar";
+import HeroSection from "../components/HeroSection";
+import FeaturesSection from "../components/FeaturesSection";
+import FAQSection from "../components/FAQSection";
+import PricingSection from "../components/PricingSection";
+import TestimonialsSection from "../components/TestimonialsSection";
+import Footer from "../components/Footer";
 
 export default function LandingPage() {
-  const { user, isLoaded } = useUser()
-  const router = useRouter()
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
 
   // useEffect(() => {
   //   if (isLoaded && user) {
@@ -37,6 +35,5 @@ export default function LandingPage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
-
