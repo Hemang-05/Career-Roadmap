@@ -19,7 +19,7 @@ export default function LandingPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
 
-  // useEffect(() => {....
+  // useEffect(() => {
   //   if (isLoaded && user) {
   //     router.push('/dashboard')
   //   }
