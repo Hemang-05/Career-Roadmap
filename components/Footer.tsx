@@ -1,9 +1,9 @@
 // components/Footer.tsx
-'use client'
+"use client";
 export default function Footer() {
   return (
-    <footer className="bg-[#FF6500] py-4">
-      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-black">
+    <footer className="bg-[#ffffff] py-4">
+      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-orange-500">
         {/* Left side */}
         <div className="flex space-x-4 text-sm mb-2 md:mb-0">
           <a href="/terms" className="hover:underline">
@@ -15,7 +15,10 @@ export default function Footer() {
         </div>
         {/* Center */}
         <div className="text-sm mb-2 md:mb-0">
-          <p>&copy; {new Date().getFullYear()} CareerRoadmap. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} CareerRoadmap. All rights
+            reserved.
+          </p>
         </div>
         {/* Right side */}
         <div className="flex items-center space-x-2 text-sm">
