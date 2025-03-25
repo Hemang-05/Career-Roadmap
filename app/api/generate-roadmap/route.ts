@@ -12,7 +12,6 @@ async function generateRoadmap(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "deepseek/deepseek-r1-distill-llama-70b:free",
       messages: [{ role: "user", content: prompt }],
-      // response_format: "json",
       top_p: 1,
       temperature: 1,
       frequency_penalty: 0,
@@ -21,13 +20,24 @@ async function generateRoadmap(prompt: string): Promise<string> {
       top_k: 0,
     }),
   });
+
   const data = await response.json();
   console.log('OpenRouter API response:', data);
+
   if (!data.choices || data.choices.length === 0) {
     throw new Error('No choices returned from OpenRouter API');
   }
-  // Access the generated content from message.content and trim any whitespace
-  return data.choices[0].message.content.trim();
+
+  const rawContent = data.choices[0].message.content.trim();
+
+  // Attempt to extract just the JSON part using regex
+  const jsonMatch = rawContent.match(/```json\s*([\s\S]*?)\s*```/i) || rawContent.match(/{[\s\S]*}/);
+  if (!jsonMatch) {
+    throw new Error('No valid JSON found in response');
+  }
+
+  const cleanContent = jsonMatch[1] || jsonMatch[0]; // Depending on which pattern matched
+  return cleanContent.trim();
 }
 
 export async function POST(request: Request) {
@@ -49,43 +59,111 @@ export async function POST(request: Request) {
     }
     const user_id = userRecord.id;
 
-    // Fetch the career_info record for that user to get the desired_career value
+    // Fetch the career_info record for that user to get all required fields
     const { data: careerInfo, error: careerInfoError } = await supabase
       .from('career_info')
-      .select('desired_career')
+      .select(`
+        desired_career,
+        residing_country,
+        spending_capacity,
+        current_class,
+        move_abroad,
+        preferred_abroad_country,
+        previous_experience
+      `)
       .eq('user_id', user_id)
       .single();
     if (careerInfoError || !careerInfo) {
       return NextResponse.json({ error: 'Career info record not found' }, { status: 500 });
     }
-    const desiredCareer = careerInfo.desired_career;
-    if (!desiredCareer) {
+
+    const {
+      desired_career,
+      residing_country,
+      spending_capacity,
+      current_class,
+      move_abroad,
+      preferred_abroad_country,
+      previous_experience
+    } = careerInfo;
+
+    if (!desired_career) {
       return NextResponse.json({ error: 'Desired career not found in career_info' }, { status: 400 });
     }
 
-    // Build the prompt using the desired career
-    const prompt = `Generate a detailed career roadmap for a student in 9th grade who wants to become a ${desiredCareer}. The roadmap should cover from 9th grade to the end of their undergraduate studies, providing a clear path to achieving their goal. The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
+    // Get current day and month
+    const now = new Date();
+    const current_day = now.getDate();
+    const current_month = now.toLocaleString('default', { month: 'long' });
 
-    { "career": "Desired Career", "current_grade": "9th Grade", "vision": "A brief motivational statement of the student's career vision", "roadmap": [ { "phase_name": "Phase Name", "time_period": "Grade Range or Undergraduate Year Range (e.g., Grade 9-10, Undergraduate Year 1-2)", "objective": "Main objective for this phase", "milestones": [ { "name": "Milestone Name", "description": "What needs to be achieved", "tasks": [ { "task_title": "Task Name", "description": "Detailed instructions for the task", "animation_trigger": "Suggested animation type (e.g., confetti, progress bar fill, badge unlock) when task is completed" } ], "resources": ["Resource 1", "Resource 2", ...], "animation_trigger": "Suggested animation type (e.g., milestone celebration) when milestone is completed" } ], "events_to_watch_for": ["Type of event 1", "Type of event 2", ...], "notes": "Brief advice or encouragement for this phase" } ], "additional_tips": ["Tip 1", "Tip 2", ...], "final_thoughts": "A motivational closing message" }
-    
-    Requirements:
-    
-    The roadmap must be comprehensive, realistic, and specific, covering key stages from 9th grade through undergraduate studies. Include 4-5 phases, each with 2-3 milestones, and each milestone with 2-3 tasks.
-    Use generic phase names (e.g., "Developing the Foundation", "Building Expertise", "Gaining Real-World Experience", "Preparing for Professional Entry") that are applicable to any career.
-    Ensure that tasks are concise, actionable, and relevant to pursuing the desired career.
-    Provide resources (e.g., books, websites, courses) where applicable to support the tasks.
-    Suggest animation triggers for each task and milestone (e.g., "confetti" for completing a task, "milestone celebration" for finishing a phase) to boost student morale.
-    List events to watch for in each phase (e.g., "Competitions", "Workshops", "Networking events") that could align with the student's interests.
-    Maintain a supportive and motivational tone, with "notes" providing advice and encouragement and "final_thoughts" delivering an inspiring closing message.
-    Consider the student's other commitments, making tasks manageable within a school schedule.
-    Include global opportunities (e.g., international programs, competitions) where applicable to enhance the student's resume.
-    Return only the JSON output, without any additional commentary or formatting.Only give response in json as it is given above, use that layout.`;
-    console.log('Prompt sent to OpenRouter API:', prompt);
+    // Build the prompt using the gathered variables
+    const prompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${move_abroad ? 'plans to move abroad to ' + preferred_abroad_country : 'does not plan to move abroad'}. The student has "${previous_experience}" in the field.
 
+The roadmap should:
+- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
+- Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
+- Provide each milestone with tasks that include weights (indicating importance) and a completion status (initially set to false).
+
+Tailor the tasks to the student's specific situation:
+- Residing Country: Incorporate relevant exams, qualifications, or educational requirements specific to "${residing_country}".
+- Spending Capacity: Adjust task recommendations based on "${spending_capacity}" (e.g., suggest free online resources if low, or paid courses/bootcamps if high).
+- Move Abroad: If the student plans to move to "${preferred_abroad_country}", include tasks such as language learning, cultural adaptation, visa preparation, or understanding the education system of that country.
+- Previous Experience: Use "${previous_experience}" to adjust the starting point—skip beginner tasks or include more advanced ones if the student has prior knowledge.
+
+Also, structure the roadmap year-wise. For example:
+- If the student is in India and currently in 9th grade, generate a roadmap until 12th grade (4 years). For students in other countries, generate the roadmap until the end of school (before college).
+- Within each year, divide the roadmap into four 3-month phases.
+- The roadmap should be sequential, with later years building upon the achievements of previous years.
+- Use the current day and month ("${current_day} ${current_month}") as the starting point for planning the phases.
+
+The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
+
+{
+  "career": "Determined Career",
+  "roadmap_summary": "A year-by-year plan, each with four 3-month phases, guiding the student from their current class until the end of secondary education.",
+  "yearly_roadmap": [
+    {
+      "year": "Year Label (e.g., 9th Grade)",
+      "overview": "Overview for the year, describing main focus or goals",
+      "phases": [
+        {
+          "phase_name": "Phase 1 (Month 1 - Month 3)",
+          "milestones": [
+            {
+              "name": "Milestone Name",
+              "description": "What needs to be achieved in this milestone",
+              "tasks": [
+                {
+                  "task_title": "Task Name",
+                  "description": "Detailed instructions for the task",
+                  "weight": NumericValue,
+                  "completed": false
+                }
+              ]
+            }
+          ]
+        }
+        // Additional phases (Phase 2, Phase 3, Phase 4) for the year
+      ]
+    }
+    // Additional years until the end of secondary education
+  ],
+  "final_notes": "Keep track of each task's progress. Update tasks as they are completed, and use the weight values to measure overall progress."
+}
+
+Requirements:
+- The roadmap must be comprehensive, realistic, and specific, covering key stages from the student's current class until the end of secondary education.
+- Divide the entire roadmap into 3‑month segments (quarters) that outline short-term objectives, starting from the current day and month ("${current_day} ${current_month}").
+- Include enough years based on the difference between the current class and the end of secondary education (e.g., if current class is '9th Grade' and in India, generate for 9th to 12th Grade).
+- Each year should have four phases, each with 2‑3 milestones, and each milestone with 2‑3 actionable tasks.
+- Use generic phase names (e.g., "Developing the Foundation", "Building Expertise", "Gaining Real-World Experience", "Preparing for Professional Entry").
+- Ensure tasks are concise, actionable, and directly relevant to pursuing "${desired_career}".
+- Provide resources, animation triggers, and events to watch for as applicable.
+- Maintain a supportive and motivational tone with final notes offering advice.
+- Return only the JSON output, exactly matching the structure above. Strictly respond in json. Do not use back ticks.`;
+  
     // Call the OpenRouter API to generate the roadmap
     const roadmap = await generateRoadmap(prompt);
-    console.log('Generated Roadmap:', roadmap);
-
     // Update the career_info record with the generated roadmap
     const { data, error } = await supabase
       .from('career_info')
