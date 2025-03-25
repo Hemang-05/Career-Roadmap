@@ -15,6 +15,9 @@ export async function POST(request: Request) {
       preferred_abroad_country,  // string (nullable)
       previous_experience,       // string (nullable)
       parent_email,               // string; (nullable)
+      form_filled,               // boolean indicating if form is filled
+      college_student,             //bool
+      difficulty,                   //text 
       roadmap                    //null
     } = await request.json();
 
@@ -48,6 +51,9 @@ export async function POST(request: Request) {
       previous_experience: previous_experience || null,
       parent_email:parent_email || null,
       updated_at: new Date().toISOString(),
+      college_student: typeof college_student === 'boolean' ? college_student : false,
+      form_filled: typeof form_filled === 'boolean' ? form_filled : false,
+      difficulty: difficulty || null,
       roadmap: null
     };
 
