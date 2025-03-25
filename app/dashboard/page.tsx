@@ -8,7 +8,8 @@ import { useSyncUser } from '@/app/hooks/sync-user';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import FloatingNavbar from '@/components/Navbar';
 import PaymentPlan from '@/components/PaymentPlan';
-import Loader from '@/components/Loader'; // Import the Loader component
+import Loader from '@/components/Loader';
+import DifficultySelector from '@/components/DifficultySelector';
 
 type OptionType = {
   label: string;
@@ -23,6 +24,11 @@ export default function Dashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showPaymentPlans, setShowPaymentPlans] = useState(false);
+  const [dbUserId, setDbUserId] = useState<string | null>(null);
+  // New state for the college form modal
+  const [showCollegeForm, setShowCollegeForm] = useState(false);
+  // New state to store the form_filled value from career_info
+  const [formFilled, setFormFilled] = useState<boolean | null>(null);
 
   // Common form states
   const [residingCountry, setResidingCountry] = useState<OptionType | null>(null);
@@ -32,6 +38,9 @@ export default function Dashboard() {
   const [moveAbroad, setMoveAbroad] = useState<'yes' | 'suggest'>('suggest');
   const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
   const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(null);
+  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(null);
+  const [apiCallCompleted, setApiCallCompleted] = useState(false);
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
 
   // Branch-specific form states
   const [careerOption, setCareerOption] = useState<'known' | 'unknown'>('known');
@@ -67,7 +76,7 @@ export default function Dashboard() {
     if (isLoaded && !isSignedIn) router.push('/');
   }, [isSignedIn, router, isLoaded]);
 
-  // Fetch subscription status and roadmap
+  // Fetch subscription status, roadmap, and form_filled from career_info
   useEffect(() => {
     if (!isLoaded || !user) return;
     async function fetchUserData() {
@@ -82,7 +91,7 @@ export default function Dashboard() {
         console.log('Error fetching user data:', userError);
         return;
       }
-      
+      setDbUserId(userData.id);
       setSubscriptionStatus(userData.subscription_status);
       setSubscriptionPlan(userData.subscription_plan);
       
@@ -95,14 +104,17 @@ export default function Dashboard() {
         setSubscriptionStatus(false);
       }
       
-      // Check if roadmap exists in career_info table
+      // Check if roadmap exists and get form_filled from career_info table
       const { data: careerData, error: careerError } = await supabase
         .from('career_info')
-        .select('user_id, roadmap')
+        .select('user_id, roadmap, form_filled')
         .eq('user_id', userData.id)
         .maybeSingle();
 
       setHasRoadmap(!!(careerData && careerData.roadmap && careerData.roadmap.trim().length > 0));
+      if (careerData) {
+        setFormFilled(careerData.form_filled);
+      }
     }
     fetchUserData();
   }, [isLoaded, user]);
@@ -114,22 +126,71 @@ export default function Dashboard() {
     { href: '/support', label: 'Support' },
   ];
 
+  // Updated Generate Roadmap Handler with new logic
   const handleGenerateRoadmap = async () => {
-    setGenerating(true); // Show loader immediately
-    try {
-      const res = await fetch('/api/generate-roadmap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clerk_id: user?.id }),
-      });
-      const result = await res.json();
-      console.log('Generated roadmap:', result);
-      router.push('/roadmap');
-    } catch (error) {
-      console.log('Error generating roadmap:', error);
+    console.log("handleGenerateRoadmap called:", { isCollegeStudent, formFilled });
+    setGenerating(true);
+  
+    (async () => {
+      try {
+        const res = await fetch('/api/generate-roadmap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clerk_id: user?.id }),
+        });
+       
+        const result = await res.json();
+        console.log('Generated roadmap:');
+        setApiCallCompleted(true);
+      } catch (error) {
+        console.log('Error generating roadmap:', error);
+        setGenerating(false);
+      }
+    })();
+  
+    if (isCollegeStudent && !formFilled) {
+      console.log("Showing college form modal.");
+      setShowCollegeForm(true);
     }
-    // We don't set generating to false because router.push will unload this page.
   };
+
+  // Handler for college form submission: update form_filled to true in the DB.
+  const handleCollegeFormSubmit = async () => {
+    try {
+      if (!dbUserId) {
+        console.error("Database user ID not found");
+        return;
+      }
+      const { data, error } = await supabase
+        .from('career_info')
+        .update({ form_filled: true })
+        .eq('user_id', dbUserId);
+  
+      if (error) {
+        console.error('Error updating form_filled:', error);
+      } else {
+        console.log('Form updated to filled:', data);
+        setFormFilled(true);
+        setShowCollegeForm(false);
+        if (apiCallCompleted) {
+          console.log("API call completed and form submitted; redirecting.");
+          router.push('/roadmap');
+        } else {
+          console.log("Form submitted, waiting for API response.");
+        }
+      }
+    } catch (err) {
+      console.error('Error in handleCollegeFormSubmit:', err);
+    }
+  };
+  
+  useEffect(() => {
+    if (apiCallCompleted && (!isCollegeStudent || formFilled)) {
+      console.log("Conditions met; redirecting to /roadmap.");
+      setGenerating(false);
+      router.push('/roadmap');
+    }
+  }, [apiCallCompleted, formFilled, isCollegeStudent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,6 +211,8 @@ export default function Dashboard() {
             : 'Suggest'
           : false,
       parent_email: parentEmail,
+      college_student: isCollegeStudent,
+      difficulty: difficulty,
       roadmap: null,
     };
 
@@ -292,12 +355,41 @@ export default function Dashboard() {
               />
             </div>
             <div>
+              <label className="block text-gray-800 mb-4">I am a college student:</label>
+              <div className="flex space-x-6 mt-2">
+                <label className="text-black">
+                  <input
+                    type="radio"
+                    name="collegeStudent"
+                    value="yes"
+                    checked={isCollegeStudent === true}
+                    onChange={() => setIsCollegeStudent(true)}
+                    className="mr-3"
+                    required
+                  />
+                  Yes
+                </label>
+                <label className="text-black">
+                  <input
+                    type="radio"
+                    name="collegeStudent"
+                    value="no"
+                    checked={isCollegeStudent === false}
+                    onChange={() => setIsCollegeStudent(false)}
+                    className="mr-3"
+                    required
+                  />
+                  No
+                </label>
+              </div>
+            </div>
+            <div>
               <label className="block text-gray-800 mb-4">Which class/standard do you study in?</label>
               <input
                 type="text"
                 value={currentClass}
                 onChange={(e) => setCurrentClass(e.target.value)}
-                placeholder="e.g., 10th, 12th, or college year"
+                placeholder="e.g., 10th, 12th, or college year (If in college, also mention the course opted.)"
                 className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                 required
               />
@@ -352,13 +444,8 @@ export default function Dashboard() {
                 className={`relative w-36 h-10 rounded-full cursor-pointer mb-6 transition-all duration-200 ease-in-out ${willingToMoveAbroad ? 'bg-green-500' : 'bg-red-500'}`}
                 onClick={() => {
                   setWillingToMoveAbroad(!willingToMoveAbroad);
-                  if (!willingToMoveAbroad) {
-                    setMoveAbroad('suggest');
-                    setPreferredAbroadCountry(null);
-                  } else {
-                    setMoveAbroad('suggest');
-                    setPreferredAbroadCountry(null);
-                  }
+                  setMoveAbroad('suggest');
+                  setPreferredAbroadCountry(null);
                 }}
               >
                 <span className={`absolute left-0 w-16 h-10 leading-10 text-center font-semibold ${willingToMoveAbroad ? 'text-white' : 'text-gray-700'}`}>
@@ -470,10 +557,9 @@ export default function Dashboard() {
                 />
                 <p className="text-sm text-gray-500 mt-2">
                   300 &lt;{' '}
-
                   <span
                     className={
-                      interestParagraph.length > 300 && interestParagraph.length < 1200
+                      interestParagraph.length >= 300 && interestParagraph.length <= 1200
                         ? 'text-green-600'
                         : 'text-red-600'
                     }
@@ -485,7 +571,11 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
+            <DifficultySelector 
+              difficulty={difficulty}
+              setDifficulty={setDifficulty}
+            />
+            
           <div className="flex justify-center w-full">
             <button
               type="submit"
@@ -512,10 +602,13 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Existing Generate Modal for non-college students */}
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-12 rounded-xl shadow-lg">
-            <h2 className="text-2xl text-black font-bold mb-4">Generate <span className="text-[#FF6500]">Career</span> Roadmap</h2>
+            <h2 className="text-2xl text-black font-bold mb-4">
+              Generate <span className="text-[#FF6500]">Career</span> Roadmap
+            </h2>
             <p className="mb-4 text-gray-700">Would you like to generate your career roadmap now?</p>
             <div className="flex justify-end space-x-4">
               <button
@@ -535,11 +628,38 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* New modal for college students to fill the form */}
+      {showCollegeForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-12 rounded-xl shadow-lg">
+            <p className="text-red-500">DEBUG: Modal is open</p>
+            <h2 className="text-2xl text-black font-bold mb-4">Form is to be filled</h2>
+            <p className="mb-4 text-gray-700">
+              As you are a college student, please click submit to confirm that your form has been filled.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowCollegeForm(false)}
+                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-red-500 mb-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCollegeFormSubmit}
+                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-green-400 mb-2"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loader overlay during roadmap generation */}
-      {generating && (
+      {generating && !showCollegeForm && (
         <div className="fixed inset-0 bg-black flex flex-col justify-center items-center z-50">
-          <Loader />
           <p className="text-white mt-6 text-xl font-semibold">Generating Roadmap...</p>
+          <Loader />
         </div>
       )}
 
