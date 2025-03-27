@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
     const user_id = userRecord.id;
 
-    // Fetch the career_info record for that user to get all required fields
+    // Fetch the career_info record for that user, including difficulty
     const { data: careerInfo, error: careerInfoError } = await supabase
       .from('career_info')
       .select(`
@@ -69,7 +69,8 @@ export async function POST(request: Request) {
         current_class,
         move_abroad,
         preferred_abroad_country,
-        previous_experience
+        previous_experience,
+        difficulty
       `)
       .eq('user_id', user_id)
       .single();
@@ -84,7 +85,8 @@ export async function POST(request: Request) {
       current_class,
       move_abroad,
       preferred_abroad_country,
-      previous_experience
+      previous_experience,
+      difficulty
     } = careerInfo;
 
     if (!desired_career) {
@@ -96,8 +98,8 @@ export async function POST(request: Request) {
     const current_day = now.getDate();
     const current_month = now.toLocaleString('default', { month: 'long' });
 
-    // Build the prompt using the gathered variables
-    const prompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${move_abroad ? 'plans to move abroad to ' + preferred_abroad_country : 'does not plan to move abroad'}. The student has "${previous_experience}" in the field.
+    // Define the base prompt
+    const basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${move_abroad ? 'plans to move abroad to ' + preferred_abroad_country : 'does not plan to move abroad'}. The student has "${previous_experience}" in the field.
 
 The roadmap should:
 - Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
@@ -149,32 +151,52 @@ The response must be strictly in JSON format without any additional text, markdo
     // Additional years until the end of secondary education
   ],
   "final_notes": "Keep track of each task's progress. Update tasks as they are completed, and use the weight values to measure overall progress."
-}
+}`;
 
-Requirements:
-- The roadmap must be comprehensive, realistic, and specific, covering key stages from the student's current class until the end of secondary education.
-- Divide the entire roadmap into 3‑month segments (quarters) that outline short-term objectives, starting from the current day and month ("${current_day} ${current_month}").
-- Include enough years based on the difference between the current class and the end of secondary education (e.g., if current class is '9th Grade' and in India, generate for 9th to 12th Grade).
-- Each year should have four phases, each with 2‑3 milestones, and each milestone with 2‑3 actionable tasks.
-- Use generic phase names (e.g., "Developing the Foundation", "Building Expertise", "Gaining Real-World Experience", "Preparing for Professional Entry").
-- Ensure tasks are concise, actionable, and directly relevant to pursuing "${desired_career}".
-- Provide resources, animation triggers, and events to watch for as applicable.
-- Maintain a supportive and motivational tone with final notes offering advice.
-- Return only the JSON output, exactly matching the structure above. Strictly respond in json. Do not use back ticks.`;
-  
+    // Select the prompt based on difficulty
+    let prompt: string;
+    switch (difficulty) {
+      case 'easy':
+        prompt = basePrompt.replace(
+          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
+          'each milestone with 3-4 actionable tasks'
+        );
+        console.log('Prompt sent for EASY difficulty:', prompt);
+        break;
+      case 'medium':
+        prompt = basePrompt.replace(
+          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
+          'each milestone with 4-6 actionable tasks'
+        );
+        console.log('Prompt sent for MEDIUM difficulty:', prompt);
+        break;
+      case 'hard':
+        prompt = basePrompt.replace(
+          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
+          'each milestone with 6-8 actionable tasks'
+        );
+        console.log('Prompt sent for HARD difficulty:', prompt);
+        break;
+      default:
+        console.error('Invalid difficulty level:', difficulty);
+        return NextResponse.json({ error: 'Invalid difficulty level' }, { status: 400 });
+    }
+
     // Call the OpenRouter API to generate the roadmap
     const roadmap = await generateRoadmap(prompt);
+
     // Update the career_info record with the generated roadmap
     const { data, error } = await supabase
       .from('career_info')
       .update({ roadmap, updated_at: new Date().toISOString() })
       .eq('user_id', user_id);
+
     if (error) {
       console.error('Error updating career_info:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Return a success response without fetching the roadmap
+    // Return a success response
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('Error in POST /api/generate-roadmap:', err);

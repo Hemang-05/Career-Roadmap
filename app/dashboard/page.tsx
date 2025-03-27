@@ -37,7 +37,7 @@ export default function Dashboard() {
   const [currentClass, setCurrentClass] = useState('');
   const [moveAbroad, setMoveAbroad] = useState<'yes' | 'suggest'>('suggest');
   const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
-  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(null);
+  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(false);
   const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(null);
   const [apiCallCompleted, setApiCallCompleted] = useState(false);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
@@ -330,7 +330,7 @@ export default function Dashboard() {
           <p className="text-black font-semibold">Please answer the following common questions:</p>
           <div className="space-y-6">
             <div>
-              <label className="block text-gray-800 mb-4">Residing Country:</label>
+              <label className="block text-gray-800 mb-4 ">Residing Country:</label>
               <Select<OptionType, false, GroupBase<OptionType>>
                 options={countryOptions}
                 value={residingCountry}
@@ -338,7 +338,7 @@ export default function Dashboard() {
                 placeholder="Select your country..."
                 required
                 styles={customStyles}
-                className="text-black mb-16 border border-gray-100 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                className="text-black mb-16 border border-gray-100 focus:outline-none focus:ring-0 focus:border-[#FF6500] cursor-pointer"
               />
             </div>
             <div>
@@ -364,7 +364,7 @@ export default function Dashboard() {
                     value="yes"
                     checked={isCollegeStudent === true}
                     onChange={() => setIsCollegeStudent(true)}
-                    className="mr-3"
+                    className="mr-3 cursor-pointer"
                     required
                   />
                   Yes
