@@ -110,8 +110,17 @@ export default function Dashboard() {
         .select('user_id, roadmap, form_filled')
         .eq('user_id', userData.id)
         .maybeSingle();
-
-      setHasRoadmap(!!(careerData && careerData.roadmap && careerData.roadmap.trim().length > 0));
+  
+      // Improved roadmap existence check
+      const roadmapExists = careerData && 
+        careerData.roadmap !== null && 
+        careerData.roadmap !== undefined && 
+        (typeof careerData.roadmap === 'string' 
+          ? careerData.roadmap.trim().length > 0 
+          : typeof careerData.roadmap === 'object');
+  
+      setHasRoadmap(!!roadmapExists);
+      
       if (careerData) {
         setFormFilled(careerData.form_filled);
       }

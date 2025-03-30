@@ -36,10 +36,10 @@ export default function FloatingNavbar({ navLinks }: FloatingNavbarProps) {
         h-14 md:h-16 w-[65%] md:w-[70%] left-1/2 -translate-x-1/2 rounded-full 
         flex items-center justify-between md:justify-around px-4">
         <div className="flex items-center">
-          <Link href="/" className="text-xl md:text-2xl font-bold">
+          <div className="text-xl md:text-2xl font-bold">
             <span className="text-[#FF6500]">Career</span>
             <span className="text-black">Roadmap</span>
-          </Link>
+          </div>
         </div>
         
         {/* Desktop Navigation */}

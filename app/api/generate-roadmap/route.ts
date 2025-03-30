@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 The roadmap should:
 - Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
 - Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
-- Provide each milestone with tasks that include weights (indicating importance) and a completion status (initially set to false).
+- Provide each milestone with tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in atleast 2 to 3 lines.
 
 Tailor the tasks to the student's specific situation:
 - Residing Country: Incorporate relevant exams, qualifications, or educational requirements specific to "${residing_country}".
@@ -116,8 +116,9 @@ Also, structure the roadmap year-wise. For example:
 - If the student is in India and currently in 9th grade, generate a roadmap until 12th grade (4 years). For students in other countries, generate the roadmap until the end of school (before college).
 - Within each year, divide the roadmap into four 3-month phases.
 - The roadmap should be sequential, with later years building upon the achievements of previous years.
+- Give detailed explanation about the task in atleast 2 to 3 lines.
 - Use the current day and month ("${current_day} ${current_month}") as the starting point for planning the phases.
-
+- Include the required Youtube tutorials/video if suggesting to start a course and learning or websites which might be helpful in "${desired_career}".
 The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
 
 {

@@ -11,13 +11,10 @@ import ProgressBar from '@/components/ProgressBar';
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
 
 function isYearComplete(yearItem: any): boolean {
-  // Check if every task in every milestone of every phase is completed.
   for (const phase of yearItem.phases) {
     for (const milestone of phase.milestones) {
       for (const task of milestone.tasks) {
-        if (!task.completed) {
-          return false;
-        }
+        if (!task.completed) return false;
       }
     }
   }
@@ -38,11 +35,8 @@ function RoadmapDisplay({
   return (
     <div className="space-y-8">
       {roadmapData.yearly_roadmap.map((yearItem: any, yearIndex: number) => {
-        // A year is unlocked if it is the first year or if the previous year is complete.
         const unlocked =
-          yearIndex === 0 ||
-          isYearComplete(roadmapData.yearly_roadmap[yearIndex - 1]);
-
+          yearIndex === 0 || isYearComplete(roadmapData.yearly_roadmap[yearIndex - 1]);
         const isOpen = openYearIndices.includes(yearIndex);
 
         return (
@@ -50,17 +44,13 @@ function RoadmapDisplay({
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => {
-                // Allow toggle only if unlocked.
                 if (unlocked) {
                   toggleYear(yearIndex);
                 }
               }}
             >
               <h2 className="text-2xl font-bold text-gray-800">
-                {yearItem.year}{" "}
-                {unlocked ? null : (
-                  <span className="text-red-500 text-base">(Locked)</span>
-                )}
+                {yearItem.year} {unlocked ? null : <span className="text-red-500 text-base">(Locked)</span>}
               </h2>
               {unlocked && (
                 <button className="text-blue-600">
@@ -69,18 +59,13 @@ function RoadmapDisplay({
               )}
             </div>
             <p className="text-gray-600 mb-4">{yearItem.overview}</p>
-            {/* If the year is unlocked and expanded, show phases, milestones, and tasks */}
             {unlocked && isOpen ? (
               yearItem.phases.map((phase: any, phaseIndex: number) => (
                 <div key={phaseIndex} className="mb-4 border-t pt-4">
-                  <h3 className="text-xl font-semibold text-[#FF6500]">
-                    {phase.phase_name}
-                  </h3>
+                  <h3 className="text-xl font-semibold text-[#FF6500]">{phase.phase_name}</h3>
                   {phase.milestones.map((milestone: any, mIndex: number) => (
                     <div key={mIndex} className="ml-4 mb-2">
-                      <h4 className="text-lg font-medium text-gray-800">
-                        {milestone.name}
-                      </h4>
+                      <h4 className="text-lg font-medium text-gray-800">{milestone.name}</h4>
                       <p className="text-gray-600">{milestone.description}</p>
                       <ul className="list-disc list-inside">
                         {milestone.tasks.map((task: any, tIndex: number) => (
@@ -89,9 +74,7 @@ function RoadmapDisplay({
                               type="checkbox"
                               checked={task.completed}
                               onChange={async () => {
-                                // Toggle the task status.
                                 task.completed = !task.completed;
-                                // Update the task via the API endpoint.
                                 await fetch("/api/update-task", {
                                   method: "POST",
                                   headers: { "Content-Type": "application/json" },
@@ -99,19 +82,14 @@ function RoadmapDisplay({
                                     user_id: roadmapData.user_id,
                                     task_title: task.task_title,
                                     completed: task.completed,
-                                    // Pass current phase identifier for pace calculation.
                                     currentPhaseIdentifier: phase.phase_name,
                                   }),
                                 });
-                                onTaskUpdate(); // Refresh data after update.
+                                onTaskUpdate();
                               }}
                               className="mr-2"
                             />
-                            <span className="font-semibold">
-                              {task.task_title}:
-                            </span>{" "}
-                            {task.description}{" "}
-                            <span className="italic">(Weight: {task.weight})</span>
+                            <span className="font-semibold">{task.task_title}:</span> {task.description} <span className="italic">(Weight: {task.weight})</span>
                           </li>
                         ))}
                       </ul>
@@ -120,18 +98,13 @@ function RoadmapDisplay({
                 </div>
               ))
             ) : (
-              // If the year is locked or not expanded, show only milestone titles and descriptions without tasks.
               <div>
                 {yearItem.phases.map((phase: any, phaseIndex: number) => (
                   <div key={phaseIndex} className="mb-4 border-t pt-4">
-                    <h3 className="text-xl font-semibold text-[#FF6500]">
-                      {phase.phase_name}
-                    </h3>
+                    <h3 className="text-xl font-semibold text-[#FF6500]">{phase.phase_name}</h3>
                     {phase.milestones.map((milestone: any, mIndex: number) => (
                       <div key={mIndex} className="ml-4 mb-2">
-                        <h4 className="text-lg font-medium text-gray-800">
-                          {milestone.name}
-                        </h4>
+                        <h4 className="text-lg font-medium text-gray-800">{milestone.name}</h4>
                         <p className="text-gray-600">{milestone.description}</p>
                       </div>
                     ))}
@@ -162,17 +135,32 @@ export default function RoadmapPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPaymentPlan, setShowPaymentPlan] = useState(false);
   const [taskCountProgress, setTaskCountProgress] = useState<number>(0);
-  // State to hold which year indices are open (expanded)
   const [openYearIndices, setOpenYearIndices] = useState<number[]>([]);
+  const [updating, setUpdating] = useState<boolean>(false);
 
-  // Updated navigation: "User Analysis" replaces "Settings"
   const dashboardLinks = [
-    { href: "/roadmap", label: "Roadmap" },
-    { href: "/dashboard", label: "Edit Info" },
+    { href: "/dashboard", label: "Regenerate Roadmap" },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
     { href: "/support", label: "Support" },
   ];
+
+  function cleanJSONString(jsonString: string): string {
+    try {
+      // Remove control characters and problematic Unicode characters
+      return jsonString
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')  // Remove control characters
+        .replace(/[\u2028\u2029]/g, '')        // Remove line/paragraph separators
+        .replace(/\\n/g, "\\n")               // Normalize newline escapes
+        .replace(/\\r/g, "\\r")               // Normalize carriage return
+        .replace(/\\t/g, "\\t")               // Normalize tab
+        .replace(/\\b/g, "\\b")               // Normalize backspace
+        .replace(/\\f/g, "\\f");              // Normalize form feed
+    } catch (error) {
+      console.error("Error in JSON cleaning:", error);
+      return jsonString;  // Return original if cleaning fails
+    }
+  }
 
   const fetchRoadmap = async () => {
     try {
@@ -182,50 +170,79 @@ export default function RoadmapPage() {
           .select("id, subscription_status, subscription_end")
           .eq("clerk_id", user.id)
           .single();
+        
         if (userError || !userRecord) {
           setErrorMessage("User record not found in Supabase.");
           return;
         }
+        
         const { subscription_status, subscription_end, id: userId } = userRecord;
         const currentDate = new Date();
         const subscriptionEndDate = new Date(subscription_end);
+        
         if (!subscription_status || subscriptionEndDate < currentDate) {
           setShowPaymentPlan(true);
           return;
         }
+        
         const { data, error } = await supabase
           .from("career_info")
           .select("roadmap, user_id")
           .eq("user_id", userId)
           .single();
+        
         if (error) {
           setErrorMessage("Error fetching roadmap: " + error.message);
-        } else if (!data?.roadmap) {
+          return;
+        }
+        
+        if (!data?.roadmap) {
           setErrorMessage("No roadmap found. Please generate your roadmap.");
-        } else {
-          setRoadmap(data.roadmap);
-          try {
-            const parsed =
-              typeof data.roadmap === "string"
-                ? JSON.parse(data.roadmap)
-                : data.roadmap;
-            // Attach the userId for further updates.
-            parsed.user_id = userId;
-            setParsedRoadmap(parsed);
-            setTaskCountProgress(calculateTaskCountProgress(parsed));
-          } catch (err) {
-            console.error("Error parsing roadmap JSON:", err);
+          return;
+        }
+        
+        setRoadmap(data.roadmap);
+        
+        try {
+          // Enhanced parsing with cleaning
+          const cleanedRoadmap = cleanJSONString(
+            typeof data.roadmap === 'string' 
+              ? data.roadmap 
+              : JSON.stringify(data.roadmap)
+          );
+          
+          const parsed = JSON.parse(cleanedRoadmap);
+          parsed.user_id = userId;
+          
+          // Additional structure validation
+          if (!parsed.yearly_roadmap || !Array.isArray(parsed.yearly_roadmap)) {
+            throw new Error("Invalid roadmap structure");
+          }
+          
+          setParsedRoadmap(parsed);
+          setTaskCountProgress(calculateTaskCountProgress(parsed));
+        } catch (err) {
+          console.error("Detailed JSON Parsing Error:", err);
+          
+          // Log the problematic JSON string for debugging
+          console.log("Original Roadmap String:", data.roadmap);
+          
+          // More specific error handling
+          if (err instanceof SyntaxError) {
+            setErrorMessage(`Something occured please regenerate your roadmap.`);
+          } else {
+            setErrorMessage("Error parsing roadmap. Please regenerate your roadmap.");
           }
         }
       }
     } catch (err) {
+      console.error("Unexpected Error:", err);
       setErrorMessage("An unexpected error occurred while fetching the roadmap.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Toggle the open state for a specific year.
   const toggleYear = (index: number) => {
     setOpenYearIndices((prev) => {
       if (prev.includes(index)) {
@@ -234,6 +251,26 @@ export default function RoadmapPage() {
         return [...prev, index];
       }
     });
+  };
+
+  // New button function to refresh future roadmap.
+  const refreshFutureRoadmap = async () => {
+    setUpdating(true);
+    try {
+      const res = await fetch("/api/update-user-roadmap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: parsedRoadmap.user_id }),
+      });
+      const json = await res.json();
+      console.log("Refresh response:", json);
+      // Re-fetch the roadmap after update.
+      await fetchRoadmap();
+    } catch (err) {
+      console.error("Error refreshing future roadmap:", err);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   useEffect(() => {
@@ -267,7 +304,24 @@ export default function RoadmapPage() {
         <h1 className="text-3xl text-black font-bold mb-6">
           Your <span className="text-[#FF6500]">Career</span> Roadmap
         </h1>
-        {/* Display the task count-based progress bar */}
+        {/* Refresh button */}
+        <div className="mb-4">
+          <button
+            onClick={refreshFutureRoadmap}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Refresh Future Roadmap
+          </button>
+        </div>
+        {/* Loader overlay when updating future roadmap */}
+        {updating && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-4 rounded shadow">
+              <p className="text-lg font-semibold">Updating roadmap...</p>
+            </div>
+          </div>
+        )}
+        {/* Task count-based progress bar */}
         <div className="mb-6">
           <h2 className="text-xl font-semibold">Task Completion Progress</h2>
           <ProgressBar progress={taskCountProgress} />
@@ -283,9 +337,7 @@ export default function RoadmapPage() {
           </div>
         ) : (
           <div className="bg-white p-6 rounded-md shadow-md">
-            <p className="text-gray-800">
-              {errorMessage || "Roadmap is not available."}
-            </p>
+            <p className="text-gray-800">{errorMessage || "Roadmap is not available."}</p>
           </div>
         )}
       </div>
