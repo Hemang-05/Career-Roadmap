@@ -12,6 +12,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "deepseek/deepseek-r1-distill-llama-70b:free",
       messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
       top_p: 1,
       temperature: 1,
       frequency_penalty: 0,
@@ -22,7 +23,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
   });
 
   const data = await response.json();
-  console.log('OpenRouter API response:', data);
+  // console.log('OpenRouter API response:', data);
 
   if (!data.choices || data.choices.length === 0) {
     throw new Error('No choices returned from OpenRouter API');
@@ -162,21 +163,21 @@ The response must be strictly in JSON format without any additional text, markdo
           'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
           'each milestone with 3-4 actionable tasks'
         );
-        console.log('Prompt sent for EASY difficulty:', prompt);
+        // console.log('Prompt sent for EASY difficulty:', prompt);
         break;
       case 'medium':
         prompt = basePrompt.replace(
           'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
           'each milestone with 4-6 actionable tasks'
         );
-        console.log('Prompt sent for MEDIUM difficulty:', prompt);
+        // console.log('Prompt sent for MEDIUM difficulty:', prompt);
         break;
       case 'hard':
         prompt = basePrompt.replace(
           'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
           'each milestone with 6-8 actionable tasks'
         );
-        console.log('Prompt sent for HARD difficulty:', prompt);
+        // console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
         console.error('Invalid difficulty level:', difficulty);

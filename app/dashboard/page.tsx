@@ -112,13 +112,13 @@ export default function Dashboard() {
         .maybeSingle();
   
       // Improved roadmap existence check
-      const roadmapExists = careerData && 
-        careerData.roadmap !== null && 
-        careerData.roadmap !== undefined && 
-        (typeof careerData.roadmap === 'string' 
-          ? careerData.roadmap.trim().length > 0 
-          : typeof careerData.roadmap === 'object');
-  
+      const roadmapExists = careerData &&
+      careerData.roadmap !== null &&
+      careerData.roadmap !== undefined &&
+      (typeof careerData.roadmap === 'string'
+        ? careerData.roadmap.trim().length > 0 // Error likely here
+        : typeof careerData.roadmap === 'object'); // Check if it's an object
+
       setHasRoadmap(!!roadmapExists);
       
       if (careerData) {
@@ -204,7 +204,7 @@ export default function Dashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     const payload: any = {
       clerk_id: user?.id,
       residing_country: residingCountry ? residingCountry.value : null,
@@ -214,9 +214,7 @@ export default function Dashboard() {
       preferred_abroad_country:
         willingToMoveAbroad === true
           ? moveAbroad === 'yes'
-            ? preferredAbroadCountry
-              ? preferredAbroadCountry.value
-              : null
+            ? preferredAbroadCountry ? preferredAbroadCountry.value : null
             : 'Suggest'
           : false,
       parent_email: parentEmail,
@@ -224,7 +222,7 @@ export default function Dashboard() {
       difficulty: difficulty,
       roadmap: null,
     };
-
+  
     if (careerOption === 'known') {
       payload.desired_career = desiredCareer;
       payload.previous_experience = previousExperience;
@@ -232,7 +230,7 @@ export default function Dashboard() {
       payload.desired_career = interestParagraph;
       payload.previous_experience = '';
     }
-
+  
     try {
       const res = await fetch('/api/save-career-info', {
         method: 'POST',
@@ -246,12 +244,29 @@ export default function Dashboard() {
       } else {
         setShowGenerateModal(true);
       }
+      // Trigger career tag assignment in parallel (fire-and-forget).
+      fetch('/api/assign-career-tag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clerk_id: user?.id,
+          desired_career: payload.desired_career,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log('Career tag assigned:', data);
+        })
+        .catch((error) => {
+          console.error('Error assigning career tag:', error);
+        });
     } catch (error) {
       console.log('Error saving career info:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
