@@ -228,7 +228,7 @@ export default function Dashboard() {
         return;
       }
 
-      if (!formData.universityId) {
+      if (!selectedUniversityId) {
         alert("Please select a university.");
         return;
       }
@@ -238,7 +238,7 @@ export default function Dashboard() {
         .from("university_ratings")
         .insert({
           user_id: dbUserId,
-          university_id: formData.universityId,
+          university_id: selectedUniversityId,
           tuition_fees: parseFloat(formData.tuitionFees) || null,
           cultural_rating: formData.culturalRating || null,
           infra_rating: formData.infraRating || null,
