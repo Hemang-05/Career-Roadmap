@@ -38,16 +38,19 @@ export default function JobsPage() {
         jobs.map((job, index) => (
           <div
             key={index}
-            style={{
-              border: "1px solid #ccc",
-              margin: "1rem 0",
-              padding: "1rem",
-            }}
+            // style={{
+            //   border: "1px solid #ccc",
+            //   margin: "1rem 0",
+            //   padding: "1rem",
+            // }}
+            className="bg-white shadow-md rounded-lg p-4 my-4 mx-56 hover:shadow-lg transition-shadow duration-300"
           >
-            <h3>{job.title}</h3>
+            <h3 className="text-xl font-bold text-blue-800 mb-2">
+              {job.title}
+            </h3>
             <p>{job.snippet}</p>
             <a href={job.link} target="_blank" rel="noopener noreferrer">
-              <button className="text-black">Apply Now</button>
+              <button className="text-blue-800">Apply Now</button>
             </a>
           </div>
         ))
