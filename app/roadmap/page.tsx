@@ -9,6 +9,7 @@ import PaymentPlan from '@/components/PaymentPlan';
 import FloatingNavbar from '@/components/Navbar';
 import ProgressBar from '@/components/ProgressBar';
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
+import { AnimatedTooltip } from '@/components/ui/AnimatedTooltip';
 
 function isYearComplete(yearItem: any): boolean {
   for (const phase of yearItem.phases) {
@@ -137,6 +138,7 @@ export default function RoadmapPage() {
   const [taskCountProgress, setTaskCountProgress] = useState<number>(0);
   const [openYearIndices, setOpenYearIndices] = useState<number[]>([]);
   const [updating, setUpdating] = useState<boolean>(false);
+  const [similarUsers, setSimilarUsers] = useState<any[]>([]);
 
   const dashboardLinks = [
     { href: "/dashboard", label: "Regenerate Roadmap" },
@@ -274,14 +276,61 @@ export default function RoadmapPage() {
   };
 
   useEffect(() => {
+    console.log("useEffect triggered - auth state:", { isLoaded, isSignedIn });
+    
     if (isLoaded && !isSignedIn) {
+      console.log("Not signed in, redirecting to home");
       router.push("/");
       return;
     }
+    
     if (user) {
+      
       fetchRoadmap();
+      fetchSimilarUsers();
+    } 
+
+  }, [isLoaded, isSignedIn, router, user]);
+
+  // In RoadmapPage component, modify fetchSimilarUsers with detailed logging
+const fetchSimilarUsers = async () => {
+  console.log("Starting to fetch similar users...");
+  try {
+    console.log("Sending request to /api/get-similar-users");
+    const response = await fetch("/api/get-similar-users");
+    console.log("Response received:", response.status, response.statusText);
+    
+    if (!response.ok) {
+      console.error("API response not OK:", response.status, response.statusText);
+      return;
     }
-  }, [isSignedIn, router, user]);
+    
+    const text = await response.text(); // Get the raw text first
+    console.log("Raw API response:", text);
+    
+    if (!text) {
+      console.log("Empty response from API");
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(text);
+      console.log("Parsed similar users data:", data);
+      
+      if (Array.isArray(data)) {
+        console.log(`Found ${data.length} similar users`);
+        setSimilarUsers(data);
+      } else {
+        console.error("API response is not an array:", data);
+      }
+    } catch (parseError) {
+      console.error("Error parsing JSON:", parseError);
+    }
+  } catch (error) {
+    console.error("Network error fetching similar users:", error);
+  }
+  console.log("Finished fetchSimilarUsers function");
+};
 
   if (loading) {
     return <div>Loading...</div>;
@@ -326,6 +375,25 @@ export default function RoadmapPage() {
           <h2 className="text-xl font-semibold">Task Completion Progress</h2>
           <ProgressBar progress={taskCountProgress} />
         </div>
+
+        {/* Similar Users Section */}
+        
+        <div className="mb-6">
+          <h2 className="text-xl text-black font-semibold">Peers on Your Path</h2>
+          {similarUsers.length > 0 ? (
+            <AnimatedTooltip
+              items={similarUsers.map((user) => ({
+                id: user.id,
+                name: user.name,
+                designation: user.designation,
+                image: user.image,
+              }))}
+            />
+          ) : (
+            <p className="text-gray-500">No peers found with the same career path.</p>
+          )}
+        </div>
+
         {parsedRoadmap ? (
           <div className="bg-white p-6 rounded-md shadow-md">
             <RoadmapDisplay
