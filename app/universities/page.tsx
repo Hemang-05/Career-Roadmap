@@ -1,94 +1,5 @@
 // // // Code: app/universities/page.tsx
 
-// "use client";
-// import { useEffect, useState } from "react";
-// import { createClient } from "@supabase/supabase-js";
-// import UniversityCard from "../../components/ui/UniversityCard";
-// import UniversityDetailModal from "../../components/ui/UniversityDetailModal";
-
-// const supabase = createClient(
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-// );
-
-// interface University {
-//   id: number;
-//   name: string;
-//   country: string;
-//   placement_score: number;
-//   tuition_fees: number;
-//   cultural_score: number;
-//   vibe_check: number;
-//   image_url?: string;
-// }
-
-// export default function UniversitiesPage() {
-//   const [universities, setUniversities] = useState<University[]>([]);
-//   const [selectedUniversity, setSelectedUniversity] =
-//     useState<University | null>(null);
-//   const [modalOpen, setModalOpen] = useState(false);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     async function fetchUniversities() {
-//       const { data, error } = await supabase
-//         .from("universities")
-//         .select(
-//           "id, name, country, placement_score, tuition_fees, cultural_score, vibe_check"
-//         );
-
-//       if (error) {
-//         console.error("Error fetching universities:", error);
-//       } else if (data) {
-//         setUniversities(data);
-//       }
-//       setLoading(false);
-//     }
-
-//     fetchUniversities();
-//   }, []);
-
-//   const handleCardClick = (uni: University) => {
-//     setSelectedUniversity(uni);
-//     setModalOpen(true);
-//   };
-
-//   return (
-//     <div className="container mx-auto p-36">
-//       <h1 className="text-3xl text-black font-bold mb-4">Universities</h1>
-
-//       {loading ? (
-//         <p>Loading universities...</p>
-//       ) : (
-//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-//           {universities.map((uni, index) => (
-//             <UniversityCard
-//               key={uni.id}
-//               ranking={index + 1}
-//               name={uni.name}
-//               country={uni.country}
-//               placementScore={uni.placement_score}
-//               tuitionScore={uni.tuition_fees}
-//               culturalScore={uni.cultural_score}
-//               vibeScore={uni.vibe_check}
-//               imageUrl={uni.image_url || "/happy.png"}
-//               onClick={() => handleCardClick(uni)}
-//             />
-//           ))}
-//         </div>
-//       )}
-
-//       {selectedUniversity && (
-//         <UniversityDetailModal
-//           isOpen={modalOpen}
-//           onClose={() => setModalOpen(false)}
-//           university={selectedUniversity}
-//         />
-//       )}
-//     </div>
-//   );
-// }
-
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -160,8 +71,6 @@ export default function UniversitiesPage() {
           return a.name.localeCompare(b.name);
         case "name-desc":
           return b.name.localeCompare(a.name);
-        case "placement_score-asc":
-          return a.placement_score - b.placement_score;
         case "placement_score-desc":
           return b.placement_score - a.placement_score;
         default:
@@ -193,13 +102,10 @@ export default function UniversitiesPage() {
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value)}
-          className="border border-gray-300 px-3 py-2 rounded"
+          className="border border-gray-300 text-black px-3 py-2 rounded"
         >
           <option value="name-asc">Name (A-Z)</option>
           <option value="name-desc">Name (Z-A)</option>
-          <option value="placement_score-asc">
-            Placement Score (Low to High)
-          </option>
           <option value="placement_score-desc">
             Placement Score (High to Low)
           </option>

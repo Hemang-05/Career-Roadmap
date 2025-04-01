@@ -2,7 +2,7 @@
 'use client'
 export default function TestimonialsSection() {
   return (
-    <section id="testimonials" className="container mx-auto px-4 py-16">
+    <section id="testimonials" className="container mx-auto px-24 py-16">
       <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
         What Our Users Say
       </h2>
