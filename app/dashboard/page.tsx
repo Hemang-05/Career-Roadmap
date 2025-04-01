@@ -75,7 +75,7 @@ export default function Dashboard() {
     useState<OptionType | null>(null);
   const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<
     boolean | null
-  >(null);
+  >(false);
   const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(
     null
   );
@@ -292,7 +292,7 @@ export default function Dashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     const payload: any = {
       clerk_id: user?.id,
       residing_country: residingCountry ? residingCountry.value : null,
@@ -320,7 +320,7 @@ export default function Dashboard() {
       payload.desired_career = interestParagraph;
       payload.previous_experience = "";
     }
-
+  
     try {
       const res = await fetch("/api/save-career-info", {
         method: "POST",
@@ -334,12 +334,29 @@ export default function Dashboard() {
       } else {
         setShowGenerateModal(true);
       }
+      // Trigger career tag assignment in parallel (fire-and-forget).
+      fetch('/api/assign-career-tag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clerk_id: user?.id,
+          desired_career: payload.desired_career,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log('Career tag assigned:', data);
+        })
+        .catch((error) => {
+          console.error('Error assigning career tag:', error);
+        });
     } catch (error) {
       console.log("Error saving career info:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -478,7 +495,7 @@ export default function Dashboard() {
                 placeholder="Select your country..."
                 required
                 styles={customStyles}
-                className="text-black mb-16 border border-gray-100 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                className="text-black mb-16 border border-gray-100 focus:outline-none focus:ring-0 focus:border-[#FF6500] cursor-pointer"
               />
             </div>
             <div>
@@ -510,7 +527,7 @@ export default function Dashboard() {
                     value="yes"
                     checked={isCollegeStudent === true}
                     onChange={() => setIsCollegeStudent(true)}
-                    className="mr-3"
+                    className="mr-3 cursor-pointer"
                     required
                   />
                   Yes

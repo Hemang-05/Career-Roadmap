@@ -1,0 +1,82 @@
+import { NextResponse } from 'next/server';
+import { supabase } from '@/utils/supabase/supabaseClient';
+import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
+import { calculateWeightProgress } from '@/utils/calcWeightProgress';
+import { updateUserPaceFromRoadmap } from '@/utils/calcAndStorePace';
+
+export async function POST(request: Request) {
+  try {
+    const { user_id, task_title, completed, currentPhaseIdentifier } = await request.json();
+    if (!user_id || !task_title) {
+      return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+    }
+
+    // Fetch and update roadmap
+    const { data: careerInfoData, error: fetchError } = await supabase
+      .from('career_info')
+      .select('roadmap')
+      .eq('user_id', user_id)
+      .single();
+      
+    if (fetchError || !careerInfoData) {
+      return NextResponse.json({ error: 'Could not fetch career info' }, { status: 500 });
+    }
+    
+    let roadmap = careerInfoData.roadmap;
+    let parsedRoadmap = typeof roadmap === 'string' ? JSON.parse(roadmap) : roadmap;
+    
+    let taskFound = false;
+    parsedRoadmap.yearly_roadmap.forEach((year: any) => {
+      year.phases.forEach((phase: any) => {
+        phase.milestones.forEach((milestone: any) => {
+          milestone.tasks.forEach((task: any) => {
+            if (task.task_title === task_title) {
+              task.completed = completed;
+              task.completed_at = new Date().toISOString();
+              taskFound = true;
+            }
+          });
+        });
+      });
+    });
+
+    if (!taskFound) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    // Update the roadmap in the database.
+    const { error: updateError } = await supabase
+      .from('career_info')
+      .update({ roadmap: parsedRoadmap, updated_at: new Date().toISOString() })
+      .eq('user_id', user_id);
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    // Calculate progress metrics.
+    const completedTasksCount = calculateTaskCountProgress(parsedRoadmap); // integer count
+    const weightProgress = calculateWeightProgress(parsedRoadmap);         // float percentage
+
+    // Update the user's pace.
+    const paceResult = await updateUserPaceFromRoadmap(user_id, parsedRoadmap,"Phase 1", currentPhaseIdentifier);
+
+    // Upsert analytics.
+    const { error: analyticsError } = await supabase
+      .from('user_analytics')
+      .upsert({
+        user_id,
+        task_completed: completedTasksCount,            // integer count
+        overall_task_percentage: weightProgress,        // float percentage
+        updated_at: new Date().toISOString(),
+        pace: paceResult?.pace || 'on_track'
+      }, { onConflict: 'user_id' });
+      
+    if (analyticsError) {
+      return NextResponse.json({ error: analyticsError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Internal Server Error', details: err.message || err }, { status: 500 });
+  }
+}

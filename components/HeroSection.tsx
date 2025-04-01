@@ -176,7 +176,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="container mx-auto flex flex-col md:flex-row items-center justify-center px-4 py-16 relative overflow-hidden"
+      className="container mx-auto flex flex-col md:flex-row items-center justify-center px-24 py-16 relative overflow-hidden"
     >
       {/* Text content */}
       <div className="md:w-1/2 mb-10 md:mb-0 md:pr-8 text-center md:text-left z-10">

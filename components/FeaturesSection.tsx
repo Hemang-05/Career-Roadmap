@@ -57,7 +57,7 @@ export default function FeaturesSection() {
   );
 
   return (
-    <section id="features" className="container mx-auto px-4 py-16 relative">
+    <section id="features" className="container mx-auto px-8 py-16 relative">
       <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">
         Personalized Roadmaps for Every Career
       </h2>
