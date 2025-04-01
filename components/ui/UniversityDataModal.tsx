@@ -1,8 +1,8 @@
-//components/ui/UniversityDataModal.tsx
-
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
-interface ExtendedRatingData {
+export interface ExtendedRatingData {
+  universityId: number;
   companiesCount: number;
   highestCTC: number;
   averageCTC: number;
@@ -10,6 +10,11 @@ interface ExtendedRatingData {
   culturalRating: number;
   infraRating: number;
   vibeRating: number;
+}
+
+interface University {
+  id: number;
+  name: string;
 }
 
 interface UniversityDataModalProps {
@@ -33,6 +38,33 @@ export default function UniversityDataModal({
     vibeRating: 0,
   });
 
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<
+    number | null
+  >(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch universities from Supabase when the component mounts
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from("universities")
+          .select("id, name");
+        if (error) throw error;
+        setUniversities(data || []);
+      } catch (error) {
+        console.error("Error fetching universities:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUniversities();
+  }, []);
+
   // Reset form when the modal opens
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +77,9 @@ export default function UniversityDataModal({
         infraRating: 0,
         vibeRating: 0,
       });
+      setSelectedUniversityId(null);
+      setInputValue("");
+      setIsSuggestionsOpen(false);
     }
   }, [isOpen]);
 
@@ -62,15 +97,24 @@ export default function UniversityDataModal({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
+    // Ensure a university is selected
+    if (!selectedUniversityId) {
+      alert("Please select a university.");
+      return;
+    }
+
     const data: ExtendedRatingData = {
+      universityId: selectedUniversityId,
       companiesCount: parseInt(formData.companiesCount),
-      highestCTC: parseFloat(formData.highestCTC),
-      averageCTC: parseFloat(formData.averageCTC),
+      highestCTC: parseInt(formData.highestCTC),
+      averageCTC: parseInt(formData.averageCTC),
       tuitionFee: parseFloat(formData.tuitionFee),
       culturalRating: formData.culturalRating,
       infraRating: formData.infraRating,
       vibeRating: formData.vibeRating,
     };
+
     onSubmit(data);
     onClose();
   };
@@ -78,17 +122,17 @@ export default function UniversityDataModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xl relative max-h-[90vh] overflow-auto">
+    <div className="fixed inset-0 text-black z-50 flex items-center justify-center bg-gray-800 bg-opacity-50 p-4">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xl relative max-h-[90vh] overflow-auto custom-scrollbar">
         {/* Close Button */}
         <button
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
           onClick={onClose}
         >
-          &times;
+          ×
         </button>
 
-        <h2 className="text-2xl font-bold mb-4">University Data Form</h2>
+        <h2 className="text-2xl  font-bold mb-4">University Data Form</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Placement Details in a single row */}
@@ -121,7 +165,7 @@ export default function UniversityDataModal({
                 name="highestCTC"
                 id="highestCTC"
                 min="0"
-                step="0.1"
+                step="1"
                 value={formData.highestCTC}
                 onChange={handleInputChange}
                 className="p-2 border rounded w-full"
@@ -137,7 +181,7 @@ export default function UniversityDataModal({
                 name="averageCTC"
                 id="averageCTC"
                 min="0"
-                step="0.1"
+                step="1"
                 value={formData.averageCTC}
                 onChange={handleInputChange}
                 className="p-2 border rounded w-full"
@@ -146,7 +190,50 @@ export default function UniversityDataModal({
             </div>
           </div>
 
-          {/* Tuition Fee */}
+          {/* University Input with Autocomplete */}
+          <div>
+            <label htmlFor="universityInput" className="block font-medium mb-1">
+              University
+            </label>
+            <div className="relative">
+              <input
+                id="universityInput"
+                type="text"
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setIsSuggestionsOpen(true);
+                }}
+                onFocus={() => setIsSuggestionsOpen(true)}
+                className="p-2 border rounded w-full"
+                placeholder="Type to search universities..."
+                required
+                autoComplete="off"
+              />
+              {isSuggestionsOpen && inputValue && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                  {universities
+                    .filter((uni) =>
+                      uni.name.toLowerCase().includes(inputValue.toLowerCase())
+                    )
+                    .map((uni) => (
+                      <div
+                        key={uni.id}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSelectedUniversityId(uni.id);
+                          setInputValue(uni.name);
+                          setIsSuggestionsOpen(false);
+                        }}
+                      >
+                        {uni.name}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div>
             <label htmlFor="tuitionFee" className="block font-medium mb-1">
               Tuition Fee (per semester)

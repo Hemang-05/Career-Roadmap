@@ -1,20 +1,25 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useUser, UserButton } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import Select, { GroupBase, StylesConfig } from 'react-select';
-import countryList from 'react-select-country-list';
-import { useSyncUser } from '@/app/hooks/sync-user';
-import { supabase } from '@/utils/supabase/supabaseClient';
-import FloatingNavbar from '@/components/Navbar';
-import PaymentPlan from '@/components/PaymentPlan';
-import Loader from '@/components/Loader';
-import DifficultySelector from '@/components/DifficultySelector';
+"use client";
+import { useState, useEffect } from "react";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import Select, { GroupBase, StylesConfig } from "react-select";
+import countryList from "react-select-country-list";
+import { useSyncUser } from "@/app/hooks/sync-user";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import FloatingNavbar from "@/components/Navbar";
+import PaymentPlan from "@/components/PaymentPlan";
+import Loader from "@/components/Loader";
+import DifficultySelector from "@/components/DifficultySelector";
 
 type OptionType = {
   label: string;
   value: string;
 };
+
+interface University {
+  id: number;
+  name: string;
+}
 
 export default function Dashboard() {
   useSyncUser();
@@ -27,31 +32,70 @@ export default function Dashboard() {
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   // New state for the college form modal
   const [showCollegeForm, setShowCollegeForm] = useState(false);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [formData, setFormData] = useState({
+    universityId: null as number | null,
+    tuitionFees: "",
+    culturalRating: 0,
+    infraRating: 0,
+    vibeRating: 0,
+    companiesCount: "",
+    highestCTC: "",
+    avgCTC: "",
+  });
+
+  useEffect(() => {
+    if (showCollegeForm) {
+      const fetchUniversities = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("universities")
+            .select("id, name");
+          if (error) throw error;
+          setUniversities(data || []);
+        } catch (error) {
+          console.error("Error fetching universities:", error);
+        }
+      };
+      fetchUniversities();
+    }
+  }, [showCollegeForm]);
   // New state to store the form_filled value from career_info
   const [formFilled, setFormFilled] = useState<boolean | null>(null);
 
   // Common form states
-  const [residingCountry, setResidingCountry] = useState<OptionType | null>(null);
-  const [spendingCapacity, setSpendingCapacity] = useState('');
-  const [parentEmail, setParentEmail] = useState('');
-  const [currentClass, setCurrentClass] = useState('');
-  const [moveAbroad, setMoveAbroad] = useState<'yes' | 'suggest'>('suggest');
-  const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
-  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(null);
-  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(null);
+  const [residingCountry, setResidingCountry] = useState<OptionType | null>(
+    null
+  );
+  const [spendingCapacity, setSpendingCapacity] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [currentClass, setCurrentClass] = useState("");
+  const [moveAbroad, setMoveAbroad] = useState<"yes" | "suggest">("suggest");
+  const [preferredAbroadCountry, setPreferredAbroadCountry] =
+    useState<OptionType | null>(null);
+  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<
+    boolean | null
+  >(null);
+  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(
+    null
+  );
   const [apiCallCompleted, setApiCallCompleted] = useState(false);
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
+  const [difficulty, setDifficulty] = useState<
+    "easy" | "medium" | "hard" | null
+  >(null);
 
   // Branch-specific form states
-  const [careerOption, setCareerOption] = useState<'known' | 'unknown'>('known');
-  const [desiredCareer, setDesiredCareer] = useState('');
-  const [previousExperience, setPreviousExperience] = useState('');
-  const [interestParagraph, setInterestParagraph] = useState('');
+  const [careerOption, setCareerOption] = useState<"known" | "unknown">(
+    "known"
+  );
+  const [desiredCareer, setDesiredCareer] = useState("");
+  const [previousExperience, setPreviousExperience] = useState("");
+  const [interestParagraph, setInterestParagraph] = useState("");
 
   // Subscription states
   const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(false);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<string>('');
-  
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string>("");
+
   // Roadmap state
   const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
 
@@ -63,17 +107,23 @@ export default function Dashboard() {
   const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
     control: (base, state) => ({
       ...base,
-      borderColor: state.isFocused ? '#FF6500' : base.borderColor,
-      boxShadow: state.isFocused ? '0 0 0  #FF6500' : base.boxShadow,
-      '&:hover': {
-        borderColor: state.isFocused ? '#FF6500' : base.borderColor,
+      borderColor: state.isFocused ? "#FF6500" : base.borderColor,
+      boxShadow: state.isFocused ? "0 0 0  #FF6500" : base.boxShadow,
+      "&:hover": {
+        borderColor: state.isFocused ? "#FF6500" : base.borderColor,
       },
     }),
   };
 
+  const [selectedUniversityId, setSelectedUniversityId] = useState<
+    number | null
+  >(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+
   // Redirect if not signed in
   useEffect(() => {
-    if (isLoaded && !isSignedIn) router.push('/');
+    if (isLoaded && !isSignedIn) router.push("/");
   }, [isSignedIn, router, isLoaded]);
 
   // Fetch subscription status, roadmap, and form_filled from career_info
@@ -82,36 +132,47 @@ export default function Dashboard() {
     async function fetchUserData() {
       // Fetch subscription info
       const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id, subscription_status, subscription_plan, subscription_start, subscription_end')
-        .eq('clerk_id', user!.id)
+        .from("users")
+        .select(
+          "id, subscription_status, subscription_plan, subscription_start, subscription_end"
+        )
+        .eq("clerk_id", user!.id)
         .single();
-      
+
       if (userError || !userData) {
-        console.log('Error fetching user data:', userError);
+        console.log("Error fetching user data:", userError);
         return;
       }
       setDbUserId(userData.id);
       setSubscriptionStatus(userData.subscription_status);
       setSubscriptionPlan(userData.subscription_plan);
-      
+
       // Check if subscription has expired
-      if (userData.subscription_end && new Date(userData.subscription_end) < new Date()) {
+      if (
+        userData.subscription_end &&
+        new Date(userData.subscription_end) < new Date()
+      ) {
         await supabase
-          .from('users')
+          .from("users")
           .update({ subscription_status: false })
-          .eq('clerk_id', user!.id);
+          .eq("clerk_id", user!.id);
         setSubscriptionStatus(false);
       }
-      
+
       // Check if roadmap exists and get form_filled from career_info table
       const { data: careerData, error: careerError } = await supabase
-        .from('career_info')
-        .select('user_id, roadmap, form_filled')
-        .eq('user_id', userData.id)
+        .from("career_info")
+        .select("user_id, roadmap, form_filled")
+        .eq("user_id", userData.id)
         .maybeSingle();
 
-      setHasRoadmap(!!(careerData && careerData.roadmap && careerData.roadmap.trim().length > 0));
+      setHasRoadmap(
+        !!(
+          careerData &&
+          careerData.roadmap &&
+          careerData.roadmap.trim().length > 0
+        )
+      );
       if (careerData) {
         setFormFilled(careerData.form_filled);
       }
@@ -120,34 +181,37 @@ export default function Dashboard() {
   }, [isLoaded, user]);
 
   const dashboardLinks = [
-    { href: '/roadmap', label: 'Roadmap' },
-    { href: '/edit-info', label: 'Edit Info' },
-    { href: '/settings', label: 'Settings' },
-    { href: '/support', label: 'Support' },
+    { href: "/roadmap", label: "Roadmap" },
+    { href: "/edit-info", label: "Edit Info" },
+    { href: "/settings", label: "Settings" },
+    { href: "/support", label: "Support" },
   ];
 
   // Updated Generate Roadmap Handler with new logic
   const handleGenerateRoadmap = async () => {
-    console.log("handleGenerateRoadmap called:", { isCollegeStudent, formFilled });
+    console.log("handleGenerateRoadmap called:", {
+      isCollegeStudent,
+      formFilled,
+    });
     setGenerating(true);
-  
+
     (async () => {
       try {
-        const res = await fetch('/api/generate-roadmap', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/generate-roadmap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ clerk_id: user?.id }),
         });
-       
+
         const result = await res.json();
-        console.log('Generated roadmap:');
+        console.log("Generated roadmap:");
         setApiCallCompleted(true);
       } catch (error) {
-        console.log('Error generating roadmap:', error);
+        console.log("Error generating roadmap:", error);
         setGenerating(false);
       }
     })();
-  
+
     if (isCollegeStudent && !formFilled) {
       console.log("Showing college form modal.");
       setShowCollegeForm(true);
@@ -155,40 +219,73 @@ export default function Dashboard() {
   };
 
   // Handler for college form submission: update form_filled to true in the DB.
-  const handleCollegeFormSubmit = async () => {
+  const handleCollegeFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission behavior
+
     try {
       if (!dbUserId) {
         console.error("Database user ID not found");
         return;
       }
+
+      if (!formData.universityId) {
+        alert("Please select a university.");
+        return;
+      }
+
+      // Step 1: Insert data into university_ratings
+      const { error: ratingsError } = await supabase
+        .from("university_ratings")
+        .insert({
+          user_id: dbUserId,
+          university_id: formData.universityId,
+          tuition_fees: parseFloat(formData.tuitionFees) || null,
+          cultural_rating: formData.culturalRating || null,
+          infra_rating: formData.infraRating || null,
+          vibe_rating: formData.vibeRating || null,
+          companies_count: parseInt(formData.companiesCount) || null,
+          highestCTC: parseInt(formData.highestCTC) || null,
+          avgCTC: parseInt(formData.avgCTC) || null,
+        });
+
+      if (ratingsError) {
+        console.error("Error inserting into university_ratings:", ratingsError);
+        alert("There was an error submitting the university rating.");
+        return;
+      }
+
+      // Step 2: Update career_info to set form_filled to true
       const { data, error } = await supabase
-        .from('career_info')
+        .from("career_info")
         .update({ form_filled: true })
-        .eq('user_id', dbUserId);
-  
+        .eq("user_id", dbUserId);
+
       if (error) {
-        console.error('Error updating form_filled:', error);
+        console.error("Error updating form_filled:", error);
+        alert("There was an error updating your career information.");
+        return;
       } else {
-        console.log('Form updated to filled:', data);
+        console.log("Form updated to filled:", data);
         setFormFilled(true);
         setShowCollegeForm(false);
         if (apiCallCompleted) {
           console.log("API call completed and form submitted; redirecting.");
-          router.push('/roadmap');
+          router.push("/roadmap");
         } else {
           console.log("Form submitted, waiting for API response.");
         }
       }
     } catch (err) {
-      console.error('Error in handleCollegeFormSubmit:', err);
+      console.error("Error in handleCollegeFormSubmit:", err);
+      alert("An unexpected error occurred. Please try again.");
     }
   };
-  
+
   useEffect(() => {
     if (apiCallCompleted && (!isCollegeStudent || formFilled)) {
       console.log("Conditions met; redirecting to /roadmap.");
       setGenerating(false);
-      router.push('/roadmap');
+      router.push("/roadmap");
     }
   }, [apiCallCompleted, formFilled, isCollegeStudent]);
 
@@ -204,11 +301,11 @@ export default function Dashboard() {
       move_abroad: willingToMoveAbroad === true,
       preferred_abroad_country:
         willingToMoveAbroad === true
-          ? moveAbroad === 'yes'
+          ? moveAbroad === "yes"
             ? preferredAbroadCountry
               ? preferredAbroadCountry.value
               : null
-            : 'Suggest'
+            : "Suggest"
           : false,
       parent_email: parentEmail,
       college_student: isCollegeStudent,
@@ -216,29 +313,29 @@ export default function Dashboard() {
       roadmap: null,
     };
 
-    if (careerOption === 'known') {
+    if (careerOption === "known") {
       payload.desired_career = desiredCareer;
       payload.previous_experience = previousExperience;
     } else {
       payload.desired_career = interestParagraph;
-      payload.previous_experience = '';
+      payload.previous_experience = "";
     }
 
     try {
-      const res = await fetch('/api/save-career-info', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/save-career-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const result = await res.json();
-      console.log('Career info saved:', result);
+      console.log("Career info saved:", result);
       if (!subscriptionStatus) {
         setShowPaymentPlans(true);
       } else {
         setShowGenerateModal(true);
       }
     } catch (error) {
-      console.log('Error saving career info:', error);
+      console.log("Error saving career info:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -247,7 +344,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
-      
+
       <div className="container mx-auto my-20 px-4 py-8 flex-grow mt-28">
         <h1 className="text-3xl text-black font-bold mb-6">
           Welcome, <span className="text-[#FF6500]">{user?.firstName}</span>
@@ -256,8 +353,15 @@ export default function Dashboard() {
         {hasRoadmap ? (
           <div className="mb-6 p-3 bg-green-50 text-green-700 rounded-md flex justify-between items-center">
             <p>
-              You already have a roadmap. <span className="font-bold cursor-pointer hover:underline" onClick={() => router.push('/roadmap')}>Click to see</span>.
-              If you want to update the existing roadmap, fill in the fields below.
+              You already have a roadmap.{" "}
+              <span
+                className="font-bold cursor-pointer hover:underline"
+                onClick={() => router.push("/roadmap")}
+              >
+                Click to see
+              </span>
+              . If you want to update the existing roadmap, fill in the fields
+              below.
             </p>
           </div>
         ) : (
@@ -272,21 +376,32 @@ export default function Dashboard() {
           {/* The rest of your form remains unchanged */}
           {/* Career Option Selector */}
           <div className="flex justify-center items-center mt-16">
-            <div className={`transition-opacity duration-300 mr-20 ${careerOption === 'known' ? 'opacity-100' : 'opacity-0'}`}>
-              <img src="/happy.png" alt="Known career" className="w-36 h-36 object-cover " />
+            <div
+              className={`transition-opacity duration-300 mr-20 ${
+                careerOption === "known" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <img
+                src="/happy.png"
+                alt="Known career"
+                className="w-36 h-36 object-cover "
+              />
             </div>
             <div className="relative w-48 h-24">
               <input
                 id="known"
                 type="radio"
                 value="known"
-                checked={careerOption === 'known'}
-                onChange={() => setCareerOption('known')}
+                checked={careerOption === "known"}
+                onChange={() => setCareerOption("known")}
                 className="opacity-0 absolute top-0 left-0 h-full w-full m-0 cursor-pointer peer"
                 required
               />
               <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
-                <label htmlFor="known" className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300">
+                <label
+                  htmlFor="known"
+                  className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300"
+                >
                   I know what career I want
                 </label>
               </div>
@@ -296,41 +411,66 @@ export default function Dashboard() {
                 id="unknown"
                 type="radio"
                 value="unknown"
-                checked={careerOption === 'unknown'}
-                onChange={() => setCareerOption('unknown')}
+                checked={careerOption === "unknown"}
+                onChange={() => setCareerOption("unknown")}
                 className="opacity-0 absolute top-0 left-0 h-full w-full m-0 cursor-pointer peer"
                 required
               />
               <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
-                <label htmlFor="unknown" className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300">
+                <label
+                  htmlFor="unknown"
+                  className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300"
+                >
                   I'm not sure what to do
                 </label>
               </div>
             </div>
-            <div className={`transition-opacity duration-300 ml-4 ${careerOption === 'unknown' ? 'opacity-100' : 'opacity-0'}`}>
-              <img src="/sad.png" alt="Exploring careers" className="w-36 h-36 object-cover" />
+            <div
+              className={`transition-opacity duration-300 ml-4 ${
+                careerOption === "unknown" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <img
+                src="/sad.png"
+                alt="Exploring careers"
+                className="w-36 h-36 object-cover"
+              />
             </div>
           </div>
 
           <div className="mt-8">
-            {careerOption === 'known' && (
+            {careerOption === "known" && (
               <div className="p-2 rounded-lg">
-                <h3 className="text-xl text-black font-bold mb-3">Great! You know your career path</h3>
-                <p className="text-[#FF6500]">We'll help you achieve your specific career goals with a focused approach.</p>
+                <h3 className="text-xl text-black font-bold mb-3">
+                  Great! You know your career path
+                </h3>
+                <p className="text-[#FF6500]">
+                  We'll help you achieve your specific career goals with a
+                  focused approach.
+                </p>
               </div>
             )}
-            {careerOption === 'unknown' && (
+            {careerOption === "unknown" && (
               <div className="p-2 rounded-lg">
-                <h3 className="text-xl text-black font-bold mb-3">Let's explore your options</h3>
-                <p className="text-[#FF6500]">We'll help you discover potential career paths based on your interests and skills.</p>
+                <h3 className="text-xl text-black font-bold mb-3">
+                  Let's explore your options
+                </h3>
+                <p className="text-[#FF6500]">
+                  We'll help you discover potential career paths based on your
+                  interests and skills.
+                </p>
               </div>
             )}
           </div>
 
-          <p className="text-black font-semibold">Please answer the following common questions:</p>
+          <p className="text-black font-semibold">
+            Please answer the following common questions:
+          </p>
           <div className="space-y-6">
             <div>
-              <label className="block text-gray-800 mb-4">Residing Country:</label>
+              <label className="block text-gray-800 mb-4">
+                Residing Country:
+              </label>
               <Select<OptionType, false, GroupBase<OptionType>>
                 options={countryOptions}
                 value={residingCountry}
@@ -343,7 +483,11 @@ export default function Dashboard() {
             </div>
             <div>
               <label className="block text-gray-800 mb-4">
-                Spending Capacity: <label className="font-style: italic text-sm text-gray-400">(How much can you spend on your education to pursue this career?)</label>
+                Spending Capacity:{" "}
+                <label className="font-style: italic text-sm text-gray-400">
+                  (How much can you spend on your education to pursue this
+                  career?)
+                </label>
               </label>
               <input
                 type="number"
@@ -355,7 +499,9 @@ export default function Dashboard() {
               />
             </div>
             <div>
-              <label className="block text-gray-800 mb-4">I am a college student:</label>
+              <label className="block text-gray-800 mb-4">
+                I am a college student:
+              </label>
               <div className="flex space-x-6 mt-2">
                 <label className="text-black">
                   <input
@@ -384,7 +530,9 @@ export default function Dashboard() {
               </div>
             </div>
             <div>
-              <label className="block text-gray-800 mb-4">Which class/standard do you study in?</label>
+              <label className="block text-gray-800 mb-4">
+                Which class/standard do you study in?
+              </label>
               <input
                 type="text"
                 value={currentClass}
@@ -397,7 +545,9 @@ export default function Dashboard() {
             <div>
               <label className="block text-gray-800 mb-4">
                 Share your parent's email id.
-                <label className="font-style: italic text-sm text-gray-400">(Parent, Guardian, Teacher)</label>
+                <label className="font-style: italic text-sm text-gray-400">
+                  (Parent, Guardian, Teacher)
+                </label>
               </label>
               <input
                 type="text"
@@ -420,10 +570,10 @@ export default function Dashboard() {
                 checked={willingToMoveAbroad === true}
                 onChange={() => {
                   setWillingToMoveAbroad(true);
-                  setMoveAbroad('suggest');
+                  setMoveAbroad("suggest");
                   setPreferredAbroadCountry(null);
                 }}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 required
               />
               <input
@@ -434,24 +584,34 @@ export default function Dashboard() {
                 checked={willingToMoveAbroad === false}
                 onChange={() => {
                   setWillingToMoveAbroad(false);
-                  setMoveAbroad('suggest');
+                  setMoveAbroad("suggest");
                   setPreferredAbroadCountry(null);
                 }}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 required
               />
               <div
-                className={`relative w-36 h-10 rounded-full cursor-pointer mb-6 transition-all duration-200 ease-in-out ${willingToMoveAbroad ? 'bg-green-500' : 'bg-red-500'}`}
+                className={`relative w-36 h-10 rounded-full cursor-pointer mb-6 transition-all duration-200 ease-in-out ${
+                  willingToMoveAbroad ? "bg-green-500" : "bg-red-500"
+                }`}
                 onClick={() => {
                   setWillingToMoveAbroad(!willingToMoveAbroad);
-                  setMoveAbroad('suggest');
+                  setMoveAbroad("suggest");
                   setPreferredAbroadCountry(null);
                 }}
               >
-                <span className={`absolute left-0 w-16 h-10 leading-10 text-center font-semibold ${willingToMoveAbroad ? 'text-white' : 'text-gray-700'}`}>
+                <span
+                  className={`absolute left-0 w-16 h-10 leading-10 text-center font-semibold ${
+                    willingToMoveAbroad ? "text-white" : "text-gray-700"
+                  }`}
+                >
                   Yes
                 </span>
-                <span className={`absolute right-0 w-16 h-10 leading-10 text-center font-semibold ${!willingToMoveAbroad ? 'text-white' : 'text-gray-700'}`}>
+                <span
+                  className={`absolute right-0 w-16 h-10 leading-10 text-center font-semibold ${
+                    !willingToMoveAbroad ? "text-white" : "text-gray-700"
+                  }`}
+                >
                   No
                 </span>
                 <span className="absolute top-1/2 left-1/2 w-5 h-1 bg-white rounded-sm transform -translate-x-1/2 -translate-y-1/2 rotate-45">
@@ -462,16 +622,18 @@ export default function Dashboard() {
               </div>
               {willingToMoveAbroad === true && (
                 <div className="mt-4">
-                  <label className="block text-gray-800 mb-4">Please choose an option:</label>
+                  <label className="block text-gray-800 mb-4">
+                    Please choose an option:
+                  </label>
                   <div className="flex space-x-6 mt-2">
                     <label className="text-black">
                       <input
                         type="radio"
                         name="moveAbroad"
                         value="yes"
-                        checked={moveAbroad === 'yes'}
+                        checked={moveAbroad === "yes"}
                         onChange={() => {
-                          setMoveAbroad('yes');
+                          setMoveAbroad("yes");
                           setPreferredAbroadCountry(null);
                         }}
                         className="mr-3"
@@ -484,10 +646,13 @@ export default function Dashboard() {
                         type="radio"
                         name="moveAbroad"
                         value="suggest"
-                        checked={moveAbroad === 'suggest'}
+                        checked={moveAbroad === "suggest"}
                         onChange={() => {
-                          setMoveAbroad('suggest');
-                          setPreferredAbroadCountry({ label: 'Suggest by yourself', value: 'Suggest by yourself' });
+                          setMoveAbroad("suggest");
+                          setPreferredAbroadCountry({
+                            label: "Suggest by yourself",
+                            value: "Suggest by yourself",
+                          });
                         }}
                         className="mr-3"
                         required
@@ -495,13 +660,17 @@ export default function Dashboard() {
                       Suggest best for me
                     </label>
                   </div>
-                  {moveAbroad === 'yes' && (
+                  {moveAbroad === "yes" && (
                     <div className="mt-4">
-                      <label className="block text-gray-800 mb-2">Preferred Country Abroad:</label>
+                      <label className="block text-gray-800 mb-2">
+                        Preferred Country Abroad:
+                      </label>
                       <Select<OptionType, false, GroupBase<OptionType>>
                         options={countryOptions}
                         value={preferredAbroadCountry}
-                        onChange={(selected) => setPreferredAbroadCountry(selected)}
+                        onChange={(selected) =>
+                          setPreferredAbroadCountry(selected)
+                        }
                         placeholder="Select a country..."
                         required
                         className="text-black mb-16"
@@ -514,10 +683,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {careerOption === 'known' ? (
+          {careerOption === "known" ? (
             <div className="space-y-6">
               <div>
-                <label className="block text-gray-800 mb-4 mt-16">What career do you want to pursue?</label>
+                <label className="block text-gray-800 mb-4 mt-16">
+                  What career do you want to pursue?
+                </label>
                 <input
                   type="text"
                   value={desiredCareer}
@@ -529,7 +700,8 @@ export default function Dashboard() {
               </div>
               <div>
                 <label className="block text-gray-800 mb-4">
-                  Previous experience or work done in this career (e.g., a home project):
+                  Previous experience or work done in this career (e.g., a home
+                  project):
                 </label>
                 <input
                   type="text"
@@ -544,7 +716,9 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-6">
               <div>
-                <label className="block text-gray-800 mt-16">Tell us what you like doing the most:</label>
+                <label className="block text-gray-800 mt-16">
+                  Tell us what you like doing the most:
+                </label>
                 <textarea
                   value={interestParagraph}
                   onChange={(e) => setInterestParagraph(e.target.value)}
@@ -556,33 +730,34 @@ export default function Dashboard() {
                   required
                 />
                 <p className="text-sm text-gray-500 mt-2">
-                  300 &lt;{' '}
+                  300 &lt;{" "}
                   <span
                     className={
-                      interestParagraph.length >= 300 && interestParagraph.length <= 1200
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                      interestParagraph.length >= 300 &&
+                      interestParagraph.length <= 1200
+                        ? "text-green-600"
+                        : "text-red-600"
                     }
                   >
                     {interestParagraph.length}
-                  </span>{' '}
+                  </span>{" "}
                   &lt; 1200
                 </p>
               </div>
             </div>
           )}
-            <DifficultySelector 
-              difficulty={difficulty}
-              setDifficulty={setDifficulty}
-            />
-            
+          <DifficultySelector
+            difficulty={difficulty}
+            setDifficulty={setDifficulty}
+          />
+
           <div className="flex justify-center w-full">
             <button
               type="submit"
               disabled={isSubmitting}
               className="bg-white text-black py-5 px-12 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-orange-400 mt-8"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>
@@ -609,7 +784,9 @@ export default function Dashboard() {
             <h2 className="text-2xl text-black font-bold mb-4">
               Generate <span className="text-[#FF6500]">Career</span> Roadmap
             </h2>
-            <p className="mb-4 text-gray-700">Would you like to generate your career roadmap now?</p>
+            <p className="mb-4 text-gray-700">
+              Would you like to generate your career roadmap now?
+            </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowGenerateModal(false)}
@@ -630,35 +807,246 @@ export default function Dashboard() {
 
       {/* New modal for college students to fill the form */}
       {showCollegeForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-12 rounded-xl shadow-lg">
-            <p className="text-red-500">DEBUG: Modal is open</p>
-            <h2 className="text-2xl text-black font-bold mb-4">Form is to be filled</h2>
-            <p className="mb-4 text-gray-700">
-              As you are a college student, please click submit to confirm that your form has been filled.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowCollegeForm(false)}
-                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-red-500 mb-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCollegeFormSubmit}
-                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-green-400 mb-2"
-              >
-                Submit
-              </button>
-            </div>
+        <div className="fixed inset-0 text-black bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-12 rounded-xl shadow-lg w-full max-w-xl max-h-[90vh] overflow-auto">
+            <h2 className="text-2xl text-black font-bold mb-4">
+              University Rating Form
+            </h2>
+            <form onSubmit={handleCollegeFormSubmit} className="space-y-6">
+              {/* University Dropdown */}
+              <div>
+                <label
+                  htmlFor="universityInput"
+                  className="block font-medium mb-1"
+                >
+                  University
+                </label>
+                <div className="relative">
+                  <input
+                    id="universityInput"
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      setIsSuggestionsOpen(true);
+                    }}
+                    onFocus={() => setIsSuggestionsOpen(true)}
+                    className="p-2 border rounded w-full"
+                    placeholder="Type to search universities..."
+                    required
+                    autoComplete="off"
+                  />
+                  {isSuggestionsOpen && inputValue && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {universities
+                        .filter((uni) =>
+                          uni.name
+                            .toLowerCase()
+                            .includes(inputValue.toLowerCase())
+                        )
+                        .map((uni) => (
+                          <div
+                            key={uni.id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              setSelectedUniversityId(uni.id);
+                              setInputValue(uni.name);
+                              setIsSuggestionsOpen(false);
+                            }}
+                          >
+                            {uni.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tuition Fees */}
+              <div>
+                <label htmlFor="tuitionFees" className="block font-medium mb-1">
+                  Tuition Fees (per semester)
+                </label>
+                <input
+                  type="number"
+                  id="tuitionFees"
+                  min="0"
+                  step="0.1"
+                  value={formData.tuitionFees}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tuitionFees: e.target.value })
+                  }
+                  className="p-2 border rounded w-full"
+                  required
+                />
+              </div>
+
+              {/* Cultural Rating */}
+              <div>
+                <label className="block font-medium mb-2">
+                  Cultural Events Rating (1-10)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                    <div
+                      key={num}
+                      onClick={() =>
+                        setFormData({ ...formData, culturalRating: num })
+                      }
+                      className={`cursor-pointer w-10 h-10 flex items-center justify-center rounded 
+                  ${
+                    formData.culturalRating === num
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                    >
+                      {num}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Infrastructure Rating */}
+              <div>
+                <label className="block font-medium mb-2">
+                  Infrastructure Rating (1-10)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                    <div
+                      key={num}
+                      onClick={() =>
+                        setFormData({ ...formData, infraRating: num })
+                      }
+                      className={`cursor-pointer w-10 h-10 flex items-center justify-center rounded 
+                  ${
+                    formData.infraRating === num
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                    >
+                      {num}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vibe Rating */}
+              <div>
+                <label className="block font-medium mb-2">
+                  Vibe Check Rating (1-10)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                    <div
+                      key={num}
+                      onClick={() =>
+                        setFormData({ ...formData, vibeRating: num })
+                      }
+                      className={`cursor-pointer w-10 h-10 flex items-center justify-center rounded 
+                  ${
+                    formData.vibeRating === num
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                    >
+                      {num}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Placement Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label
+                    htmlFor="companiesCount"
+                    className="block font-medium mb-1"
+                  >
+                    Companies Count
+                  </label>
+                  <input
+                    type="number"
+                    id="companiesCount"
+                    min="0"
+                    step="1"
+                    value={formData.companiesCount}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        companiesCount: e.target.value,
+                      })
+                    }
+                    className="p-2 border rounded w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="highestCTC"
+                    className="block font-medium mb-1"
+                  >
+                    Highest CTC (LPA)
+                  </label>
+                  <input
+                    type="number"
+                    id="highestCTC"
+                    min="0"
+                    step="1"
+                    value={formData.highestCTC}
+                    onChange={(e) =>
+                      setFormData({ ...formData, highestCTC: e.target.value })
+                    }
+                    className="p-2 border rounded w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="avgCTC" className="block font-medium mb-1">
+                    Average CTC (LPA)
+                  </label>
+                  <input
+                    type="number"
+                    id="avgCTC"
+                    min="0"
+                    step="1"
+                    value={formData.avgCTC}
+                    onChange={(e) =>
+                      setFormData({ ...formData, avgCTC: e.target.value })
+                    }
+                    className="p-2 border rounded w-full"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCollegeForm(false)}
+                  className="bg-white text-black py-2 px-4 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-red-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-white text-black py-2 px-4 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-green-400"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Loader overlay during roadmap generation */}
       {generating && !showCollegeForm && (
-        <div className="fixed inset-0 bg-black flex flex-col justify-center items-center z-50">
-          <p className="text-white mt-6 text-xl font-semibold">Generating Roadmap...</p>
+        <div className="fixed inset-0 bg-white flex flex-col justify-center items-center z-50">
+          <p className="text-black mt-6 text-xl font-semibold">
+            Generating Roadmap...
+          </p>
           <Loader />
         </div>
       )}

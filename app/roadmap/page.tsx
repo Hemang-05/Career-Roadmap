@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useUser, UserButton } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase/supabaseClient';
-import { useSyncUser } from '@/app/hooks/sync-user';
-import PaymentPlan from '@/components/PaymentPlan';
-import FloatingNavbar from '@/components/Navbar';
+import { useState, useEffect } from "react";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { useSyncUser } from "@/app/hooks/sync-user";
+import PaymentPlan from "@/components/PaymentPlan";
+import FloatingNavbar from "@/components/Navbar";
 
 function RoadmapDisplay({ roadmapData }: { roadmapData: any }) {
   return (
@@ -17,15 +17,23 @@ function RoadmapDisplay({ roadmapData }: { roadmapData: any }) {
           <p className="text-gray-600 mb-4">{yearItem.overview}</p>
           {yearItem.phases.map((phase: any, phaseIndex: number) => (
             <div key={phaseIndex} className="mb-4 border-t pt-4">
-              <h3 className="text-xl font-semibold text-[#FF6500]">{phase.phase_name}</h3>
+              <h3 className="text-xl font-semibold text-[#FF6500]">
+                {phase.phase_name}
+              </h3>
               {phase.milestones.map((milestone: any, mIndex: number) => (
                 <div key={mIndex} className="ml-4 mb-2">
-                  <h4 className="text-lg font-medium text-gray-800">{milestone.name}</h4>
+                  <h4 className="text-lg font-medium text-gray-800">
+                    {milestone.name}
+                  </h4>
                   <p className="text-gray-600">{milestone.description}</p>
                   <ul className="list-disc list-inside">
                     {milestone.tasks.map((task: any, tIndex: number) => (
                       <li key={tIndex} className="text-gray-700">
-                        <span className="font-semibold">{task.task_title}:</span> {task.description} <span className="italic">(Weight: {task.weight})</span>
+                        <span className="font-semibold">
+                          {task.task_title}:
+                        </span>{" "}
+                        {task.description}{" "}
+                        <span className="italic">(Weight: {task.weight})</span>
                       </li>
                     ))}
                   </ul>
@@ -55,16 +63,16 @@ export default function RoadmapPage() {
   const [showPaymentPlan, setShowPaymentPlan] = useState(false);
 
   const dashboardLinks = [
-    { href: '/roadmap', label: 'Roadmap' },
-    { href: '/dashboard', label: 'Edit Info' },
-    { href: '/events', label: 'Events' },
-    { href: '/settings', label: 'Settings' },
-    { href: '/support', label: 'Support' },
+    { href: "/roadmap", label: "Roadmap" },
+    { href: "/dashboard", label: "Edit Info" },
+    { href: "/events", label: "Events" },
+    { href: "/settings", label: "Settings" },
+    { href: "/support", label: "Support" },
   ];
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
@@ -73,41 +81,49 @@ export default function RoadmapPage() {
         if (user) {
           // Fetch subscription info from users table
           const { data: userRecord, error: userError } = await supabase
-            .from('users')
-            .select('id, subscription_status, subscription_end')
-            .eq('clerk_id', user.id)
+            .from("users")
+            .select("id, subscription_status, subscription_end")
+            .eq("clerk_id", user.id)
             .single();
           if (userError || !userRecord) {
-            console.log('Error fetching user record:', userError);
-            setErrorMessage('User record not found in Supabase.');
+            console.log("Error fetching user record:", userError);
+            setErrorMessage("User record not found in Supabase.");
             return;
           }
-          const { subscription_status, subscription_end, id: userId } = userRecord;
+          const {
+            subscription_status,
+            subscription_end,
+            id: userId,
+          } = userRecord;
           const currentDate = new Date();
           const subscriptionEndDate = new Date(subscription_end);
           if (!subscription_status || subscriptionEndDate < currentDate) {
-            console.log('Subscription expired or inactive');
+            console.log("Subscription expired or inactive");
             setShowPaymentPlan(true);
             return;
           }
           // If subscription is active, fetch the roadmap from career_info
           const { data, error } = await supabase
-            .from('career_info')
-            .select('roadmap')
-            .eq('user_id', userId)
+            .from("career_info")
+            .select("roadmap")
+            .eq("user_id", userId)
             .single();
           if (error) {
-            console.log('Error fetching roadmap:', error);
-            setErrorMessage('Error fetching roadmap: ' + error.message);
+            console.log("Error fetching roadmap:", error);
+            setErrorMessage("Error fetching roadmap: " + error.message);
           } else if (!data?.roadmap) {
-            setErrorMessage('No roadmap found. Please generate your roadmap. Go to edit info and submit your details');
+            setErrorMessage(
+              "No roadmap found. Please generate your roadmap. Go to edit info and submit your details"
+            );
           } else {
             setRoadmap(data.roadmap);
           }
         }
       } catch (err) {
-        console.log('Error in fetchRoadmap:', err);
-        setErrorMessage('An unexpected error occurred while fetching the roadmap.');
+        console.log("Error in fetchRoadmap:", err);
+        setErrorMessage(
+          "An unexpected error occurred while fetching the roadmap."
+        );
       } finally {
         setLoading(false);
       }
@@ -124,7 +140,13 @@ export default function RoadmapPage() {
 
   // If payment plan should be shown (subscription expired), display the PaymentPlan component
   if (showPaymentPlan && user?.id) {
-    return <PaymentPlan clerk_id={user.id} onSuccess={() => window.location.reload()} message="Your subscription has expired. Please choose a new plan." />;
+    return (
+      <PaymentPlan
+        clerk_id={user.id}
+        onSuccess={() => window.location.reload()}
+        message="Your subscription has expired. Please choose a new plan."
+      />
+    );
   }
 
   let parsedRoadmap: any = null;
@@ -149,7 +171,9 @@ export default function RoadmapPage() {
           </div>
         ) : (
           <div className="bg-white p-6 rounded-md shadow-md">
-            <p className="text-gray-800">{errorMessage || 'Roadmap is not available.'}</p>
+            <p className="text-gray-800">
+              {errorMessage || "Roadmap is not available."}
+            </p>
           </div>
         )}
       </div>
