@@ -9,7 +9,6 @@ export const GlareCard = ({
   children: React.ReactNode;
   className?: string;
 }) => {
-  const isPointerInside = useRef(false);
   const refElement = useRef<HTMLDivElement>(null);
   const state = useRef({
     glare: { x: 50, y: 50 },
@@ -17,8 +16,8 @@ export const GlareCard = ({
     rotate: { x: 0, y: 0 },
   });
   const containerStyle = {
-    "--m-x": "50%",
-    "--m-y": "50%",
+    "--m-x": "0%",
+    "--m-y": "0%",
     "--r-x": "0deg",
     "--r-y": "0deg",
     "--bg-x": "50%",
@@ -26,7 +25,7 @@ export const GlareCard = ({
     "--duration": "300ms",
     "--foil-size": "100%",
     "--opacity": "0",
-    "--radius": "48px",
+    "--radius": "24px",
     "--easing": "ease",
     "--transition": "var(--duration) var(--easing)",
   } as any;
@@ -46,7 +45,7 @@ export const GlareCard = ({
   return (
     <div
       style={containerStyle}
-      className={`relative isolate [contain:layout_style] [perspective:600px] transition-transform duration-[var(--duration)] ease-[var(--easing)] will-change-transform w-[320px] [aspect-ratio:17/21] ${className}`}
+      className={`relative isolate [contain:layout_style] [perspective:600px] transition-transform duration-[var(--duration)] ease-[var(--easing)] will-change-transform w-[300px] [aspect-ratio:17/21] ${className}`}
       ref={refElement}
       onPointerMove={(event) => {
         const rotateFactor = 0.4;

@@ -1,137 +1,174 @@
-// components/FeaturesSection.tsx
 'use client'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { RoadmapFlipWords } from './ui/FlipWords';
 
 interface Feature {
+  id: string;
   title: string;
-  subtitle: string;
-  color: string;
+  description: string;
+  imageUrl: string;
 }
 
 export default function FeaturesSection() {
   const features: Feature[] = [
     {
-      title: "Comprehensive Roadmap",
-      subtitle: "A full-blown roadmap from start to goal.",
-      color: "#FF6500"
+      id: 'ai-roadmap',
+      title: "Your Ultimate AI Career Roadmap",
+      description: "Experience a detailed, real-time career roadmap powered by AI. Choose your difficulty easy, medium, or hard to tailor your journey. Our universal insights surpass traditional counselors, ensuring you're never alone on your path to success.",
+      imageUrl: "https://i.pinimg.com/236x/b1/d4/cd/b1d4cd78bd0f83cb18a97c2d6d885e6e.jpg" // Replace with your actual image URLs
     },
     {
-      title: "Real-Time Notifications",
-      subtitle: "Timely alerts for events and scholarships.",
-      color: "#FF6500"
+      id: 'events-updates',
+      title: "Real-Time Event Alerts",
+      description: "Never miss an opportunity with our live notifications. From hackathons and competitions to cultural events, exam dates, and application deadlines, our platform ensures you're always informed. Stay ahead, upgrade your portfolio, and seize every moment with timely updates delivered straight to your email.",
+      imageUrl: "https://i.pinimg.com/236x/e9/25/dc/e925dcb6e995d46b5364644e1e7b0285.jpg"
     },
     {
-      title: "Personalized AI Guidance",
-      subtitle: "Customized career advice and roadmap adjustments.",
-      color: "#FF6500"
+      id: 'progress-analysis',
+      title: "Your Progress Analyzer",
+      description: "Stay in tune with your journey. Track your progress with our detailed analysis tool that monitors completed tasks, evaluates your learning pace, and shows whether you're ahead, on track, or need to catch up. Get real-time insights to boost your motivation and ensure you're always moving towards your career goals.",
+      imageUrl: "https://i.pinimg.com/236x/ee/f0/b6/eef0b65e3fefe173c8dc5a8a4dcc6629.jpg"
     },
     {
-      title: "Progress Monitoring",
-      subtitle: "Tailored insights to track progress.",
-      color: "#FF6500"
+      id: 'college-info',
+      title: "College Insights",
+      description: "Discover unbiased college information with no ads or endorsements. Our platform features a student-created rating system, allowing you to choose universities based on the metrics that matter most to you.",
+      imageUrl: "https://i.pinimg.com/474x/42/74/6b/42746ba2bf287e9a46d082674b590eff.jpg"
     },
     {
-      title: "Curated Resources & Events",
-      subtitle: "Access resources and upcoming events.",
-      color: "#FF6500"
-    },
-    {
-      title: "Expert Support & Community",
-      subtitle: "A supportive network and expert guidance.",
-      color: "#FF6500"
+      id: 'job-opportunities',
+      title: "Boundless Job Opportunities",
+      description: "Explore billions of job listings, including niche careers. Our platform ensures every dream has a chance to thrive, supporting you from your first step to your ultimate destination.",
+      imageUrl: "https://i.pinimg.com/236x/89/14/25/8914252a404d590473b1878793695365.jpg"
     }
   ];
 
-  // Helper function to render a feature card (for full screens)
-  const renderCard = (feature: Feature) => (
-    <div className="animate-pop bg-white px-4 py-2 rounded-2xl shadow-all border border-[#FF6500]">
-      <p className="text-base text-gray-800 text-center">
-        <span className="font-bold">{feature.title.split(' ')[0]} </span>
-        <span className="font-bold" style={{ color: feature.color }}>
-          {feature.title.split(' ').slice(1).join(' ')}:
-        </span>
-        <br />
-        {feature.subtitle}
-      </p>
-    </div>
-  );
+  // Always initialize with the first feature selected
+  const [activeFeature, setActiveFeature] = useState<string>(features[0].id);
+  const [displayedFeature, setDisplayedFeature] = useState<string>(features[0].id);
+  const [previousFeature, setPreviousFeature] = useState<string | null>(null);
+  const [animationState, setAnimationState] = useState<'idle' | 'fadeOut' | 'fadeIn'>('idle');
+
+  const toggleFeature = (featureId: string) => {
+    if (featureId !== activeFeature && animationState === 'idle') {
+      setActiveFeature(featureId);
+      setPreviousFeature(displayedFeature);
+      setAnimationState('fadeOut');
+    }
+  };
+
+  // Handle fade-out animation
+  useEffect(() => {
+    if (animationState === 'fadeOut') {
+      // Wait for fade-out to complete
+      const timer = setTimeout(() => {
+        setDisplayedFeature(activeFeature);
+        setAnimationState('fadeIn');
+      }, 500); // Fade-out duration
+      
+      return () => clearTimeout(timer);
+    }
+  }, [animationState, activeFeature]);
+
+  // Handle fade-in animation
+  useEffect(() => {
+    if (animationState === 'fadeIn') {
+      // Wait for fade-in to complete
+      const timer = setTimeout(() => {
+        setPreviousFeature(null);
+        setAnimationState('idle');
+      }, 500); // Fade-in duration
+      
+      return () => clearTimeout(timer);
+    }
+  }, [animationState]);
+
+  // Get current feature object
+  const getCurrentFeature = (): Feature => {
+    return features.find(f => f.id === displayedFeature) || features[0];
+  };
+
+  // Get previous feature object
+  const getPreviousFeature = (): Feature | null => {
+    return previousFeature ? features.find(f => f.id === previousFeature) || null : null;
+  };
 
   return (
-    <section id="features" className="container mx-auto px-8 py-16 relative">
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">
-        Personalized Roadmaps for Every Career
+    <section id="features" className="container  mx-auto px-44 pb-16 pt-0">
+      <h2 className="text-3xl md:text-5xl font-bold text-center mb-28">
+        <RoadmapFlipWords/>
       </h2>
-      <p className="text-gray-600 text-lg max-w-3xl mx-auto text-center mb-12">
-        Our platform delivers a comprehensive, AI-driven roadmap tailored to your goals.
-        Get real-time event notifications and updates, ensuring you never miss an opportunity.
-      </p>
 
-      {/* Full Screen Layout: Globe with Cards Around */}
-      <div className="hidden md:block relative w-full h-[36rem]">
-        {/* Center Rotating Globe */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72">
-          <Image
-            src="/glb.png"
-            alt="Rotating Globe"
-            fill
-            className="object-cover rounded-full animate-spin"
-            style={{ animationDuration: '20s' }}
-          />
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Left side: Feature accordion */}
+        <div className="md:w-1/2 space-y-4">
+          {features.map((feature) => (
+            <div key={feature.id} className={`rounded-lg shadow-sm ${
+              activeFeature === feature.id ? 'bg-[#fff4ed]' : 'bg-white'
+            }`}>
+              <button
+                onClick={() => toggleFeature(feature.id)}
+                className={`w-full text-left p-4 font-medium text-lg transition-all duration-300 ${
+                  activeFeature === feature.id ? 'text-gray-800' : 'text-gray-700'
+                }`}
+              >
+                {feature.title}
+              </button>
+              
+              <div 
+                className={`overflow-hidden transition-all duration-300 ${
+                  activeFeature === feature.id ? 'max-h-80 p-4 pt-0' : 'max-h-0'
+                }`}
+              >
+                <p className="text-gray-600">
+                  {feature.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
-        {/* Cards around the globe */}
-        <div className="absolute top-[10%] left-[15%] w-[25rem]">
-          {renderCard(features[0])}
-        </div>
-        <div className="absolute top-[10%] right-[15%] w-[25rem]">
-          {renderCard(features[1])}
-        </div>
-        <div className="absolute top-[40%] right-[5%] w-[25rem]">
-          {renderCard(features[2])}
-        </div>
-        <div className="absolute bottom-[10%] right-[15%] w-[25rem]">
-          {renderCard(features[3])}
-        </div>
-        <div className="absolute bottom-[10%] left-[15%] w-[25rem]">
-          {renderCard(features[4])}
-        </div>
-        <div className="absolute top-[40%] left-[5%] w-[25rem]">
-          {renderCard(features[5])}
-        </div>
-      </div>
 
-      {/* Mobile Layout: Stacked Cards */}
-      <div className="md:hidden space-y-6 w-full max-w-md mx-auto">
-        {features.map((feature, index) => (
-          <div key={index} className="animate-pop bg-white px-6 py-5 rounded-2xl shadow-all">
-            <p className="text-base text-gray-800 text-center">
-              <span className="font-bold">{feature.title.split(' ')[0]} </span>
-              <span className="font-bold" style={{ color: feature.color }}>
-                {feature.title.split(' ').slice(1).join(' ')}:
-              </span>
-              <br />
-              {feature.subtitle}
-            </p>
+        {/* Right side: Feature image with sequential fade animation */}
+        <div className="md:w-1/2 rounded-lg p-6 flex items-center justify-center relative h-[28rem]">
+          {/* Previous image (fading out) */}
+          {getPreviousFeature() && (
+            <div 
+              className={`absolute inset-0 p-6 transition-opacity duration-500 ${
+                animationState === 'fadeOut' ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              <div className="relative w-full h-96">
+                <Image
+                  src={getPreviousFeature()?.imageUrl || features[0].imageUrl}
+                  alt={getPreviousFeature()?.title || features[0].title}
+                  fill
+                  className=""
+                  unoptimized
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Current image (fading in) */}
+          <div 
+            className={`absolute inset-0 p-6 transition-opacity duration-500 ${
+              animationState === 'fadeIn' ? 'opacity-100' : 
+              animationState === 'fadeOut' ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <div className="relative w-full h-96">
+              <Image
+                src={getCurrentFeature().imageUrl}
+                alt={getCurrentFeature().title}
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
           </div>
-        ))}
+        </div>
       </div>
-
-      {/* Custom Keyframes for auto pop/zoom animation & custom shadow */}
-      <style jsx>{`
-        @keyframes pop {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-        .animate-pop {
-          animation: pop 3s ease-in-out infinite;
-        }
-        .shadow-all {
-          box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
-        }
-      `}</style>
     </section>
   );
 }

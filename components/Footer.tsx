@@ -12,6 +12,9 @@ export default function Footer() {
           <a href="/privacy" className="hover:underline">
             Privacy Policy
           </a>
+          <a href="/refund" className="hover:underline">
+            Refund
+          </a>
         </div>
         {/* Center */}
         <div className="text-sm mb-2 md:mb-0">
@@ -36,8 +39,8 @@ export default function Footer() {
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-18 4v6a2 2 0 002 2h14a2 2 0 002-2v-6"
             />
           </svg>
-          <a href="mailto:supp3114@gmail.com" className="hover:underline">
-            supp3114@gmail.com
+          <a href="mailto:ai@careeroadmap.com" className="hover:underline">
+            ai@careeroadmap.com
           </a>
         </div>
       </div>
