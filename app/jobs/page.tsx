@@ -1,61 +1,139 @@
-// pages/jobs.tsx
+// // app/jobs/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface JobItem {
   title: string;
   snippet: string;
   link: string;
+  thumbnail?: string | null;
 }
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch the jobs from the API route; you can also add a query param if needed.
-    fetch("/api/job-board?profession=software%20engineer")
-      .then((res) => res.json())
+    setLoading(true);
+    setError(null);
+    // Fetch from the API route (it now uses the logged-in user's desired career)
+    fetch("/api/job-board")
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res
+            .json()
+            .catch(() => ({ error: `HTTP error! status: ${res.status}` }));
+          throw new Error(
+            errorData.error || `HTTP error! status: ${res.status}`
+          );
+        }
+        return res.json();
+      })
       .then((data) => {
-        setJobs(data.jobs);
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        setJobs(data.jobs || []);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching jobs:", err);
+        setError(err.message || "Failed to load jobs. Please try again later.");
         setLoading(false);
+        setJobs([]);
       });
   }, []);
 
-  if (loading) {
-    return <div>Loading jobs...</div>;
-  }
-
   return (
-    <div className="text-black" style={{ padding: "2rem" }}>
-      <h1>Job Listings</h1>
-      {jobs.length > 0 ? (
-        jobs.map((job, index) => (
-          <div
-            key={index}
-            // style={{
-            //   border: "1px solid #ccc",
-            //   margin: "1rem 0",
-            //   padding: "1rem",
-            // }}
-            className="bg-white shadow-md rounded-lg p-4 my-4 mx-56 hover:shadow-lg transition-shadow duration-300"
-          >
-            <h3 className="text-xl font-bold text-blue-800 mb-2">
-              {job.title}
-            </h3>
-            <p>{job.snippet}</p>
-            <a href={job.link} target="_blank" rel="noopener noreferrer">
-              <button className="text-blue-800">Apply Now</button>
-            </a>
-          </div>
-        ))
-      ) : (
-        <p>No jobs found.</p>
+    <div className="container mx-auto px-80 my-40">
+      <h1 className="text-4xl font-black text-center mb-16 text-[#635a5a]">
+        Portals to YOUR Professional Growth
+      </h1>
+
+      {loading && (
+        <div className="text-center text-gray-500">
+          <p>Loading jobs...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center text-red-600 bg-red-100 p-4 rounded-md">
+          <p>Error: {error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="space-y-10">
+          {jobs.length > 0 ? (
+            jobs.map((job, index) => (
+              <div
+                key={job.link + index}
+                className="bg-[#ffe1c5] border border-gray-200 rounded-3xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col sm:flex-row items-start"
+              >
+                <div className="w-full sm:w-24 md:w-32 h-32 m-4 rounded-3xl sm:h-auto flex-shrink-0 bg-gray-100 flex items-center justify-center relative">
+                  {job.thumbnail ? (
+                    <Image
+                      src={job.thumbnail}
+                      alt={`${job.title} logo`}
+                      width={128}
+                      height={128}
+                      className="object-contain w-full h-full rounded-3xl"
+                      unoptimized={true}
+                      priority={index < 3}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        (e.target as HTMLImageElement)
+                          .closest("div")
+                          ?.classList.add("bg-gray-100");
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src="/happy.png"
+                      alt="Default job listing placeholder"
+                      width={128}
+                      height={128}
+                      className="object-contain w-full h-full"
+                      priority={index < 3}
+                    />
+                  )}
+                </div>
+
+                <div className="p-4 flex flex-col justify-between leading-normal w-full">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-medium text-gray-800 mb-4">
+                      <a
+                        href={job.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 transition-colors duration-200"
+                      >
+                        {job.title}
+                      </a>
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3">{job.snippet}</p>
+                  </div>
+                  <a
+                    href={job.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-4 px-4 py-2 rounded-2xl border border-[#d7933b] bg-[#ffffff] text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 self-start"
+                  >
+                    View & Apply
+                  </a>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500">
+              No jobs found matching your criteria.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
