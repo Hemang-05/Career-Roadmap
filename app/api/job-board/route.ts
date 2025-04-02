@@ -1,14 +1,15 @@
-// File Path: app/api/job-board/route.ts
-// Using Next.js App Router conventions
+// // File Path: app/api/job-board/route.ts
 
-import { NextResponse } from "next/server"; // Import NextResponse
-import type { NextRequest } from "next/server"; // Optional: Import NextRequest for type safety if needed
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@supabase/supabase-js";
 
 // Define the structure of a job item we want to return
 interface JobItem {
   title: string;
   snippet: string;
   link: string;
+  thumbnail?: string | null;
 }
 
 // Placeholder type for items returned by Google Custom Search API
@@ -16,6 +17,11 @@ interface GoogleSearchItem {
   title?: string;
   snippet?: string;
   link?: string;
+  pagemap?: {
+    cse_thumbnail?: [{ src?: string }];
+    cse_image?: [{ src?: string }];
+    metatags?: Record<string, any>[];
+  };
 }
 
 // Define the expected structure of the Google API response
@@ -30,44 +36,85 @@ interface SuccessResponse {
 
 // Define the structure of our API route's error response
 interface ErrorResponse {
-  jobs: JobItem[]; // Keep consistent structure even on error
+  jobs: JobItem[];
   error: string;
 }
 
-// Export a named function for the GET HTTP method
 export async function GET(
   request: Request
 ): Promise<NextResponse<SuccessResponse | ErrorResponse>> {
   try {
-    // --- Get Profession from Query Parameter ---
-    // App Router way to get query parameters from the Request URL
-    const { searchParams } = new URL(request.url);
-    const profession = searchParams.get("profession") || "software engineer";
+    // --- Identify the Logged-In User via Clerk ---
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json(
+        { jobs: [], error: "User not authenticated." },
+        { status: 401 }
+      );
+    }
 
-    // --- Retrieve API Keys ---
+    // --- Initialize Supabase Client ---
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error("Supabase configuration is missing.");
+      return NextResponse.json(
+        { jobs: [], error: "Server configuration error." },
+        { status: 500 }
+      );
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    // --- Retrieve the System User ID from the "users" table using Clerk ID ---
+    const { data: userRecord, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", clerkUserId)
+      .single();
+
+    if (userError || !userRecord) {
+      console.error("Error fetching user record:", userError?.message);
+      return NextResponse.json(
+        { jobs: [], error: "User record not found." },
+        { status: 404 }
+      );
+    }
+    const systemUserId = userRecord.id;
+
+    // --- Retrieve the User's Desired Career from the "career_info" table ---
+    const { data: careerInfo, error: careerError } = await supabase
+      .from("career_info")
+      .select("desired_career")
+      .eq("user_id", systemUserId)
+      .single();
+
+    if (careerError) {
+      console.error("Supabase error:", careerError.message);
+    }
+    // Fallback to a default career if none is provided or on error
+    const desiredCareer = careerInfo?.desired_career || "software engineer";
+
+    // --- Retrieve Google API Keys ---
     const googleApiKey = process.env.GOOGLE_API_KEY;
     const googleCSEID = process.env.GOOGLE_CSE_ID;
-
     if (!googleApiKey || !googleCSEID) {
       console.error(
         "Google API Key or CSE ID missing from environment variables."
       );
-      // Return 500 Internal Server Error using NextResponse
       return NextResponse.json(
         { jobs: [], error: "Server configuration error." },
         { status: 500 }
       );
     }
 
-    // --- Construct Google Search API Query ---
-    const query = `${profession} jobs in India`;
+    // --- Construct Google Search API Query using the User's Desired Career ---
+    const query = `${desiredCareer} jobs in India`;
     const url = `https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=${googleCSEID}&q=${encodeURIComponent(
       query
     )}&num=10`;
 
     // --- Fetch Data from Google API ---
-    // TODO: Implement Caching Check here
-
+    console.log("Fetching from Google API:", url);
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -76,41 +123,41 @@ export async function GET(
         `Google API Error: ${response.status} ${response.statusText}`,
         errorBody
       );
-      throw new Error(
-        `Failed to fetch data from Google API: ${response.statusText}`
-      );
+      let googleErrorMsg = `Failed to fetch data from Google API: ${response.statusText}`;
+      try {
+        const parsedError = JSON.parse(errorBody);
+        googleErrorMsg = parsedError.error?.message || googleErrorMsg;
+      } catch {}
+      throw new Error(googleErrorMsg);
     }
 
     const data: GoogleResponse = await response.json();
 
-    // --- Process Results ---
+    // --- Process the Google API Response ---
     const jobs: JobItem[] = data.items
       ? data.items
           .map((item) => ({
             title: item.title || "No Title Provided",
             snippet: item.snippet || "No Snippet Available",
             link: item.link || "#",
+            thumbnail:
+              item.pagemap?.cse_thumbnail?.[0]?.src ||
+              item.pagemap?.cse_image?.[0]?.src ||
+              null,
           }))
-          .filter((item) => item.link !== "#")
+          .filter((job) => job.link !== "#")
       : [];
 
-    // TODO: Store results in Cache here
-
-    // Send successful response using NextResponse
     return NextResponse.json({ jobs });
   } catch (err: any) {
-    // Catch block for errors
     console.error("Error in API route (/api/job-board):", err.message || err);
-    // Send 500 Internal Server Error using NextResponse
     return NextResponse.json(
       {
         jobs: [],
-        error: "Failed to fetch job listings due to a server error.",
+        error:
+          err.message || "Failed to fetch job listings due to a server error.",
       },
       { status: 500 }
     );
   }
 }
-
-// You can add other methods like POST, PUT, DELETE here as needed
-// export async function POST(request: Request) { ... }
