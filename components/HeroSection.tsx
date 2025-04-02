@@ -176,10 +176,10 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="container mx-auto flex flex-col md:flex-row items-center justify-center px-24 py-16 relative overflow-hidden"
+      className="container mx-auto flex flex-col md:flex-row items-center justify-center px-44 py-12 relative overflow-hidden"
     >
       {/* Text content */}
-      <div className="md:w-1/2 mb-10 md:mb-0 md:pr-8 text-center md:text-left z-10">
+      <div className="md:w-1/2 mb-10  md:mb-0 md:pr-8 text-center md:text-left z-10">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-8">
           <div>Your Journey.</div>
           <div className="md:text-5xl">
@@ -187,8 +187,7 @@ export default function HeroSection() {
           </div>
         </h1>
         <p className="text-xl text-gray-600 mb-20">
-          We guide you from the first step to the finish line, ensuring no
-          opportunity slips by.
+        AI-driven roadmaps, real-time updates, exclusive opportunities, and personalized guidance—your complete career partner, all in one place.
         </p>
         {/* Button Section */}
         <div className="flex flex-col md:flex-row md:space-x-12 items-center justify-center md:justify-start mt-8">
@@ -244,7 +243,7 @@ export default function HeroSection() {
 
       {/* 3D Career Illustrations Section */}
       <div
-        className="w-full md:w-1/2 flex items-center justify-center relative h-60 md:h-96"
+        className="w-full md:w-1/2 flex  items-center justify-center  relative h-60 md:h-96"
         ref={containerRef}
       >
         {Array.from({ length: 7 }).map((_, index) => (
@@ -268,6 +267,7 @@ export default function HeroSection() {
           </div>
         ))}
       </div>
+      
     </section>
   );
 }

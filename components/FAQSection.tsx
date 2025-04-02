@@ -47,7 +47,7 @@ const FAQSection = () => {
                 className="w-full px-4 py-6 text-left flex justify-between items-center  transition-colors"
                 onClick={() => setActiveIndex(activeIndex === index ? null : index)}
               >
-                <h3 className="text-lg font-semibold text-gray-800 pr-4">
+                <h3 className="text-lg font-normal text-gray-800 pr-4">
                   {item.question}
                 </h3>
                 <svg
