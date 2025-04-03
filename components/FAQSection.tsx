@@ -34,8 +34,8 @@ const FAQSection = () => {
   return (
     <section id="faq" className="py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">
-          Frequently Asked Questions
+        <h2 className="text-3xl md:text-5xl font-bold text-gray-800 text-center mb-24">
+          Frequently Asked <span className='text-[#FF6500]'>Questions</span>
         </h2>
         <div className="max-w-3xl mx-auto">
           {faqItems.map((item, index) => (

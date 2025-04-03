@@ -109,6 +109,7 @@ export default function Dashboard() {
       ...base,
       borderColor: state.isFocused ? "#FF6500" : base.borderColor,
       boxShadow: state.isFocused ? "0 0 0  #FF6500" : base.boxShadow,
+      borderRadius: "1rem",
       "&:hover": {
         borderColor: state.isFocused ? "#FF6500" : base.borderColor,
       },
@@ -166,11 +167,11 @@ export default function Dashboard() {
         .eq("user_id", userData.id)
         .maybeSingle();
 
-      setHasRoadmap(
-        !!(
+      setHasRoadmap(!!(
           careerData &&
           careerData.roadmap &&
-          careerData.roadmap.trim().length > 0
+          typeof careerData.roadmap === 'object' &&
+          Object.keys(careerData.roadmap).length > 0
         )
       );
       if (careerData) {
@@ -261,7 +262,7 @@ export default function Dashboard() {
         .eq("user_id", dbUserId);
 
       if (error) {
-        console.error("Error updating form_filled:", error);
+        console.error("Error updating form_filled:", ratingsError.message, ratingsError.details);
         alert("There was an error updating your career information.");
         return;
       } else {
@@ -362,7 +363,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-white flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
 
-      <div className="container mx-auto my-20 px-4 py-8 flex-grow mt-28">
+      <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-36">
         <h1 className="text-3xl text-black font-bold mb-6">
           Welcome, <span className="text-[#FF6500]">{user?.firstName}</span>
         </h1>
@@ -392,16 +393,16 @@ export default function Dashboard() {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* The rest of your form remains unchanged */}
           {/* Career Option Selector */}
-          <div className="flex justify-center items-center mt-16">
+          <div className="flex justify-center  items-center mb-16 mt-16">
             <div
-              className={`transition-opacity duration-300 mr-20 ${
+              className={`transition-opacity duration-300 mr-4 ${
                 careerOption === "known" ? "opacity-100" : "opacity-0"
               }`}
             >
               <img
                 src="/happy.png"
                 alt="Known career"
-                className="w-36 h-36 object-cover "
+                className="w-36 h-36  object-contain "
               />
             </div>
             <div className="relative w-48 h-24">
@@ -423,7 +424,7 @@ export default function Dashboard() {
                 </label>
               </div>
             </div>
-            <div className="relative w-48 h-24 mx-6">
+            <div className="relative w-48 h-24 ml-4">
               <input
                 id="unknown"
                 type="radio"
@@ -443,19 +444,19 @@ export default function Dashboard() {
               </div>
             </div>
             <div
-              className={`transition-opacity duration-300 ml-4 ${
+              className={`transition-opacity duration-300 ml-0 ${
                 careerOption === "unknown" ? "opacity-100" : "opacity-0"
               }`}
             >
               <img
                 src="/sad.png"
                 alt="Exploring careers"
-                className="w-36 h-36 object-cover"
+                className="w-36 h-36 object-contain"
               />
             </div>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 ">
             {careerOption === "known" && (
               <div className="p-2 rounded-lg">
                 <h3 className="text-xl text-black font-bold mb-3">
@@ -483,7 +484,7 @@ export default function Dashboard() {
           <p className="text-black font-semibold">
             Please answer the following common questions:
           </p>
-          <div className="space-y-6">
+          <div className="space-y-12">
             <div>
               <label className="block text-gray-800 mb-4">
                 Residing Country:
@@ -495,11 +496,11 @@ export default function Dashboard() {
                 placeholder="Select your country..."
                 required
                 styles={customStyles}
-                className="text-black mb-16 border border-gray-100 focus:outline-none focus:ring-0 focus:border-[#FF6500] cursor-pointer"
+                className="text-black mb-16 focus:outline-none focus:ring-0  cursor-pointer"
               />
             </div>
             <div>
-              <label className="block text-gray-800 mb-4">
+               <label className="block text-gray-800 mb-4">
                 Spending Capacity:{" "}
                 <label className="font-style: italic text-sm text-gray-400">
                   (How much can you spend on your education to pursue this
@@ -507,11 +508,11 @@ export default function Dashboard() {
                 </label>
               </label>
               <input
-                type="number"
+                type="Text"
                 value={spendingCapacity}
                 onChange={(e) => setSpendingCapacity(e.target.value)}
-                placeholder="e.g., 50000"
-                className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                placeholder="e.g. 500000 rupees"
+                className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                 required
               />
             </div>
@@ -519,29 +520,51 @@ export default function Dashboard() {
               <label className="block text-gray-800 mb-4">
                 I am a college student:
               </label>
-              <div className="flex space-x-6 mt-2">
-                <label className="text-black">
-                  <input
+              <div className="flex space-x-8 mb-16 mt-2">
+                <label className="text-black mr-8">
+                <input
                     type="radio"
                     name="collegeStudent"
                     value="yes"
                     checked={isCollegeStudent === true}
                     onChange={() => setIsCollegeStudent(true)}
-                    className="mr-3 cursor-pointer"
                     required
+                    // Hide native radio and apply custom styles
+                    className="
+                      appearance-none 
+                      h-4 w-4 
+                      border border-gray-400 
+                      rounded-full 
+                      checked:bg-[#FF6500] 
+                      checked:border-[#FF6500] 
+                      focus:outline-none
+                      cursor-pointer
+                      mr-4
+                    "
                   />
                   Yes
                 </label>
                 <label className="text-black">
-                  <input
-                    type="radio"
-                    name="collegeStudent"
-                    value="no"
-                    checked={isCollegeStudent === false}
-                    onChange={() => setIsCollegeStudent(false)}
-                    className="mr-3"
-                    required
-                  />
+                <input
+                  type="radio"
+                  name="collegeStudent"
+                  value="no"
+                  checked={isCollegeStudent === false}
+                  onChange={() => setIsCollegeStudent(false)}
+                  required
+                  // Same styling for the other option
+                  className="
+                    appearance-none 
+                    h-4 w-4 
+                    border border-gray-400 
+                    rounded-full 
+                    checked:bg-[#FF6500] 
+                    checked:border-[#FF6500] 
+                    focus:outline-none
+                    cursor-pointer
+                    mr-4
+                  "
+                />
                   No
                 </label>
               </div>
@@ -555,7 +578,7 @@ export default function Dashboard() {
                 value={currentClass}
                 onChange={(e) => setCurrentClass(e.target.value)}
                 placeholder="e.g., 10th, 12th, or college year (If in college, also mention the course opted.)"
-                className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                 required
               />
             </div>
@@ -571,7 +594,7 @@ export default function Dashboard() {
                 value={parentEmail}
                 onChange={(e) => setParentEmail(e.target.value)}
                 placeholder="e.g., parentemail@gmail.com"
-                className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                 required
               />
             </div>
@@ -608,7 +631,7 @@ export default function Dashboard() {
                 required
               />
               <div
-                className={`relative w-36 h-10 rounded-full cursor-pointer mb-6 transition-all duration-200 ease-in-out ${
+                className={`relative w-36 h-10 rounded-full cursor-pointer mb-16 transition-all duration-200 ease-in-out ${
                   willingToMoveAbroad ? "bg-green-500" : "bg-red-500"
                 }`}
                 onClick={() => {
@@ -619,23 +642,22 @@ export default function Dashboard() {
               >
                 <span
                   className={`absolute left-0 w-16 h-10 leading-10 text-center font-semibold ${
-                    willingToMoveAbroad ? "text-white" : "text-gray-700"
+                    willingToMoveAbroad ? "text-white" : "text-red-500"
                   }`}
                 >
                   Yes
                 </span>
                 <span
                   className={`absolute right-0 w-16 h-10 leading-10 text-center font-semibold ${
-                    !willingToMoveAbroad ? "text-white" : "text-gray-700"
+                    !willingToMoveAbroad ? "text-white" : "text-green-500"
                   }`}
                 >
                   No
                 </span>
-                <span className="absolute top-1/2 left-1/2 w-5 h-1 bg-white rounded-sm transform -translate-x-1/2 -translate-y-1/2 rotate-45">
-                  {!willingToMoveAbroad && (
-                    <span className="absolute w-1 h-5 bg-white rounded-sm -mt-2 ml-2" />
-                  )}
+                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-bold text-lg">
+                  {willingToMoveAbroad ? "✓" : "✕"}
                 </span>
+
               </div>
               {willingToMoveAbroad === true && (
                 <div className="mt-4">
@@ -653,7 +675,16 @@ export default function Dashboard() {
                           setMoveAbroad("yes");
                           setPreferredAbroadCountry(null);
                         }}
-                        className="mr-3"
+                        className="
+                          appearance-none 
+                          h-4 w-4 
+                          border border-gray-400 
+                          rounded-full 
+                          checked:bg-[#FF6500] 
+                          checked:border-[#FF6500] 
+                          focus:outline-none
+                          cursor-pointer
+                          mr-4"
                         required
                       />
                       I'll select my preferred country
@@ -671,7 +702,16 @@ export default function Dashboard() {
                             value: "Suggest by yourself",
                           });
                         }}
-                        className="mr-3"
+                        className="
+                            appearance-none 
+                            h-4 w-4 
+                            border border-gray-400 
+                            rounded-full 
+                            checked:bg-[#FF6500] 
+                            checked:border-[#FF6500] 
+                            focus:outline-none
+                            cursor-pointer
+                            mr-4"
                         required
                       />
                       Suggest best for me
@@ -679,7 +719,7 @@ export default function Dashboard() {
                   </div>
                   {moveAbroad === "yes" && (
                     <div className="mt-4">
-                      <label className="block text-gray-800 mb-2">
+                      <label className="block text-gray-800 mt-16 mb-2">
                         Preferred Country Abroad:
                       </label>
                       <Select<OptionType, false, GroupBase<OptionType>>
@@ -690,7 +730,7 @@ export default function Dashboard() {
                         }
                         placeholder="Select a country..."
                         required
-                        className="text-black mb-16"
+                        className="text-black"
                         styles={customStyles}
                       />
                     </div>
@@ -701,9 +741,9 @@ export default function Dashboard() {
           </div>
 
           {careerOption === "known" ? (
-            <div className="space-y-6">
+            <div className="space-y-12 ">
               <div>
-                <label className="block text-gray-800 mb-4 mt-16">
+                <label className="block text-gray-800 mb-4 mt-8">
                   What career do you want to pursue?
                 </label>
                 <input
@@ -711,7 +751,7 @@ export default function Dashboard() {
                   value={desiredCareer}
                   onChange={(e) => setDesiredCareer(e.target.value)}
                   placeholder="e.g., Astronaut"
-                  className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                  className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                   required
                 />
               </div>
@@ -725,7 +765,7 @@ export default function Dashboard() {
                   value={previousExperience}
                   onChange={(e) => setPreviousExperience(e.target.value)}
                   placeholder="Describe your experience..."
-                  className="mt-2 block w-full text-black border border-gray-100 p-2 rounded-md mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                  className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-20  focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                   required
                 />
               </div>
@@ -740,13 +780,13 @@ export default function Dashboard() {
                   value={interestParagraph}
                   onChange={(e) => setInterestParagraph(e.target.value)}
                   placeholder="Write about your interests, hobbies, or activities you enjoy (e.g., 'I love solving puzzles, building things with my hands, and helping my friends with their problems...')"
-                  className="mt-2 block w-full px-2 py-4 text-black border border-gray-100 rounded-md focus:outline-none focus:ring-0 focus:border-[#FF6500]"
+                  className="mt-2 block w-full px-2 py-4 text-black border border-gray-300 rounded-[1rem] focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                   rows={4}
                   minLength={300}
                   maxLength={1200}
                   required
                 />
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 mt-2 mb-20">
                   300 &lt;{" "}
                   <span
                     className={
@@ -1067,12 +1107,6 @@ export default function Dashboard() {
           <Loader />
         </div>
       )}
-
-      <footer className="bg-gray-50 border-t">
-        <div className="container mx-auto px-4 py-4 text-center text-gray-600 text-sm">
-          © {new Date().getFullYear()} CareerRoadmap. All rights reserved.
-        </div>
-      </footer>
     </div>
   );
 }
