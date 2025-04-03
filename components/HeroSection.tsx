@@ -124,7 +124,8 @@ export default function HeroSection() {
           const roadmapExists = !!(
             careerData &&
             careerData.roadmap &&
-            careerData.roadmap.trim().length > 0
+            typeof careerData.roadmap === 'object' &&
+            Object.keys(careerData.roadmap).length > 0
           );
           console.log("Does roadmap exist and have content?", roadmapExists);
           setHasRoadmap(roadmapExists);

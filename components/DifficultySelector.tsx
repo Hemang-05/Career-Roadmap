@@ -1,14 +1,14 @@
 import React from 'react';
 import { Dispatch, SetStateAction } from 'react';
 
-const DifficultyCard = ({ 
-  title, 
-  description, 
-  taskCount, 
-  successRate, 
-  difficulty, 
-  isSelected, 
-  onSelect 
+const DifficultyCard = ({
+  title,
+  description,
+  taskCount,
+  successRate,
+  difficulty,
+  isSelected,
+  onSelect
 }: {
   title: string;
   description: string;
@@ -19,33 +19,35 @@ const DifficultyCard = ({
   onSelect: (difficulty: 'easy' | 'medium' | 'hard') => void;
 }) => {
   return (
-    <div 
-      onClick={() => onSelect(difficulty)}
-      className={`
-        p-4 rounded-lg shadow-lg cursor-pointer transition-all duration-300 
-        ${isSelected 
-          ? 'border-4 border-[#FF6500] bg-orange-50 scale-105' 
-          : 'border border-gray-200 hover:bg-gray-50'}
-        flex flex-col justify-between
-      `}
-    >
-      <div>
-        <h3 className={`
-          text-lg font-bold mb-2 uppercase 
-          ${difficulty === 'easy' ? 'text-green-600' : 
-            difficulty === 'medium' ? 'text-blue-600' : 
-            'text-red-600'}
-        `}>
+    <div className="relative  w-128 h-auto">
+      <input
+        id={difficulty}
+        type="radio"
+        value={difficulty}
+        checked={isSelected}
+        onChange={() => onSelect(difficulty)}
+        className="opacity-0 absolute top-0 left-0 h-full w-full m-0 cursor-pointer peer"
+        required
+      />
+      <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
+        <label
+          htmlFor={difficulty}
+          className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300 mb-4"
+        >
           {title} Difficulty
-        </h3>
-        <p className="text-xs text-gray-700 mb-2">{description}</p>
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between">
-            <span className="font-semibold">Tasks per Phase:</span>
-            <span>{taskCount}</span>
+        </label>
+        
+        <p className="text-xs  text-black mb-4 peer-checked:text-white transition-colors duration-300">
+          {description}
+        </p>
+        
+        <div className="mt-2 text-xs peer-checked:text-white transition-colors duration-300">
+          <div className="flex justify-normal mb-2">
+            <span className="font-semibold mr-4">Tasks:</span>
+            <span >{taskCount}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Success Probability:</span>
+          <div className="flex justify-normal">
+            <span className="font-semibold mr-4">Success:</span>
             <span>{successRate}</span>
           </div>
         </div>
@@ -54,10 +56,10 @@ const DifficultyCard = ({
   );
 };
 
-export default function DifficultySelector({ 
-  difficulty, 
-  setDifficulty 
-}: { 
+export default function DifficultySelector({
+  difficulty,
+  setDifficulty
+}: {
   difficulty: 'easy' | 'medium' | 'hard' | null;
   setDifficulty: Dispatch<SetStateAction<'easy' | 'medium' | 'hard' | null>>;
 }) {
@@ -65,33 +67,33 @@ export default function DifficultySelector({
     {
       difficulty: 'easy' as const,
       title: 'Easy',
-      description: 'Perfect for slow learners. Gentle introduction with fewer tasks.',
+      description: 'A steady and structured path for those who prefer a relaxed pace. Learn at your comfort while building a solid foundation.',
       taskCount: '2-3 tasks per phase',
-      successRate: '40-50%'
+      successRate: 'Increases your chances of success by 40-50%'
     },
     {
       difficulty: 'medium' as const,
       title: 'Medium',
-      description: 'Balanced approach for average learners. More comprehensive tasks.',
+      description: 'A balanced journey with a mix of challenge and ease, designed for those who want steady progress with deeper learning.',
       taskCount: '3-5 tasks per phase',
-      successRate: '60-70%'
+      successRate: 'Boosts your chances of success by 60-70%'
     },
     {
       difficulty: 'hard' as const,
       title: 'Hard',
-      description: 'Challenging path for quick learners. Maximum tasks with high complexity.',
+      description: 'An intensive and fast-paced roadmap for those who thrive on challenges and aim for rapid mastery.',
       taskCount: '5-8 tasks per phase',
-      successRate: '80-90%'
+      successRate: 'Maximizes your chances of success by 80-90%'
     }
-  ];
+];
+
 
   return (
     <div className="mt-16">
-      <label className="block text-gray-800 mb-4 text-xl">
+      <label className="block text-gray-800 mb-4">
         Choose Your Learning Difficulty
-        <span className="text-red-500">*</span>
       </label>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="flex justify-center space-x-8">
         {difficulties.map((diff) => (
           <DifficultyCard
             key={diff.difficulty}
