@@ -292,7 +292,7 @@ export default function Dashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     const payload: any = {
       clerk_id: user?.id,
       residing_country: residingCountry ? residingCountry.value : null,
@@ -320,7 +320,7 @@ export default function Dashboard() {
       payload.desired_career = interestParagraph;
       payload.previous_experience = "";
     }
-  
+
     try {
       const res = await fetch("/api/save-career-info", {
         method: "POST",
@@ -335,9 +335,9 @@ export default function Dashboard() {
         setShowGenerateModal(true);
       }
       // Trigger career tag assignment in parallel (fire-and-forget).
-      fetch('/api/assign-career-tag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/assign-career-tag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clerk_id: user?.id,
           desired_career: payload.desired_career,
@@ -345,10 +345,10 @@ export default function Dashboard() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log('Career tag assigned:', data);
+          console.log("Career tag assigned:", data);
         })
         .catch((error) => {
-          console.error('Error assigning career tag:', error);
+          console.error("Error assigning career tag:", error);
         });
     } catch (error) {
       console.log("Error saving career info:", error);
@@ -356,7 +356,6 @@ export default function Dashboard() {
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -394,14 +393,14 @@ export default function Dashboard() {
           {/* Career Option Selector */}
           <div className="flex justify-center items-center mt-16">
             <div
-              className={`transition-opacity duration-300 mr-20 ${
+              className={`transition-opacity duration-300 mr-4 ${
                 careerOption === "known" ? "opacity-100" : "opacity-0"
               }`}
             >
               <img
                 src="/happy.png"
                 alt="Known career"
-                className="w-36 h-36 object-cover "
+                className="w-36 h-36 object-contain "
               />
             </div>
             <div className="relative w-48 h-24">
@@ -423,7 +422,7 @@ export default function Dashboard() {
                 </label>
               </div>
             </div>
-            <div className="relative w-48 h-24 mx-6">
+            <div className="relative w-48 h-24 ml-2">
               <input
                 id="unknown"
                 type="radio"
@@ -443,14 +442,14 @@ export default function Dashboard() {
               </div>
             </div>
             <div
-              className={`transition-opacity duration-300 ml-4 ${
+              className={`transition-opacity duration-300 ml-0 ${
                 careerOption === "unknown" ? "opacity-100" : "opacity-0"
               }`}
             >
               <img
                 src="/sad.png"
                 alt="Exploring careers"
-                className="w-36 h-36 object-cover"
+                className="w-36 h-36 object-contain"
               />
             </div>
           </div>

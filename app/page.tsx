@@ -6,12 +6,9 @@ import FeaturesSection from "../components/FeaturesSection";
 import FAQSection from "../components/FAQSection";
 
 import TestimonialsSection from "../components/TestimonialsSection";
-import Footer from "../components/Footer";
 import PricingSection from "@/components/PricingSection";
 
-
 export default function LandingPage() {
-
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
@@ -22,7 +19,6 @@ export default function LandingPage() {
         <TestimonialsSection />
         <FAQSection />
       </main>
-      <Footer />
     </div>
   );
 }

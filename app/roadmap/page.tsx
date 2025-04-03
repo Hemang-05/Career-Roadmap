@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase/supabaseClient';
-import { useSyncUser } from '@/app/hooks/sync-user';
-import PaymentPlan from '@/components/PaymentPlan';
-import FloatingNavbar from '@/components/Navbar';
-import ProgressBar from '@/components/ProgressBar';
-import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
-import { AnimatedTooltip } from '@/components/ui/AnimatedTooltip';
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { useSyncUser } from "@/app/hooks/sync-user";
+import PaymentPlan from "@/components/PaymentPlan";
+import FloatingNavbar from "@/components/Navbar";
+import ProgressBar from "@/components/ProgressBar";
+import { calculateTaskCountProgress } from "@/utils/calcTaskCountProgress";
+import { AnimatedTooltip } from "@/components/ui/AnimatedTooltip";
 
 function isYearComplete(yearItem: any): boolean {
   for (const phase of yearItem.phases) {
@@ -26,7 +26,7 @@ function RoadmapDisplay({
   roadmapData,
   onTaskUpdate,
   openYearIndices,
-  toggleYear
+  toggleYear,
 }: {
   roadmapData: any;
   onTaskUpdate: () => void;
@@ -37,7 +37,8 @@ function RoadmapDisplay({
     <div className="space-y-8">
       {roadmapData.yearly_roadmap.map((yearItem: any, yearIndex: number) => {
         const unlocked =
-          yearIndex === 0 || isYearComplete(roadmapData.yearly_roadmap[yearIndex - 1]);
+          yearIndex === 0 ||
+          isYearComplete(roadmapData.yearly_roadmap[yearIndex - 1]);
         const isOpen = openYearIndices.includes(yearIndex);
 
         return (
@@ -51,7 +52,10 @@ function RoadmapDisplay({
               }}
             >
               <h2 className="text-2xl font-bold text-gray-800">
-                {yearItem.year} {unlocked ? null : <span className="text-red-500 text-base">(Locked)</span>}
+                {yearItem.year}{" "}
+                {unlocked ? null : (
+                  <span className="text-red-500 text-base">(Locked)</span>
+                )}
               </h2>
               {unlocked && (
                 <button className="text-blue-600">
@@ -63,14 +67,21 @@ function RoadmapDisplay({
             {unlocked && isOpen ? (
               yearItem.phases.map((phase: any, phaseIndex: number) => (
                 <div key={phaseIndex} className="mb-4 border-t pt-4">
-                  <h3 className="text-xl font-semibold text-[#FF6500]">{phase.phase_name}</h3>
+                  <h3 className="text-xl font-semibold text-[#FF6500]">
+                    {phase.phase_name}
+                  </h3>
                   {phase.milestones.map((milestone: any, mIndex: number) => (
                     <div key={mIndex} className="ml-4 mb-2">
-                      <h4 className="text-lg font-medium text-gray-800">{milestone.name}</h4>
+                      <h4 className="text-lg font-medium text-gray-800">
+                        {milestone.name}
+                      </h4>
                       <p className="text-gray-600">{milestone.description}</p>
                       <ul className="list-disc list-inside">
                         {milestone.tasks.map((task: any, tIndex: number) => (
-                          <li key={tIndex} className="text-gray-700 flex items-center">
+                          <li
+                            key={tIndex}
+                            className="text-gray-700 flex items-center"
+                          >
                             <input
                               type="checkbox"
                               checked={task.completed}
@@ -78,7 +89,9 @@ function RoadmapDisplay({
                                 task.completed = !task.completed;
                                 await fetch("/api/update-task", {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" },
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
                                   body: JSON.stringify({
                                     user_id: roadmapData.user_id,
                                     task_title: task.task_title,
@@ -90,7 +103,13 @@ function RoadmapDisplay({
                               }}
                               className="mr-2"
                             />
-                            <span className="font-semibold">{task.task_title}:</span> {task.description} <span className="italic">(Weight: {task.weight})</span>
+                            <span className="font-semibold">
+                              {task.task_title}:
+                            </span>{" "}
+                            {task.description}{" "}
+                            <span className="italic">
+                              (Weight: {task.weight})
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -102,10 +121,14 @@ function RoadmapDisplay({
               <div>
                 {yearItem.phases.map((phase: any, phaseIndex: number) => (
                   <div key={phaseIndex} className="mb-4 border-t pt-4">
-                    <h3 className="text-xl font-semibold text-[#FF6500]">{phase.phase_name}</h3>
+                    <h3 className="text-xl font-semibold text-[#FF6500]">
+                      {phase.phase_name}
+                    </h3>
                     {phase.milestones.map((milestone: any, mIndex: number) => (
                       <div key={mIndex} className="ml-4 mb-2">
-                        <h4 className="text-lg font-medium text-gray-800">{milestone.name}</h4>
+                        <h4 className="text-lg font-medium text-gray-800">
+                          {milestone.name}
+                        </h4>
                         <p className="text-gray-600">{milestone.description}</p>
                       </div>
                     ))}
@@ -144,23 +167,24 @@ export default function RoadmapPage() {
     { href: "/dashboard", label: "Regenerate Roadmap" },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
-    { href: "/support", label: "Support" },
+    { href: "/jobs", label: "Jobs" },
+    { href: "/universities", label: "Universities" },
   ];
 
   function cleanJSONString(jsonString: string): string {
     try {
       // Remove control characters and problematic Unicode characters
       return jsonString
-        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')  // Remove control characters
-        .replace(/[\u2028\u2029]/g, '')        // Remove line/paragraph separators
-        .replace(/\\n/g, "\\n")               // Normalize newline escapes
-        .replace(/\\r/g, "\\r")               // Normalize carriage return
-        .replace(/\\t/g, "\\t")               // Normalize tab
-        .replace(/\\b/g, "\\b")               // Normalize backspace
-        .replace(/\\f/g, "\\f");              // Normalize form feed
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
+        .replace(/[\u2028\u2029]/g, "") // Remove line/paragraph separators
+        .replace(/\\n/g, "\\n") // Normalize newline escapes
+        .replace(/\\r/g, "\\r") // Normalize carriage return
+        .replace(/\\t/g, "\\t") // Normalize tab
+        .replace(/\\b/g, "\\b") // Normalize backspace
+        .replace(/\\f/g, "\\f"); // Normalize form feed
     } catch (error) {
       console.error("Error in JSON cleaning:", error);
-      return jsonString;  // Return original if cleaning fails
+      return jsonString; // Return original if cleaning fails
     }
   }
 
@@ -172,74 +196,84 @@ export default function RoadmapPage() {
           .select("id, subscription_status, subscription_end")
           .eq("clerk_id", user.id)
           .single();
-        
+
         if (userError || !userRecord) {
           setErrorMessage("User record not found in Supabase.");
           return;
         }
-        
-        const { subscription_status, subscription_end, id: userId } = userRecord;
+
+        const {
+          subscription_status,
+          subscription_end,
+          id: userId,
+        } = userRecord;
         const currentDate = new Date();
         const subscriptionEndDate = new Date(subscription_end);
-        
+
         if (!subscription_status || subscriptionEndDate < currentDate) {
           setShowPaymentPlan(true);
           return;
         }
-        
+
         const { data, error } = await supabase
           .from("career_info")
           .select("roadmap, user_id")
           .eq("user_id", userId)
           .single();
-        
+
         if (error) {
           setErrorMessage("Error fetching roadmap: " + error.message);
           return;
         }
-        
+
         if (!data?.roadmap) {
           setErrorMessage("No roadmap found. Please generate your roadmap.");
           return;
         }
-        
+
         setRoadmap(data.roadmap);
-        
+
         try {
           // Enhanced parsing with cleaning
           const cleanedRoadmap = cleanJSONString(
-            typeof data.roadmap === 'string' 
-              ? data.roadmap 
+            typeof data.roadmap === "string"
+              ? data.roadmap
               : JSON.stringify(data.roadmap)
           );
-          
+
           const parsed = JSON.parse(cleanedRoadmap);
           parsed.user_id = userId;
-          
+
           // Additional structure validation
           if (!parsed.yearly_roadmap || !Array.isArray(parsed.yearly_roadmap)) {
             throw new Error("Invalid roadmap structure");
           }
-          
+
           setParsedRoadmap(parsed);
           setTaskCountProgress(calculateTaskCountProgress(parsed));
         } catch (err) {
           console.error("Detailed JSON Parsing Error:", err);
-          
+
           // Log the problematic JSON string for debugging
           console.log("Original Roadmap String:", data.roadmap);
-          
+
           // More specific error handling
           if (err instanceof SyntaxError) {
-            setErrorMessage(`Something occured please regenerate your roadmap.`);
+            setErrorMessage(
+              `Something occured please regenerate your roadmap.`
+            );
           } else {
-            setErrorMessage("Error parsing roadmap. Please regenerate your roadmap.");
+            setErrorMessage(
+              "Error parsing roadmap. Please regenerate your roadmap."
+            );
           }
         }
       }
     } catch (err) {
       console.error("Unexpected Error:", err);
-      setErrorMessage("An unexpected error occurred while fetching the roadmap.");
+      setErrorMessage(
+        "An unexpected error occurred while fetching the roadmap."
+      );
     } finally {
       setLoading(false);
     }
@@ -277,60 +311,62 @@ export default function RoadmapPage() {
 
   useEffect(() => {
     console.log("useEffect triggered - auth state:", { isLoaded, isSignedIn });
-    
+
     if (isLoaded && !isSignedIn) {
       console.log("Not signed in, redirecting to home");
       router.push("/");
       return;
     }
-    
+
     if (user) {
-      
       fetchRoadmap();
       fetchSimilarUsers();
-    } 
-
+    }
   }, [isLoaded, isSignedIn, router, user]);
 
   // In RoadmapPage component, modify fetchSimilarUsers with detailed logging
-const fetchSimilarUsers = async () => {
-  console.log("Starting to fetch similar users...");
-  try {
-    console.log("Sending request to /api/get-similar-users");
-    const response = await fetch("/api/get-similar-users");
-    console.log("Response received:", response.status, response.statusText);
-    
-    if (!response.ok) {
-      console.error("API response not OK:", response.status, response.statusText);
-      return;
-    }
-    
-    const text = await response.text(); // Get the raw text first
-    console.log("Raw API response:", text);
-    
-    if (!text) {
-      console.log("Empty response from API");
-      return;
-    }
-    
+  const fetchSimilarUsers = async () => {
+    console.log("Starting to fetch similar users...");
     try {
-      const data = JSON.parse(text);
-      console.log("Parsed similar users data:", data);
-      
-      if (Array.isArray(data)) {
-        console.log(`Found ${data.length} similar users`);
-        setSimilarUsers(data);
-      } else {
-        console.error("API response is not an array:", data);
+      console.log("Sending request to /api/get-similar-users");
+      const response = await fetch("/api/get-similar-users");
+      console.log("Response received:", response.status, response.statusText);
+
+      if (!response.ok) {
+        console.error(
+          "API response not OK:",
+          response.status,
+          response.statusText
+        );
+        return;
       }
-    } catch (parseError) {
-      console.error("Error parsing JSON:", parseError);
+
+      const text = await response.text(); // Get the raw text first
+      console.log("Raw API response:", text);
+
+      if (!text) {
+        console.log("Empty response from API");
+        return;
+      }
+
+      try {
+        const data = JSON.parse(text);
+        console.log("Parsed similar users data:", data);
+
+        if (Array.isArray(data)) {
+          console.log(`Found ${data.length} similar users`);
+          setSimilarUsers(data);
+        } else {
+          console.error("API response is not an array:", data);
+        }
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError);
+      }
+    } catch (error) {
+      console.error("Network error fetching similar users:", error);
     }
-  } catch (error) {
-    console.error("Network error fetching similar users:", error);
-  }
-  console.log("Finished fetchSimilarUsers function");
-};
+    console.log("Finished fetchSimilarUsers function");
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -377,9 +413,11 @@ const fetchSimilarUsers = async () => {
         </div>
 
         {/* Similar Users Section */}
-        
+
         <div className="mb-6">
-          <h2 className="text-xl text-black font-semibold">Peers on Your Path</h2>
+          <h2 className="text-xl text-black font-semibold">
+            Peers on Your Path
+          </h2>
           {similarUsers.length > 0 ? (
             <AnimatedTooltip
               items={similarUsers.map((user) => ({
@@ -390,7 +428,9 @@ const fetchSimilarUsers = async () => {
               }))}
             />
           ) : (
-            <p className="text-gray-500">No peers found with the same career path.</p>
+            <p className="text-gray-500">
+              No peers found with the same career path.
+            </p>
           )}
         </div>
 
@@ -405,7 +445,9 @@ const fetchSimilarUsers = async () => {
           </div>
         ) : (
           <div className="bg-white p-6 rounded-md shadow-md">
-            <p className="text-gray-800">{errorMessage || "Roadmap is not available."}</p>
+            <p className="text-gray-800">
+              {errorMessage || "Roadmap is not available."}
+            </p>
           </div>
         )}
       </div>
