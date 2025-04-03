@@ -1,3 +1,5 @@
+//util/calcWeightProgress.ts
+
 export function calculateWeightProgress(roadmap: any): number {
   let totalWeight = 0;
   let completedWeight = 0;

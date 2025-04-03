@@ -293,7 +293,7 @@ export default function Dashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     const payload: any = {
       clerk_id: user?.id,
       residing_country: residingCountry ? residingCountry.value : null,
@@ -321,7 +321,7 @@ export default function Dashboard() {
       payload.desired_career = interestParagraph;
       payload.previous_experience = "";
     }
-  
+
     try {
       const res = await fetch("/api/save-career-info", {
         method: "POST",
@@ -336,9 +336,9 @@ export default function Dashboard() {
         setShowGenerateModal(true);
       }
       // Trigger career tag assignment in parallel (fire-and-forget).
-      fetch('/api/assign-career-tag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/assign-career-tag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clerk_id: user?.id,
           desired_career: payload.desired_career,
@@ -346,10 +346,10 @@ export default function Dashboard() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log('Career tag assigned:', data);
+          console.log("Career tag assigned:", data);
         })
         .catch((error) => {
-          console.error('Error assigning career tag:', error);
+          console.error("Error assigning career tag:", error);
         });
     } catch (error) {
       console.log("Error saving career info:", error);
@@ -357,7 +357,6 @@ export default function Dashboard() {
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

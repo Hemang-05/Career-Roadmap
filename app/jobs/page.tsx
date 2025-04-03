@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import FloatingNavbar from "@/components/Navbar";
 
 interface JobItem {
   title: string;
@@ -16,6 +17,14 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const dashboardLinks = [
+    { href: "/dashboard", label: "Regenerate Roadmap" },
+    { href: "/events", label: "Events" },
+    { href: "/analytics", label: "User Analysis" },
+    { href: "/jobs", label: "Jobs" },
+    { href: "/universities", label: "Universities" },
+  ];
 
   useEffect(() => {
     setLoading(true);
@@ -50,8 +59,10 @@ export default function JobsPage() {
 
   return (
     <div className="container mx-auto px-80 my-40">
-      <h1 className="text-4xl font-black text-center mb-16 text-[#635a5a]">
-        Portals to YOUR Professional Growth
+      <FloatingNavbar navLinks={dashboardLinks} />
+      <h1 className="text-4xl font-black text-center mb-16 text-black">
+        Portals to <span className="text-[#FF6500]">YOUR</span> Professional
+        Growth
       </h1>
 
       {loading && (
