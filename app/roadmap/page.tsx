@@ -228,7 +228,7 @@ export default function RoadmapPage() {
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
     { href: "/jobs", label: "Jobs" },
-    { href: "/universities", label: "Universities" },
+    
   ];
 
   function cleanJSONString(jsonString: string): string {
