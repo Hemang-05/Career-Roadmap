@@ -42,74 +42,133 @@ function RoadmapDisplay({
         const isOpen = openYearIndices.includes(yearIndex);
 
         return (
-          <div key={yearIndex} className="border p-4 rounded-md shadow-sm">
+          <div key={yearIndex} className=" p-8 rounded-[2rem] mb-20 bg-white shadow-[0_0_25px_rgba(0,0,0,0.1)]">
             <div
-              className="flex justify-between items-center cursor-pointer"
+              className="flex justify-between mb-8 items-center cursor-pointer"
               onClick={() => {
                 if (unlocked) {
                   toggleYear(yearIndex);
                 }
               }}
             >
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold  text-gray-800">
                 {yearItem.year}{" "}
                 {unlocked ? null : (
                   <span className="text-red-500 text-base">(Locked)</span>
                 )}
               </h2>
               {unlocked && (
-                <button className="text-blue-600">
-                  {isOpen ? "Collapse" : "Expand"}
+                <button className="text-[#FF6500] flex items-center transition-all duration-300 hover:opacity-80">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  <span className="ml-1 text-sm font-medium">
+                    {isOpen ? "" : "Show Tasks"}
+                  </span>
                 </button>
               )}
             </div>
-            <p className="text-gray-600 mb-4">{yearItem.overview}</p>
+            <p className="text-gray-600  mb-8">{yearItem.overview}</p>
             {unlocked && isOpen ? (
               yearItem.phases.map((phase: any, phaseIndex: number) => (
-                <div key={phaseIndex} className="mb-4 border-t pt-4">
-                  <h3 className="text-xl font-semibold text-[#FF6500]">
+                <div key={phaseIndex} className="mx-4 border-t pb-8 pt-8">
+                  <h3 className="text-xl font-semibold mb-8  text-[#FF6500]">
                     {phase.phase_name}
                   </h3>
                   {phase.milestones.map((milestone: any, mIndex: number) => (
-                    <div key={mIndex} className="ml-4 mb-2">
-                      <h4 className="text-lg font-medium text-gray-800">
+                    <div key={mIndex} className="mx-4 mb-2 ">
+                      <h4 className="text-lg font-semibold text-gray-800">
                         {milestone.name}
                       </h4>
-                      <p className="text-gray-600">{milestone.description}</p>
-                      <ul className="list-disc list-inside">
+                      <p className="text-gray-600 mb-8">{milestone.description}</p>
+                      <ul className="space-y-6">
                         {milestone.tasks.map((task: any, tIndex: number) => (
                           <li
                             key={tIndex}
-                            className="text-gray-700 flex items-center"
+                            className="flex items-start mb-4 pl-4 relative"
                           >
+                            {/* Bullet Point */}
+                            <div className="absolute left-0 top-1 text-lg">•</div>
+                            
+                            {/* Custom Checkbox */}
+                              <div 
+                                        onClick={async () => {
+                                          task.completed = !task.completed;
+                                          // Make sure the phase name is correctly passed
+                                          const phaseIdentifier = phase.phase_name; // Use the full phase name
+                                          
+                                          await fetch("/api/update-task", {
+                                            method: "POST",
+                                            headers: {
+                                              "Content-Type": "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                              user_id: roadmapData.user_id,
+                                              task_title: task.task_title,
+                                              completed: task.completed,
+                                              currentPhaseIdentifier: phaseIdentifier, // Use the full phase name
+                                            }),
+                                          });
+                                          onTaskUpdate();
+                                        }}
+                                        className={`
+                                          w-5 h-5 rounded-full flex items-center justify-center cursor-pointer mr-3 flex-shrink-0 mt-1
+                                          border-2 transition-colors duration-200
+                                          ${task.completed 
+                                            ? "bg-green-500 border-green-500" 
+                                            : "bg-gray-200 border-gray-300"}
+                                        `}
+                                      >
+                                        {/* Show checkmark when completed */}
+                                        {task.completed && (
+                                          <svg 
+                                            className="w-3 h-3 text-white" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24" 
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path 
+                                              strokeLinecap="round" 
+                                              strokeLinejoin="round" 
+                                              strokeWidth="2" 
+                                              d="M5 13l4 4L19 7"
+                                            />
+                                          </svg>
+                                        )}
+                              </div>
+                            
+                            {/* Hidden native checkbox for accessibility */}
                             <input
                               type="checkbox"
-                              checked={task.completed}
-                              onChange={async () => {
-                                task.completed = !task.completed;
-                                await fetch("/api/update-task", {
-                                  method: "POST",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    user_id: roadmapData.user_id,
-                                    task_title: task.task_title,
-                                    completed: task.completed,
-                                    currentPhaseIdentifier: phase.phase_name,
-                                  }),
-                                });
-                                onTaskUpdate();
-                              }}
-                              className="mr-2"
+                              checked={task.completed ?? false}
+                              onChange={() => {}} // The actual change handler is on the div above
+                              className="sr-only" // Hide visually but keep for screen readers
                             />
-                            <span className="font-semibold">
-                              {task.task_title}:
-                            </span>{" "}
-                            {task.description}{" "}
-                            <span className="italic">
-                              (Weight: {task.weight})
-                            </span>
+                            
+                            {/* Task Content */}
+                            <div className="flex-grow  mb-4">
+                              <div className="flex justify-between items-start">
+                                <span className="font-medium text-black">
+                                  {task.task_title}
+                                </span>
+                                <span className="text-sm font-thin text-gray-600 ml-2">
+                                  Weight: {task.weight}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 font-extralight mt-1">{task.description}</p>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -120,8 +179,8 @@ function RoadmapDisplay({
             ) : (
               <div>
                 {yearItem.phases.map((phase: any, phaseIndex: number) => (
-                  <div key={phaseIndex} className="mb-4 border-t pt-4">
-                    <h3 className="text-xl font-semibold text-[#FF6500]">
+                  <div key={phaseIndex} className="mb-12 border-t pt-4">
+                    <h3 className="text-xl font-semibold mb-4 text-[#FF6500]">
                       {phase.phase_name}
                     </h3>
                     {phase.milestones.map((milestone: any, mIndex: number) => (
@@ -141,7 +200,7 @@ function RoadmapDisplay({
       })}
       {roadmapData.final_notes && (
         <div className="mt-8 p-4 border-t">
-          <p className="text-gray-700">{roadmapData.final_notes}</p>
+          <p className="text-gray-700 mt-8">{roadmapData.final_notes}</p>
         </div>
       )}
     </div>
@@ -162,9 +221,10 @@ export default function RoadmapPage() {
   const [openYearIndices, setOpenYearIndices] = useState<number[]>([]);
   const [updating, setUpdating] = useState<boolean>(false);
   const [similarUsers, setSimilarUsers] = useState<any[]>([]);
+  const [desiredCareer, setDesiredCareer] = useState<string>("");
 
   const dashboardLinks = [
-    { href: "/dashboard", label: "Regenerate Roadmap" },
+    { href: "/dashboard", label: "Renew" },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
     { href: "/jobs", label: "Jobs" },
@@ -217,11 +277,16 @@ export default function RoadmapPage() {
 
         const { data, error } = await supabase
           .from("career_info")
-          .select("roadmap, user_id")
+          .select("roadmap, user_id, desired_career")
           .eq("user_id", userId)
           .single();
 
+          if (!error && data) {
+            setDesiredCareer(data.desired_career || "");
+          }
+
         if (error) {
+
           setErrorMessage("Error fetching roadmap: " + error.message);
           return;
         }
@@ -251,6 +316,10 @@ export default function RoadmapPage() {
 
           setParsedRoadmap(parsed);
           setTaskCountProgress(calculateTaskCountProgress(parsed));
+       
+            
+              console.log("taskcount:", taskCountProgress);
+            
         } catch (err) {
           console.error("Detailed JSON Parsing Error:", err);
 
@@ -326,38 +395,31 @@ export default function RoadmapPage() {
 
   // In RoadmapPage component, modify fetchSimilarUsers with detailed logging
   const fetchSimilarUsers = async () => {
-    console.log("Starting to fetch similar users...");
     try {
-      console.log("Sending request to /api/get-similar-users");
       const response = await fetch("/api/get-similar-users");
-      console.log("Response received:", response.status, response.statusText);
+      // if (!response.ok) {
+      //   console.error(
+      //     "API response not OK:",
+      //     response.status,
+      //     response.statusText
+      //   );
+      //   return;
+      // }
 
-      if (!response.ok) {
-        console.error(
-          "API response not OK:",
-          response.status,
-          response.statusText
-        );
-        return;
-      }
+      const text = await response.text(); // Get the raw text firs
 
-      const text = await response.text(); // Get the raw text first
-      console.log("Raw API response:", text);
-
-      if (!text) {
-        console.log("Empty response from API");
-        return;
-      }
+      // if (!text) {
+      //   console.log("Empty response from API");
+      //   return;
+      // }
 
       try {
         const data = JSON.parse(text);
-        console.log("Parsed similar users data:", data);
 
         if (Array.isArray(data)) {
-          console.log(`Found ${data.length} similar users`);
           setSimilarUsers(data);
         } else {
-          console.error("API response is not an array:", data);
+          console.log("API response is not an array:", data);
         }
       } catch (parseError) {
         console.error("Error parsing JSON:", parseError);
@@ -365,7 +427,7 @@ export default function RoadmapPage() {
     } catch (error) {
       console.error("Network error fetching similar users:", error);
     }
-    console.log("Finished fetchSimilarUsers function");
+
   };
 
   if (loading) {
@@ -383,39 +445,42 @@ export default function RoadmapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen  bg-[#fafff9] flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="container mx-auto mt-20 px-4 py-8 flex-grow">
-        <h1 className="text-3xl text-black font-bold mb-6">
+      <div className="container mx-auto mt-36 px-48  py-12 flex-grow">
+        <h1 className="text-5xl text-black font-bold mb-16">
           Your <span className="text-[#FF6500]">Career</span> Roadmap
+          
         </h1>
-        {/* Refresh button */}
-        <div className="mb-4">
+        
+        {/* Refresh button */} 
+         {/* <div className="mb-4">
           <button
             onClick={refreshFutureRoadmap}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Refresh Future Roadmap
           </button>
-        </div>
+        </div> */}
         {/* Loader overlay when updating future roadmap */}
         {updating && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-4 rounded shadow">
-              <p className="text-lg font-semibold">Updating roadmap...</p>
+              <p className="text-lg text-black font-semibold">Updating roadmap...</p>
             </div>
           </div>
         )}
         {/* Task count-based progress bar */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold">Task Completion Progress</h2>
+          <h2 className="text-xl mb-4 text-black font-semibold">Task Completion Progress</h2>
+          
           <ProgressBar progress={taskCountProgress} />
         </div>
 
         {/* Similar Users Section */}
 
-        <div className="mb-6">
-          <h2 className="text-xl text-black font-semibold">
+        <div className="mb-12 mt-16">
+          <h2 className="text-xl mb-4 text-black font-semibold">
             Peers on Your Path
           </h2>
           {similarUsers.length > 0 ? (
@@ -433,9 +498,13 @@ export default function RoadmapPage() {
             </p>
           )}
         </div>
+        
+        <div className=" text-center ">
+        <span className="font-extrabold text-[#FF6500] text-3xl">{desiredCareer}</span>
+        </div>
 
         {parsedRoadmap ? (
-          <div className="bg-white p-6 rounded-md shadow-md">
+          <div className=" p-12">
             <RoadmapDisplay
               roadmapData={parsedRoadmap}
               onTaskUpdate={fetchRoadmap}
@@ -451,11 +520,6 @@ export default function RoadmapPage() {
           </div>
         )}
       </div>
-      <footer className="bg-gray-50 border-t">
-        <div className="container mx-auto px-4 py-4 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} YourBrand. All rights reserved.
-        </div>
-      </footer>
     </div>
   );
 }

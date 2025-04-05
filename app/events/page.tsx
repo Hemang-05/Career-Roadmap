@@ -54,7 +54,7 @@ export default function EventsPage() {
   // Custom nav links for the events page
   const navLinks = [
     { href: "/roadmap", label: "Roadmap" },
-    { href: "/dashboard", label: "Edit Info" },
+    // { href: "/dashboard", label: "Edit Info" },
     { href: "/jobs", label: "Jobs" },
     { href: "/universities", label: "Universities" },
   ];
@@ -182,7 +182,7 @@ export default function EventsPage() {
       // Check localStorage for a flag
       const triggeredMonth = localStorage.getItem("externalSearchTriggered");
       // Only trigger if today is specified day and the flag for this month is not set
-      if ((today === 3 || today === 15) && triggeredMonth !== currentMonth) {
+      if ((today === 1 || today === 15) && triggeredMonth !== currentMonth) {
         console.log(
           "Auto-triggering external events search for current month:",
           currentMonth
@@ -201,14 +201,53 @@ export default function EventsPage() {
       console.error("User email not available for sending notification.");
       return;
     }
+  
+    let parentEmail = null;
+    try {
+      // We already have the user ID from previous supabase queries in this page
+      const { data: userRecord, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("clerk_id", user.id)
+        .single();
+        
+      if (userError || !userRecord) {
+        console.error("Error fetching user record:", userError);
+        // Continue with sending email to user even if parent email fetch fails
+      } else {
+        // Fetch parent_email from career_info table using the user_id
+        const { data: careerInfo, error: careerInfoError } = await supabase
+          .from("career_info")
+          .select("parent_email")
+          .eq("user_id", userRecord.id)
+          .single();
+          
+        if (careerInfoError) {
+          console.error("Error fetching parent email:", careerInfoError);
+        } else if (careerInfo && careerInfo.parent_email) {
+          parentEmail = careerInfo.parent_email;
+          console.log("Parent email fetched:", parentEmail);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching parent email:", err);
+      // Continue with sending email to user even if parent email fetch fails
+    }
+  
+    // Create an array of recipients
+    const recipients = [user.primaryEmailAddress.emailAddress];
+    if (parentEmail) {
+      recipients.push(parentEmail);
+    }
+  
     const emailPayload = {
-      to: user.primaryEmailAddress.emailAddress,
+      to: recipients, // Send to both user and parent if available
       subject: "New Career Events Updates!",
       text: `Hi ${
         user.fullName || "there"
-      },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nYourBrand Team`,
+      },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nCareer Roadmap Team`,
     };
-
+  
     try {
       const res = await fetch("/api/send-email", {
         method: "POST",

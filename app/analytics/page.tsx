@@ -428,7 +428,7 @@ export default function AnalyticsDashboard() {
 
   // Main Dashboard Content with modern, minimal design
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#fafff9] flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
       <div className="container mx-auto mt-24 px-6 py-12 flex-grow max-w-6xl">
         <h1 className="text-3xl text-slate-800 font-bold mb-2">
@@ -595,11 +595,11 @@ export default function AnalyticsDashboard() {
             <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
               <h3 className="text-slate-700 font-medium mb-2">Pace Analysis</h3>
               <p className="text-slate-600 text-sm">
-                {pace === "on track"
+                {pace === "On Track"
                   ? "You're making steady progress at the expected rate."
-                  : pace === "before track"
+                  : pace === "Ahead Of Track"
                   ? "You're ahead of schedule! Keep up the good work."
-                  : pace === "behind track"
+                  : pace === "Behind Track"
                   ? "You're a bit behind schedule. Consider focusing on high-priority tasks."
                   : "Start completing tasks to establish your pace."}
               </p>

@@ -3,27 +3,26 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 
 async function generateRoadmap(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek/deepseek-r1-distill-llama-70b:free",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        top_p: 1,
-        temperature: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        repetition_penalty: 1,
-        top_k: 0,
-      }),
-    }
-  );
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-pro-exp-03-25:free",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      top_p: 1,
+      temperature: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      repetition_penalty: 1,
+      top_k: 0,
+    }),
+  });
+
 
   const data = await response.json();
   // console.log('OpenRouter API response:', data);
@@ -197,7 +196,7 @@ The response must be strictly in JSON format without any additional text, markdo
           "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
           "each milestone with 6-8 actionable tasks"
         );
-        // console.log('Prompt sent for HARD difficulty:', prompt);
+        console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
         console.error("Invalid difficulty level:", difficulty);
