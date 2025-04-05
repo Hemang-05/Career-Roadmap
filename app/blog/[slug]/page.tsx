@@ -1,33 +1,26 @@
 // app/blog/[slug]/page.tsx
 
+import React from "react";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
-export default async function BlogPost({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const { slug } = params;
+export default async function BlogPost(props: any): Promise<React.ReactNode> {
+  const { slug } = props.params;
 
-  // Fetch data using the slug
+  // Fetch blog data using the slug
   const { data: blog, error } = await supabase
     .from("blogs")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  // Handle errors or blog post not found
   if (error || !blog) {
     console.error(`Error fetching blog post for slug "${slug}":`, error);
     notFound();
   }
 
-  // Render the blog post details
   return (
     <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
@@ -61,9 +54,7 @@ export default async function BlogPost({
   );
 }
 
-// Generate static paths for blog posts during build time
 export async function generateStaticParams() {
-  // Fetch only the 'slug' column from the 'blogs' table
   const { data: blogs, error } = await supabase.from("blogs").select("slug");
 
   if (error || !blogs) {
@@ -71,10 +62,7 @@ export async function generateStaticParams() {
     return [];
   }
 
-  // Map the fetched slugs into the format Next.js expects for params
   return blogs
-    .map((b: { slug: string | null | undefined }) => ({
-      slug: b.slug || "",
-    }))
-    .filter((p: { slug: string }) => p.slug); // Filter out any empty slugs
+    .map((b: { slug: string | null | undefined }) => ({ slug: b.slug || "" }))
+    .filter((p: { slug: string }) => p.slug);
 }
