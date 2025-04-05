@@ -1,8 +1,9 @@
+// app/api/update-task/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
 import { calculateWeightProgress } from '@/utils/calcWeightProgress';
-import { updateUserPaceFromRoadmap } from '@/utils/calcAndStorePace';
+import { getPaceFromPhaseName } from '@/utils/getPaceFromPhaseName';
 
 export async function POST(request: Request) {
   try {
@@ -57,8 +58,11 @@ export async function POST(request: Request) {
     const completedTasksCount = calculateTaskCountProgress(parsedRoadmap); // integer count
     const weightProgress = calculateWeightProgress(parsedRoadmap);         // float percentage
 
-    // Update the user's pace.
-    const paceResult = await updateUserPaceFromRoadmap(user_id, parsedRoadmap,"Phase 1", currentPhaseIdentifier);
+    // Determine pace directly from the phase name, passing the completed tasks count
+    console.log("Using phase name for pace:", currentPhaseIdentifier);
+    console.log("Completed tasks count:", completedTasksCount);
+    const pace = getPaceFromPhaseName(currentPhaseIdentifier, completedTasksCount);
+    console.log("Determined pace:", pace);
 
     // Upsert analytics.
     const { error: analyticsError } = await supabase
@@ -68,15 +72,16 @@ export async function POST(request: Request) {
         task_completed: completedTasksCount,            // integer count
         overall_task_percentage: weightProgress,        // float percentage
         updated_at: new Date().toISOString(),
-        pace: paceResult?.pace || 'on_track'
+        pace: pace
       }, { onConflict: 'user_id' });
       
     if (analyticsError) {
       return NextResponse.json({ error: analyticsError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, pace: pace });
   } catch (err: any) {
+    console.error("Server error:", err);
     return NextResponse.json({ error: 'Internal Server Error', details: err.message || err }, { status: 500 });
   }
 }

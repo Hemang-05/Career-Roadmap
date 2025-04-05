@@ -2,9 +2,17 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+// Define types for better type safety
+type EmailPayload = {
+  to: string | string[]; // Can be a single email or array of emails
+  subject: string;
+  text: string;
+};
+
 export async function POST(request: Request) {
   try {
-    const { to, subject, text } = await request.json();
+    const { to, subject, text }: EmailPayload = await request.json();
+    
     // Configure your transporter (this example uses Gmail)
     const transporter = nodemailer.createTransport({
       service: 'gmail',

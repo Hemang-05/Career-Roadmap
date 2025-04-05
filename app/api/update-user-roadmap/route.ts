@@ -47,8 +47,9 @@ async function generateRoadmap(prompt: string): Promise<string> {
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "deepseek/deepseek-r1-distill-llama-70b:free",
+      model: "google/gemini-2.5-pro-exp-03-25:free",
       messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
       top_p: 1,
       temperature: 1,
       frequency_penalty: 0,
@@ -78,7 +79,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
 
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
 import { calculateWeightProgress } from '@/utils/calcWeightProgress';
-import { updateUserPaceFromRoadmap } from '@/utils/calcAndStorePace';
+
 
 export async function POST(request: Request) {
   try {
@@ -160,6 +161,8 @@ export async function POST(request: Request) {
               newTasks.push(oldTask);
             } else {
               if (updIndex < updatedTasks.length) {
+                const updatedTask = updatedTasks[updIndex];
+                updatedTask.completed = false;
                 newTasks.push(updatedTasks[updIndex]);
                 updIndex++;
               } else {
@@ -185,8 +188,6 @@ export async function POST(request: Request) {
     const weightProgress = calculateWeightProgress(currentRoadmap);
     console.log("Task count progress:", taskCountProgress, "Weight progress:", weightProgress);
 
-    // Update pace for the current phase (default "Phase 1").
-    await updateUserPaceFromRoadmap(user_id, currentRoadmap, "Phase 1", new Date());
 
     // Update the career_info record with the merged roadmap.
     const { error: updateError } = await supabase

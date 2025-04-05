@@ -10,7 +10,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "deepseek/deepseek-r1-distill-llama-70b:free",
+      model: "google/gemini-2.5-pro-exp-03-25:free",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
       top_p: 1,
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 The roadmap should:
 - Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
 - Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
-- Provide each milestone with tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in atleast 2 to 3 lines.
+- Provide each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in atleast 2 to 3 lines.
 
 Tailor the tasks to the student's specific situation:
 - Residing Country: Incorporate relevant exams, qualifications, or educational requirements specific to "${residing_country}".
@@ -177,7 +177,7 @@ The response must be strictly in JSON format without any additional text, markdo
           'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
           'each milestone with 6-8 actionable tasks'
         );
-        // console.log('Prompt sent for HARD difficulty:', prompt);
+        console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
         console.error('Invalid difficulty level:', difficulty);
