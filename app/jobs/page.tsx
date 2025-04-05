@@ -19,11 +19,9 @@ export default function JobsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const dashboardLinks = [
-    { href: "/dashboard", label: "Regenerate Roadmap" },
+    { href: "/roadmap", label: "Roadmap" },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
-    { href: "/jobs", label: "Jobs" },
-    { href: "/universities", label: "Universities" },
   ];
 
   useEffect(() => {

@@ -54,9 +54,9 @@ export default function EventsPage() {
   // Custom nav links for the events page
   const navLinks = [
     { href: "/roadmap", label: "Roadmap" },
-    // { href: "/dashboard", label: "Edit Info" },
+    { href: "/blog", label: "Blogs" },
     { href: "/jobs", label: "Jobs" },
-    { href: "/universities", label: "Universities" },
+    
   ];
 
   // Fetch user's desired career from career_info

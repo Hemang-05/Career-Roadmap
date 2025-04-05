@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Select, { GroupBase, StylesConfig } from "react-select";
 import countryList from "react-select-country-list";
@@ -183,9 +183,7 @@ export default function Dashboard() {
 
   const dashboardLinks = [
     { href: "/roadmap", label: "Roadmap" },
-    { href: "/edit-info", label: "Edit Info" },
-    { href: "/settings", label: "Settings" },
-    { href: "/support", label: "Support" },
+    { href: "/blog", label: "Blogs" },
   ];
 
   // Updated Generate Roadmap Handler with new logic
@@ -1118,10 +1116,8 @@ export default function Dashboard() {
 
       {/* Loader overlay during roadmap generation */}
       {generating && !showCollegeForm && (
-        <div className="fixed inset-0 bg-white flex flex-col justify-center items-center z-50">
-          <p className="text-black mt-6 text-xl font-semibold">
-            Generating Roadmap...
-          </p>
+        <div className="fixed inset-0  justify-center items-center z-50 ">
+          
           <Loader />
         </div>
       )}

@@ -20,8 +20,7 @@ function getIncompleteTasks(milestone: any): any[] {
   return milestone.tasks.filter((task: any) => !task.completed);
 }
 
-// Builds a prompt to update only the incomplete tasks in a milestone.
-// This prompt instructs the AI to update the tasks only if there's a trending alternative.
+
 function buildMilestoneUpdatePrompt(milestone: any, difficulty: string): string {
   const incompleteTasks = getIncompleteTasks(milestone);
   const tasksText = incompleteTasks.map((task: any) => {
