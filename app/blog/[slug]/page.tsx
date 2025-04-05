@@ -1,4 +1,5 @@
 // app/blog/[slug]/page.tsx
+
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -9,8 +10,8 @@ type Props = {
 };
 
 export default async function BlogPost({ params }: Props) {
-  // await params before destructuring
-  const { slug } = await params;
+  // Destructure the slug directly; no need to await params
+  const { slug } = params;
 
   const { data: blog, error } = await supabase
     .from("blogs")
@@ -31,7 +32,7 @@ export default async function BlogPost({ params }: Props) {
           </h1>
           <p className="text-sm pt-4 text-gray-500">
             {format(new Date(blog.created_at), "MMMM dd, yyyy")}
-            {blog.author && `· ${blog.author}`}
+            {blog.author && ` · ${blog.author}`}
           </p>
           {blog.cover_image_url && (
             <img
