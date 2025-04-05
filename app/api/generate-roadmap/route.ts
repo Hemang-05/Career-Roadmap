@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase/supabaseClient';
+import { NextResponse } from "next/server";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 async function generateRoadmap(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -22,19 +23,22 @@ async function generateRoadmap(prompt: string): Promise<string> {
     }),
   });
 
+
   const data = await response.json();
   // console.log('OpenRouter API response:', data);
 
   if (!data.choices || data.choices.length === 0) {
-    throw new Error('No choices returned from OpenRouter API');
+    throw new Error("No choices returned from OpenRouter API");
   }
 
   const rawContent = data.choices[0].message.content.trim();
 
   // Attempt to extract just the JSON part using regex
-  const jsonMatch = rawContent.match(/```json\s*([\s\S]*?)\s*```/i) || rawContent.match(/{[\s\S]*}/);
+  const jsonMatch =
+    rawContent.match(/```json\s*([\s\S]*?)\s*```/i) ||
+    rawContent.match(/{[\s\S]*}/);
   if (!jsonMatch) {
-    throw new Error('No valid JSON found in response');
+    throw new Error("No valid JSON found in response");
   }
 
   const cleanContent = jsonMatch[1] || jsonMatch[0]; // Depending on which pattern matched
@@ -46,24 +50,28 @@ export async function POST(request: Request) {
     // Parse the JSON payload sent by the client
     const { clerk_id } = await request.json();
     if (!clerk_id) {
-      return NextResponse.json({ error: 'Missing clerk_id' }, { status: 400 });
+      return NextResponse.json({ error: "Missing clerk_id" }, { status: 400 });
     }
 
     // Look up the user record in the users table using clerk_id
     const { data: userRecord, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerk_id)
+      .from("users")
+      .select("id")
+      .eq("clerk_id", clerk_id)
       .single();
     if (userError || !userRecord) {
-      return NextResponse.json({ error: 'User record not found' }, { status: 500 });
+      return NextResponse.json(
+        { error: "User record not found" },
+        { status: 500 }
+      );
     }
     const user_id = userRecord.id;
 
     // Fetch the career_info record for that user, including difficulty
     const { data: careerInfo, error: careerInfoError } = await supabase
-      .from('career_info')
-      .select(`
+      .from("career_info")
+      .select(
+        `
         desired_career,
         residing_country,
         spending_capacity,
@@ -72,11 +80,15 @@ export async function POST(request: Request) {
         preferred_abroad_country,
         previous_experience,
         difficulty
-      `)
-      .eq('user_id', user_id)
+      `
+      )
+      .eq("user_id", user_id)
       .single();
     if (careerInfoError || !careerInfo) {
-      return NextResponse.json({ error: 'Career info record not found' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Career info record not found" },
+        { status: 500 }
+      );
     }
 
     const {
@@ -87,20 +99,27 @@ export async function POST(request: Request) {
       move_abroad,
       preferred_abroad_country,
       previous_experience,
-      difficulty
+      difficulty,
     } = careerInfo;
 
     if (!desired_career) {
-      return NextResponse.json({ error: 'Desired career not found in career_info' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Desired career not found in career_info" },
+        { status: 400 }
+      );
     }
 
     // Get current day and month
     const now = new Date();
     const current_day = now.getDate();
-    const current_month = now.toLocaleString('default', { month: 'long' });
+    const current_month = now.toLocaleString("default", { month: "long" });
 
     // Define the base prompt
-    const basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${move_abroad ? 'plans to move abroad to ' + preferred_abroad_country : 'does not plan to move abroad'}. The student has "${previous_experience}" in the field.
+    const basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${
+      move_abroad
+        ? "plans to move abroad to " + preferred_abroad_country
+        : "does not plan to move abroad"
+    }. The student has "${previous_experience}" in the field.
 
 The roadmap should:
 - Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
@@ -158,30 +177,33 @@ The response must be strictly in JSON format without any additional text, markdo
     // Select the prompt based on difficulty
     let prompt: string;
     switch (difficulty) {
-      case 'easy':
+      case "easy":
         prompt = basePrompt.replace(
-          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
-          'each milestone with 3-4 actionable tasks'
+          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
+          "each milestone with 3-4 actionable tasks"
         );
         // console.log('Prompt sent for EASY difficulty:', prompt);
         break;
-      case 'medium':
+      case "medium":
         prompt = basePrompt.replace(
-          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
-          'each milestone with 4-6 actionable tasks'
+          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
+          "each milestone with 4-6 actionable tasks"
         );
         // console.log('Prompt sent for MEDIUM difficulty:', prompt);
         break;
-      case 'hard':
+      case "hard":
         prompt = basePrompt.replace(
-          'each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks',
-          'each milestone with 6-8 actionable tasks'
+          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
+          "each milestone with 6-8 actionable tasks"
         );
         console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
-        console.error('Invalid difficulty level:', difficulty);
-        return NextResponse.json({ error: 'Invalid difficulty level' }, { status: 400 });
+        console.error("Invalid difficulty level:", difficulty);
+        return NextResponse.json(
+          { error: "Invalid difficulty level" },
+          { status: 400 }
+        );
     }
 
     // Call the OpenRouter API to generate the roadmap
@@ -189,19 +211,22 @@ The response must be strictly in JSON format without any additional text, markdo
 
     // Update the career_info record with the generated roadmap
     const { data, error } = await supabase
-      .from('career_info')
+      .from("career_info")
       .update({ roadmap, updated_at: new Date().toISOString() })
-      .eq('user_id', user_id);
+      .eq("user_id", user_id);
 
     if (error) {
-      console.error('Error updating career_info:', error);
+      console.error("Error updating career_info:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     // Return a success response
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('Error in POST /api/generate-roadmap:', err);
-    return NextResponse.json({ error: 'Internal Server Error', details: err.message || err }, { status: 500 });
+    console.error("Error in POST /api/generate-roadmap:", err);
+    return NextResponse.json(
+      { error: "Internal Server Error", details: err.message || err },
+      { status: 500 }
+    );
   }
 }
