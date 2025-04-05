@@ -5,11 +5,13 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
+// Updated props type to include searchParams
 type Props = {
   params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-export default async function BlogPost({ params }: Props) {
+export default async function BlogPost({ params, searchParams }: Props) {
   // Destructure the slug directly; no need to await params
   const { slug } = params;
 
