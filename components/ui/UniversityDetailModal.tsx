@@ -26,10 +26,10 @@ export default function UniversityDetailModal({
 
   return (
     <div className="fixed inset-0 text-black flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative">
+      <div className="bg-white rounded-3xl m-8 shadow-lg p-6 max-w-2xl w-full relative">
         {/* Close Button */}
         <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+          className="absolute top-2 right-6 text-red-500 hover:text-gray-700 text-2xl"
           onClick={onClose}
         >
           &times;
@@ -49,29 +49,36 @@ export default function UniversityDetailModal({
         </div>
 
         {/* Scores */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid bg-orange-200 rounded-2xl p-4  grid-cols-2 gap-4">
           <div>
             <p className="font-medium">Placement:</p>
-            <p>{university.placement_score.toFixed(1)}/10</p>
+            <p className="font-normal">
+              {university.placement_score.toFixed(1)}/10
+            </p>
           </div>
           <div>
             <p className="font-medium">Tuition Fees per Semester:</p>
-            <p>{university.tuition_fees.toFixed(1)}/semester</p>
+            <p className="font-normal">
+              {university.tuition_fees.toFixed(1)}/semester
+            </p>
           </div>
+
           <div>
             <p className="font-medium">Cultural:</p>
-            <p>{university.cultural_score.toFixed(1)}/10</p>
+            <p className="font-normal">
+              {university.cultural_score.toFixed(1)}/10
+            </p>
           </div>
           <div>
             <p className="font-medium">Vibe:</p>
-            <p>{university.vibe_check.toFixed(1)}/10</p>
+            <p className="font-normal">{university.vibe_check.toFixed(1)}/10</p>
           </div>
         </div>
 
         {/* Additional Info */}
         <div className="mt-6">
-          <p className="text-sm text-gray-700">
-            Additional information about the university can be displayed here.
+          <p className="text-sm text-gray-400">
+            Other details are not available yet. Please check back later.
           </p>
         </div>
       </div>
