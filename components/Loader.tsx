@@ -1,74 +1,38 @@
-'use client'
-import { useEffect, useRef } from 'react'
-import Image from 'next/image'
+// export default Loader
+"use client";
+import React, { useEffect, useState } from "react"; // Import React and hooks for state and effect
+import "../app/globals.css"; // Import global CSS styles
 
 const Loader = () => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number | null>(null)
-  const angleRef = useRef(0)
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  const messages = [
+    "Take a walk, this could take a moment...",
+    "Have a coffee break while we prepare your roadmap...",
+    "Brewing your career path, almost ready...",
+    "Flipping through possibilities for your future...",
+    "Mapping the journey to your dream career...",
+  ];
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % messages.length);
+    }, 3000); // Cycle message every 3 seconds
 
-    const illustrations = container.querySelectorAll('.career-illustration')
-    const totalItems = illustrations.length
-
-    function mapRange(value: number, in_min: number, in_max: number, out_min: number, out_max: number) {
-      return ((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
-    }
-
-    const animate = () => {
-      const radius = 220
-
-      illustrations.forEach((illustration, index) => {
-        const offset = (Math.PI * 2 / totalItems) * index
-        const x = Math.cos(angleRef.current + offset) * radius
-        const z = Math.sin(angleRef.current + offset) * radius
-        const scale = mapRange(z, -radius, radius, 0.6, 1.2)
-        const opacity = mapRange(z, -radius, radius, 0.7, 1)
-        const zIndex = Math.floor(mapRange(z, -radius, radius, 1, 10))
-        const el = illustration as HTMLElement
-        el.style.transform = `translateX(${x}px) scale(${scale})`
-        el.style.opacity = opacity.toString()
-        el.style.zIndex = zIndex.toString()
-      })
-
-      angleRef.current += 0.005
-      animationRef.current = requestAnimationFrame(animate)
-    }
-
-    animationRef.current = requestAnimationFrame(animate)
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
-    }
-  }, [])
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(interval);
+  }, [messages.length]); // Dependency array includes messages.length
 
   return (
-    <div className="flex items-center justify-center h-screen w-full">
-      <div className="relative w-60 h-60" ref={containerRef}>
-        {Array.from({ length: 7 }).map((_, index) => (
-          <div
-            key={index}
-            className="career-illustration absolute transition-transform will-change-transform transform scale-75"
-            style={{
-              transformOrigin: 'center center',
-              willChange: 'transform, opacity',
-            }}
-          >
-            <Image
-              src={`/${index + 1}.png`} // Uses the same image names
-              alt={`career-${index + 1}`}
-              width={index === 0 ? 150 : 180}
-              height={index === 0 ? 150 : 200}
-              className="object-contain"
-              loading="eager"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+    // This outer div uses Tailwind for centering the content vertically and horizontally
+    <div className="flex flex-col items-center justify-center min-h-screen bg-orange-200 p-4">
+      {/* The CSS spinner */}
+      <span className="loader"></span>
 
-export default Loader
+      {/* The cycling message displayed below the spinner */}
+      <p className="loader-message">{messages[messageIndex]}</p>
+    </div>
+  );
+};
+
+export default Loader;
