@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     
     // Configure your transporter (this example uses Gmail)
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: 'smtpout.secureserver.net',
       port: 465,
       secure: true, // use SSL
       auth: {
