@@ -38,10 +38,10 @@ const RefundPolicy: React.FC = () => {
             <li>
               By visiting our website:{" "}
               <a
-                href="https://weekly-informed-chow.ngrok-free.app/"
+                href="https://www.careeroadmap.com"
                 className="text-gray-600 hover:underline"
               >
-                https://weekly-informed-chow.ngrok-free.app/
+                https://www.careeroadmap.com
               </a>
             </li>
             <li>

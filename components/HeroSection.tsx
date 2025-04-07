@@ -232,7 +232,7 @@ export default function HeroSection() {
                 </button>
               </SignInButton>
             )}
-            <div className="flex flex-col items-center mt-4">
+            <div className="flex flex-col items-center mt-4 pointer-events-none">
               <AnimatedTooltip items={enrolledUsers} />
             </div>
           </div>

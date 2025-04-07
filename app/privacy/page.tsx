@@ -37,10 +37,10 @@ const PrivacyPolicy: React.FC = () => {
             valid for visitors to our website with regards to the information
             that they shared and/or collected on{" "}
             <a
-              href="https://weekly-informed-chow.ngrok-free.app/"
+              href="https://www.careeroadmap.com"
               className="text-gray-600 hover:underline"
             >
-              https://weekly-informed-chow.ngrok-free.app/
+              https://www.careeroadmap.com/
             </a>
             . This policy is not applicable to any information collected offline
             or via channels other than this website.
