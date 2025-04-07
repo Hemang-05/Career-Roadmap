@@ -188,34 +188,34 @@ export default function Dashboard() {
 
   // Updated Generate Roadmap Handler with new logic
   const handleGenerateRoadmap = async () => {
-    console.log("handleGenerateRoadmap called:", {
-      isCollegeStudent,
-      formFilled,
-    });
+    console.log("handleGenerateRoadmap called.");
     setGenerating(true);
-
-    (async () => {
-      try {
-        const res = await fetch("/api/generate-roadmap", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clerk_id: user?.id }),
-        });
-
-        const result = await res.json();
-        console.log("Generated roadmap:");
-        setApiCallCompleted(true);
-      } catch (error) {
-        console.log("Error generating roadmap:", error);
-        setGenerating(false);
-      }
-    })();
-
+  
+    // Fire-and-forget API call to trigger roadmap generation in the background
+    fetch("/api/generate-roadmap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clerk_id: user?.id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Roadmap generation triggered:", data);
+      })
+      .catch((error) => {
+        console.error("Error triggering roadmap API:", error);
+      });
+  
+    // Check if the user is a college student and the form is not filled
     if (isCollegeStudent && !formFilled) {
-      console.log("Showing college form modal.");
+      // Instead of redirecting immediately, show the college form modal
+      console.log("User is a college student and college form is not filled; showing college form modal.");
       setShowCollegeForm(true);
+    } else {
+      // Otherwise, redirect immediately to the roadmap page
+      router.push("/roadmap");
     }
   };
+  
 
   // Handler for college form submission: update form_filled to true in the DB.
   const handleCollegeFormSubmit = async (e: React.FormEvent) => {
@@ -267,12 +267,7 @@ export default function Dashboard() {
         console.log("Form updated to filled:", data);
         setFormFilled(true);
         setShowCollegeForm(false);
-        if (apiCallCompleted) {
-          console.log("API call completed and form submitted; redirecting.");
-          router.push("/roadmap");
-        } else {
-          console.log("Form submitted, waiting for API response.");
-        }
+        router.push("/roadmap");
       }
     } catch (err) {
       console.error("Error in handleCollegeFormSubmit:", err);
