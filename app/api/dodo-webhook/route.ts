@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { Webhook } from "standardwebhooks";
 import { headers } from "next/headers";
 import { dodopayments } from "@/utils/dodopayment";
