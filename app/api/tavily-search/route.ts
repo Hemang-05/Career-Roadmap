@@ -1,4 +1,6 @@
 // app/api/tavily-search/route.ts
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { tavily } from '@tavily/core';
 import { supabase } from '@/utils/supabase/supabaseClient';
