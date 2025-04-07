@@ -1115,7 +1115,7 @@ export default function Dashboard() {
   </div>
 )}
 
-      {/* Loader overlay during roadmap generation */}
+      {/* Loader overlay during roadmap generation  */}
       {generating && !showCollegeForm && (
         <div className="fixed inset-0  justify-center items-center z-50 ">
           

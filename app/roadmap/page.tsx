@@ -676,10 +676,6 @@ export default function RoadmapPage() {
           </div>
         )}
       </div>
-        {/* Footer placeholder if needed */}
-        {/* <footer className="py-4 text-center text-gray-500 text-sm">
-            My App Footer
-        </footer> */}
     </div>
   );
 }
