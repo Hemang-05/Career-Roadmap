@@ -189,7 +189,7 @@ export default function Dashboard() {
   // Updated Generate Roadmap Handler with new logic
   const handleGenerateRoadmap = async () => {
     console.log("handleGenerateRoadmap called.");
-    setGenerating(true);
+    
   
     // Fire-and-forget API call to trigger roadmap generation in the background
     fetch("/api/generate-roadmap", {
@@ -278,7 +278,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (apiCallCompleted && (!isCollegeStudent || formFilled)) {
       console.log("Conditions met; redirecting to /roadmap.");
-      setGenerating(false);
+      
       router.push("/roadmap");
     }
   }, [apiCallCompleted, formFilled, isCollegeStudent]);
@@ -1110,12 +1110,12 @@ export default function Dashboard() {
 )}
 
       {/* Loader overlay during roadmap generation */}
-      {generating && !showCollegeForm && (
+      {/* {generating && !showCollegeForm && (
         <div className="fixed inset-0  justify-center items-center z-50 ">
           
           <Loader />
         </div>
-      )}
+      )} */}
     </div>
   );
 }
