@@ -1,5 +1,5 @@
 // app/api/send-email/route.ts
-export const runtime = 'edge';
+
 
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';

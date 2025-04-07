@@ -1,6 +1,4 @@
 // app/api/fetch-events/route.ts
-export const runtime = 'edge';
-
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 

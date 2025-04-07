@@ -1,5 +1,5 @@
 // app/api/update-task/route.ts
-export const runtime = 'edge';
+
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';

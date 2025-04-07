@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 
 import { Webhook } from "standardwebhooks";
 import { headers } from "next/headers";
