@@ -11,7 +11,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash-thinking-exp:free" ,
+      model: "google/gemini-2.0-flash-thinking-exp-1219:free" ,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
       top_p: 1,
