@@ -1,7 +1,5 @@
 //app/blog/page.tsx
 
-export const dynamic = "force-dynamic";
-
 import { supabase } from "@/utils/supabase/supabaseClient";
 import BlogCard from "@/components/BlogCard";
 import FloatingNavbar from "@/components/Navbar";
