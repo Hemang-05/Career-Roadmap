@@ -13,22 +13,15 @@ const dashboardLinks = [
   { href: "/analytics", label: "User Analysis" },
 ];
 
-// Define the expected type for params - This remains the same
-type BlogPostPageProps = {
-  params: {
-    slug: string;
-  };
-  // Note: params itself might eventually be typed as Promise<{ slug: string }>,
-  // but for destructuring in the signature, this type works.
-  // The key change is how you *use* params inside the function.
-};
+// REMOVE the custom BlogPostPageProps type definition
 
-// Function signature remains the same, but how params is used changes
+// Use an inline type directly in the signature
 export default async function BlogPost({
-  params,
-}: BlogPostPageProps): Promise<React.ReactNode> {
-  // *** THE KEY CHANGE IS HERE ***
-  // Await params before accessing its properties, as per the documentation
+  params, // Destructure params
+}: {
+  params: { slug: string }; // Define the expected structure of params here
+}): Promise<React.ReactNode> {
+  // Await params before accessing its properties - THIS REMAINS CORRECT
   const { slug } = await params;
 
   // Fetch blog data using the slug
@@ -53,7 +46,7 @@ export default async function BlogPost({
               {blog.title}
             </h1>
           )}
-          {blog.created_at && (
+          {blog.created_at && ( // Check if created_at exists
             <p className="text-sm pt-0 text-gray-500 mt-0 mb-6">
               {(() => {
                 try {
@@ -86,25 +79,7 @@ export default async function BlogPost({
   );
 }
 
-// generateStaticParams remains unchanged - it runs at build time and provides
-// the params object synchronously in that context. The async change applies
-// to how params is accessed during request time within the page component.
-// export async function generateStaticParams() {
-//   const { data: blogs, error } = await supabase.from("blogs").select("slug");
-
-//   if (error || !blogs) {
-//     console.error("Error fetching slugs for generateStaticParams:", error);
-//     return [];
-//   }
-
-//   return blogs
-//     .filter(
-//       (b): b is { slug: string } =>
-//         typeof b.slug === "string" && b.slug.length > 0
-//     )
-//     .map((b) => ({ slug: b.slug }));
-// }
-
+// generateStaticParams remains unchanged
 export async function generateStaticParams() {
   const { data: blogs, error } = await supabase.from("blogs").select("slug");
 
@@ -113,6 +88,7 @@ export async function generateStaticParams() {
     return [];
   }
 
+  // Refined mapping and filtering for robustness
   return blogs
     .map((b: { slug: string | null | undefined }) => ({ slug: b.slug || "" }))
     .filter((p: { slug: string }) => p.slug);
