@@ -36,7 +36,7 @@ export default async function BlogPage() {
   return (
     <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto mt-20">
         <h1 className="text-5xl font-extrabold text-center text-amber-600 mb-8">
           Our Blog
         </h1>
