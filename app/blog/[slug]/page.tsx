@@ -13,16 +13,8 @@ const dashboardLinks = [
   { href: "/analytics", label: "User Analysis" },
 ];
 
-// REMOVE the custom BlogPostPageProps type definition
-
-// Use an inline type directly in the signature
-export default async function BlogPost({
-  params, // Destructure params
-}: {
-  params: { slug: string }; // Define the expected structure of params here
-}): Promise<React.ReactNode> {
-  // Await params before accessing its properties - THIS REMAINS CORRECT
-  const { slug } = await params;
+export default async function BlogPost(props: any): Promise<React.ReactNode> {
+  const { slug } = props.params;
 
   // Fetch blog data using the slug
   const { data: blog, error } = await supabase
@@ -46,18 +38,9 @@ export default async function BlogPost({
               {blog.title}
             </h1>
           )}
-          {blog.created_at && ( // Check if created_at exists
+          {blog.created_at && (
             <p className="text-sm pt-0 text-gray-500 mt-0 mb-6">
-              {(() => {
-                try {
-                  // Ensure the format string is exactly this:
-                  return format(new Date(blog.created_at), "MMMM dd, yyyy");
-                } catch (e) {
-                  console.error("Error formatting date:", blog.created_at, e);
-                  // Optionally return the original string or a placeholder
-                  return String(blog.created_at);
-                }
-              })()}
+              {format(new Date(blog.created_at), "MMMM dd, yyyy")}
               {blog.author && ` · By ${blog.author}`}
             </p>
           )}
@@ -79,7 +62,6 @@ export default async function BlogPost({
   );
 }
 
-// generateStaticParams remains unchanged
 export async function generateStaticParams() {
   const { data: blogs, error } = await supabase.from("blogs").select("slug");
 
@@ -88,7 +70,6 @@ export async function generateStaticParams() {
     return [];
   }
 
-  // Refined mapping and filtering for robustness
   return blogs
     .map((b: { slug: string | null | undefined }) => ({ slug: b.slug || "" }))
     .filter((p: { slug: string }) => p.slug);
