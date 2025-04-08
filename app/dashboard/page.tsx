@@ -189,49 +189,32 @@ export default function Dashboard() {
 
   // Updated Generate Roadmap Handler with new logic
   const handleGenerateRoadmap = async () => {
-    console.log("handleGenerateRoadmap called");
+    console.log("handleGenerateRoadmap called:", {
+      isCollegeStudent,
+      formFilled,
+    });
     setGenerating(true);
-    try {
-      const res = await fetch("/api/generate-roadmap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clerk_id: user?.id }),
-      });
-  
-      if (!res.body) {
-        throw new Error("No readable stream in response.");
+
+    (async () => {
+      try {
+        const res = await fetch("/api/generate-roadmap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clerk_id: user?.id }),
+        });
+
+        const result = await res.json();
+        console.log("Generated roadmap:");
+        setApiCallCompleted(true);
+      } catch (error) {
+        console.log("Error generating roadmap:", error);
+        setGenerating(false);
       }
-  
-      // Read the streaming response.
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let resultStr = "";
-  
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        resultStr += chunk;
-        
-        // Update the UI with the streaming content
-        // This is optional but provides feedback to the user
-        
-        // If you detect the finish marker, break the loop
-        if (resultStr.includes("[STREAM_END]")) {
-          resultStr = resultStr.replace("[STREAM_END]", "");
-          break;
-        }
-      }
-  
-      console.log("Stream complete");
-      setApiCallCompleted(true);
-      
-      // Redirect to the roadmap page - the proper JSON is already stored in the DB
-      router.push('/roadmap');
-    } catch (error) {
-      console.error("Error generating roadmap:", error);
-    } finally {
-      setGenerating(false);
+    })();
+
+    if (isCollegeStudent && !formFilled) {
+      console.log("Showing college form modal.");
+      setShowCollegeForm(true);
     }
   };
 
