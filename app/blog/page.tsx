@@ -2,6 +2,7 @@
 
 import { supabase } from "@/utils/supabase/supabaseClient";
 import BlogCard from "@/components/BlogCard";
+import FloatingNavbar from "@/components/Navbar";
 
 type Blog = {
   id: string;
@@ -12,6 +13,12 @@ type Blog = {
   author: string | null;
   created_at: string;
 };
+
+const dashboardLinks = [
+  { href: "/roadmap", label: "Roadmap" },
+  { href: "/events", label: "Events" },
+  { href: "/analytics", label: "User Analysis" },
+];
 
 export default async function BlogPage() {
   const { data: blogs, error } = (await supabase
@@ -28,7 +35,8 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+      <FloatingNavbar navLinks={dashboardLinks} />
+      <div className="max-w-5xl mx-auto mt-20">
         <h1 className="text-5xl font-extrabold text-center text-amber-600 mb-8">
           Our Blog
         </h1>
