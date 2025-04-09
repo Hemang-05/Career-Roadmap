@@ -129,44 +129,66 @@ function RoadmapDisplay({
 
                             {/* Custom Checkbox */}
                             <div
-                              onClick={async () => {
+                              onClick={() => {
                                 // Ensure roadmapData and user_id are valid before proceeding
                                 if (!roadmapData?.user_id || !phase?.phase_name || !task?.task_title) {
-                                    console.error("Missing data for task update:", { roadmapData, phase, task });
-                                    // Optionally show an error to the user
-                                    return;
+                                  console.error("Missing data for task update:", { roadmapData, phase, task });
+                                  return;
                                 }
+                                
+                                // Toggle completion state for immediate visual feedback
                                 task.completed = !task.completed;
+                                
+                                // Force React to recognize the state change by creating a new reference
+                                const shallowCopy = [...milestone.tasks];
+                                milestone.tasks[tIndex] = {...task};
+                                milestone.tasks = shallowCopy;
+                                
                                 const phaseIdentifier = phase.phase_name;
-
-                                try {
-                                    await fetch("/api/update-task", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                        user_id: roadmapData.user_id,
-                                        task_title: task.task_title,
-                                        completed: task.completed,
-                                        currentPhaseIdentifier: phaseIdentifier,
-                                    }),
-                                    });
-                                    onTaskUpdate(); // Trigger data refresh
-                                } catch (error) {
-                                    console.error("Failed to update task:", error);
-                                    // Revert optimistic UI update if needed
-                                    task.completed = !task.completed;
-                                    // Optionally show an error message to the user
-                                }
+                                
+                                // Make API call without awaiting it
+                                fetch("/api/update-task", {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    user_id: roadmapData.user_id,
+                                    task_title: task.task_title,
+                                    completed: task.completed,
+                                    currentPhaseIdentifier: phaseIdentifier,
+                                  }),
+                                })
+                                .then(response => {
+                                  if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                  }
+                                  return response.json();
+                                })
+                                .then(data => {
+                                  console.log("Task updated successfully:", data);
+                                  // Update progress without reloading page
+                                  if (typeof onTaskUpdate === 'function') {
+                                    onTaskUpdate();
+                                  }
+                                })
+                                .catch(error => {
+                                  console.error("Failed to update task:", error);
+                                  // Revert optimistic UI update if needed
+                                  task.completed = !task.completed;
+                                  // Force another re-render by updating the array again
+                                  const revertShallowCopy = [...milestone.tasks];
+                                  milestone.tasks[tIndex] = {...task};
+                                  milestone.tasks = revertShallowCopy;
+                                });
                               }}
-                              // Adjusted checkbox margin
+                              // Simple styling with just the color change
                               className={`
                                 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer mr-2 md:mr-3 flex-shrink-0 mt-1
                                 border-2 transition-colors duration-200
                                 ${task.completed
                                   ? "bg-green-500 border-green-500"
-                                  : "bg-gray-200 border-gray-300 hover:border-gray-400" // Added hover state for unchecked
+                                  : "bg-gray-200 border-gray-300 hover:border-gray-400"
                                 }
                               `}
                             >
@@ -569,6 +591,7 @@ export default function RoadmapPage() {
   }
 
 
+
   // Main Page Content
   return (
     // Adjusted background, added padding for small screens
@@ -652,8 +675,9 @@ export default function RoadmapPage() {
             <RoadmapDisplay
               roadmapData={parsedRoadmap}
               onTaskUpdate={() => {
-                  console.log("Task updated, re-fetching roadmap...");
-                  fetchRoadmap(); // Re-fetch data on task update
+                if (parsedRoadmap) {
+                  setTaskCountProgress(calculateTaskCountProgress(parsedRoadmap));
+              }
               }}
               openYearIndices={openYearIndices}
               toggleYear={toggleYear}

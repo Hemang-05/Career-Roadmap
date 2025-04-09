@@ -38,7 +38,10 @@ export async function POST(request: Request) {
     console.log('Initialized Tavily client');
     
     // Call the search method with the query and an empty options object
-    const response = await tvly.search(query, {});
+    const response = await tvly.search(query, {
+      searchDepth:"advanced",
+      maxResults: 7
+    });
     console.log('Tavily API raw response:', response);
     
     if (!response.results || response.results.length === 0) {

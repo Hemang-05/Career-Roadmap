@@ -175,21 +175,72 @@ export default function EventsPage() {
   // Automatically trigger external events search only on specific dates
   useEffect(() => {
     if (isLoaded && user && desiredCareer) {
-      const today = new Date().getDate();
-      const currentMonth = new Date().toLocaleString("default", {
-        month: "long",
-      });
+      const today = new Date();
+      const dayOfMonth = today.getDate();
       // Check localStorage for a flag
       const triggeredMonth = localStorage.getItem("externalSearchTriggered");
       // Only trigger if today is specified day and the flag for this month is not set
-      if ((today === 1 || today === 15) && triggeredMonth !== currentMonth) {
-        console.log(
-          "Auto-triggering external events search for current month:",
-          currentMonth
-        );
-        handleExternalSearch();
-        localStorage.setItem("externalSearchTriggered", currentMonth);
-        // Also send an email notification after triggering the external search
+      if ((dayOfMonth  === 1 || dayOfMonth  === 15)) {
+        
+        const checkIfSearchNeeded = async () => {
+          try {
+            // 1. Get Supabase user ID
+            const { data: userRecord, error: userError } = await supabase
+              .from("users")
+              .select("id")
+              .eq("clerk_id", user.id) // Use non-null assertion since 'user' is checked above
+              .single();
+
+            if (userError || !userRecord) {
+              console.error("Error fetching Supabase user record for check:", userError);
+              // Decide if you want to proceed without the check or stop
+              // For safety, let's stop here if we can't confirm the user ID
+              return;
+            }
+            const userId = userRecord.id;
+
+            // 2. Define date range for today
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0); // Set to beginning of the day
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999); // Set to end of the day
+
+            // 3. Check if an event was created today for this user
+            const { count, error: checkError } = await supabase
+              .from("events")
+              .select("id", { count: 'exact', head: true }) // Only need the count
+              .eq("user_id", userId)
+              .gte("created_at", startOfDay.toISOString()) // Check if created_at >= start of today
+              .lte("created_at", endOfDay.toISOString());   // Check if created_at <= end of today
+
+            if (checkError) {
+              console.error("Error checking for existing events today:", checkError);
+              // Decide if you want to proceed despite the error, maybe default to searching?
+              // Let's be cautious and not search if the check fails
+              return;
+            }
+
+            // 4. Trigger search ONLY if no event was created today (count is 0 or null)
+            if (count === 0) {
+              console.log(
+                "Auto-triggering external events search: No record found for today."
+              );
+              handleExternalSearch(); // Call your existing search function
+              sendEmailNotification(); // Call your existing email function
+              // You might still want a flag (in state or DB) if you need to ensure it runs *only once* per day
+              // even if the component re-mounts, but this check prevents it based on DB data.
+            } else {
+              console.log(
+                "Skipping external events search: Record already exists for today.",
+                `Count: ${count}`
+              );
+            }
+          } catch (err) {
+            console.error("Error in checkIfSearchNeeded:", err);
+          }
+        };
+
+        checkIfSearchNeeded();
         sendEmailNotification();
       }
     }
