@@ -240,12 +240,174 @@ export default function EventsPage() {
       recipients.push(parentEmail);
     }
   
+    // const emailPayload = {
+    //   to: recipients, // Send to both user and parent if available
+    //   subject: "New Career Events Updates!",
+    //   text: `Hi ${
+    //     user.fullName || "there"
+    //   },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nCareer Roadmap Team`,
+    // };
     const emailPayload = {
-      to: recipients, // Send to both user and parent if available
-      subject: "New Career Events Updates!",
-      text: `Hi ${
-        user.fullName || "there"
-      },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nCareer Roadmap Team`,
+      to: recipients,
+      subject: "New Career Events Available",
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Career Events Update</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+            
+            body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+            .container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      background-color: #FDFAF6;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    }
+            .header {
+      padding: 28px 0;
+      text-align: center;
+      background: linear-gradient(70deg, #FF6500, #FCB454);
+      color: white;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: 1.3px;
+    }
+
+            .content {
+              padding: 40px 36px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: 600;
+              color: #1a1a1a;
+              margin: 0 0 24px 0;
+              letter-spacing: -0.5px;
+            }
+            .text {
+              font-size: 15px;
+              color: #444;
+              margin-bottom: 20px;
+              font-weight: 400;
+            }
+            .button-container {
+              text-align: center;
+              margin: 32px 0;
+            }
+            .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #FF6500, #FCB454);
+      color: white;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 32px;
+      font-weight: 500;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(102, 101, 221, 0.3);
+    }
+            .divider {
+              height: 1px;
+              background-color: #eaeaea;
+              margin: 36px 0;
+            }
+          
+            .event-title {
+              font-size: 17px;
+              font-weight: 600;
+              margin: 0 0 8px 0;
+            }
+            .event-description {
+              font-size: 14px;
+              color: #666;
+              margin: 0;
+            }
+            .footer {
+              background-color: #f8f9fa;
+              padding: 24px;
+              text-align: center;
+              font-size: 13px;
+              color: #888;
+            }
+           
+            @media only screen and (max-width: 550px) {
+              .content {
+                padding: 30px 24px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">Career Roadmap</div>
+            </div>
+            
+            <div class="content">
+              <h1 class="title">New Career Opportunities Available</h1>
+              
+              <p class="text">Hello ${user.fullName || "there"},</p>
+              
+              <p class="text">We're pleased to inform you that new career events matching your professional profile have been added to our platform.</p>
+              
+              <div class="event-preview">
+                <h3 class="event-title">Events Notification</h3>
+                <p class="event-description">Check out the new events and improve your chances to reach your dream.</p>
+              </div>
+              
+              <div class="button-container">
+                <a href="https://www.careeroadmap.com/events" class="button">View All Events</a>
+              </div>
+              
+              <div class="divider"></div>
+              
+              <p class="text">We carefully curate opportunities to help accelerate your career growth and connect you with ways to improve your portfolio.</p>
+              
+              <p class="text" style="margin-bottom: 0;">Best regards,<br>The Career Roadmap Team</p>
+            </div>
+            
+            <div class="footer">
+              
+              <div>© 2025 Career Roadmap. All rights reserved.</div>
+  
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Hello ${user.fullName || "there"},
+    
+    We've curated new career events that align with your professional goals. These exclusive opportunities are now available in your personalized dashboard.
+    
+    FEATURED EVENT:
+    Tech Industry Networking Summit - Connect with industry leaders and explore emerging career paths in technology.
+    
+    View all events: [APP_LINK]
+    
+    Your career growth matters to us. Our team has carefully selected these events based on your profile and interests.
+    
+    Best regards,
+    The Career Roadmap Team
+    
+    © 2025 Career Roadmap. All rights reserved.
+    `,
     };
   
     try {

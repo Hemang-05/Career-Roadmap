@@ -196,7 +196,7 @@ The response must be strictly in JSON format without any additional text, markdo
           "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
           "each milestone with 6-8 actionable tasks"
         );
-        console.log('Prompt sent for HARD difficulty:', prompt);
+        // console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
         console.error("Invalid difficulty level:", difficulty);

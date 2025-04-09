@@ -9,15 +9,16 @@ type EmailPayload = {
   to: string | string[]; // Can be a single email or array of emails
   subject: string;
   text: string;
+  html?: string
 };
 
 export async function POST(request: Request) {
   try {
-    const { to, subject, text }: EmailPayload = await request.json();
+    const { to, subject, text, html }: EmailPayload = await request.json();
     
     // Configure your transporter (this example uses Gmail)
     const transporter = nodemailer.createTransport({
-      service: 'smtpout.secureserver.net',
+      host: 'smtpout.secureserver.net',
       port: 465,
       secure: true, // use SSL
       auth: {
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
       to,
       subject,
       text,
+      html,
     };
     
     const info = await transporter.sendMail(mailOptions);

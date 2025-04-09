@@ -11,6 +11,7 @@ import FloatingNavbar from "@/components/Navbar";
 import PaymentPlan from "@/components/PaymentPlan";
 import Loader from "@/components/Loader";
 import DifficultySelector from "@/components/DifficultySelector";
+import RoadmapNotification from "@/components/RoadmapNotification";
 
 type OptionType = {
   label: string;
@@ -367,19 +368,7 @@ export default function Dashboard() {
         </h1>
 
         {hasRoadmap ? (
-          <div className="mb-6 p-3 bg-green-50 text-green-700 rounded-md flex justify-between items-center">
-            <p>
-              You already have a roadmap.{" "}
-              <span
-                className="font-bold cursor-pointer hover:underline"
-                onClick={() => router.push("/roadmap")}
-              >
-                Click to see
-              </span>
-              . If you want to update the existing roadmap, fill in the fields
-              below.
-            </p>
-          </div>
+          <RoadmapNotification />
         ) : (
           <div className="mb-6 p-3 bg-orange-50 text-orange-700 rounded-md">
             <p>
