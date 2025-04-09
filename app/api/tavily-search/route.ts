@@ -39,8 +39,8 @@ export async function POST(request: Request) {
     
     // Call the search method with the query and an empty options object
     const response = await tvly.search(query, {
-      searchDepth:"advanced",
-      maxResults: 7
+      searchDepth:"advanced"
+      // maxResults: 7
     });
     console.log('Tavily API raw response:', response);
     

@@ -7,8 +7,24 @@ import { supabase } from '@/utils/supabase/supabaseClient';
  * In this example, the AI call is made using model "deepseek/deepseek-r1:free".
  */
 async function generateCareerTag(desired_career: string): Promise<string> {
-  const prompt = `Determine the common career category for the desired career: "${desired_career}". Options include "Doctor", "Entertainment", "Engineer", or "General". Return only the category name.`;
-  
+  // const prompt = `Determine the common career category for the desired career: "${desired_career}". Options include "Doctor", "Entertainment", "Engineer", or "General". Return only the category name.`;
+  const prompt = `
+For a desired career "${desired_career}", determine the most appropriate career category from the following options:
+
+1. Medical/Healthcare – for doctors, nurses, therapists, and other health-related professionals
+2. Entertainment & Media – for actors, musicians, directors, and other creative performers
+3. Engineering & Technology – for engineers, developers, IT specialists, and technical professionals
+4. Business & Finance – for entrepreneurs, bankers, accountants, and corporate professionals
+5. Law & Public Service – for lawyers, policy makers, and government or public administrators
+6. Education & Research – for teachers, professors, researchers, and academic professionals
+7. Arts & Design – for visual artists, designers, architects, and creative specialists
+8. Science & Environment – for scientists, researchers, environmentalists, and lab professionals
+9. Sports & Fitness – for athletes, coaches, trainers, and sports managers
+10. Culinary & Hospitality – for chefs, restaurant managers, travel experts, and hospitality professionals
+11. Others – for any niche or emerging professions that do not fit into the above categories
+
+Return only the category name without numbering or explanation.
+`;
   const apiKey = process.env.OPENROUTER_API_KEY_TAG;
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
