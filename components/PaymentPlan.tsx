@@ -54,7 +54,6 @@ export default function PaymentPlan({
       const { error: updateError } = await supabase
         .from("users")
         .update({
-          subscription_status: true,
           subscription_plan: plan,
           subscription_start: now.toISOString(),
           subscription_end: endDate.toISOString(),
