@@ -57,16 +57,17 @@ export async function POST(request: Request) {
 
     const response = await dodopayments.subscriptions.create({
       billing: {
-        city: "",
+        city: "city",
         country: "IN", // Ensure you use a valid ISO country code
-        state: "",
+        state: "state",
         street: "",
-        zipcode: "",
+        zipcode: "zipcode",
       },
       customer: {
         email: user.email,
         name: user.full_name || "",
       },
+      billing_currency: 'INR',
       payment_link: true,
       product_id,
       quantity: 1,
