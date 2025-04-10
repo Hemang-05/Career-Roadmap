@@ -67,7 +67,6 @@ export async function POST(request: Request) {
         email: user.email,
         name: user.full_name || "",
       },
-      billing_currency: 'INR',
       payment_link: true,
       product_id,
       quantity: 1,
