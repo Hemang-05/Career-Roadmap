@@ -7,6 +7,7 @@ const Loader = () => {
   const [messageIndex, setMessageIndex] = useState(0);
 
   const messages = [
+    "This can take up to 3 to 5 minutes in generating roadmap",
     "Take a walk, this could take a moment...",
     "Have a coffee break while we prepare your roadmap...",
     "Brewing your career path, almost ready...",
