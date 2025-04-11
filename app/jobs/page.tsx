@@ -5,6 +5,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import FloatingNavbar from "@/components/Navbar";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface JobItem {
   title: string;
@@ -17,12 +19,21 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user, isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
 
   const dashboardLinks = [
     { href: "/roadmap", label: "Roadmap" },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
   ];
+
+
+  useEffect(() => {
+  if (isLoaded && !isSignedIn) {
+    router.push("/");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
     setLoading(true);
