@@ -3,7 +3,7 @@ import { GlareCard } from '@/components/ui/GlareCard';
 
 export default function PricingSection() {
   return (
-    <section id="pricing" className="container mx-auto py-24">
+    <section className="container mx-auto py-24">
       <h2 className="text-3xl md:text-5xl font-bold text-center text-black mb-8">Why <span className='text-[#FF6500]'>us?</span></h2>
       <p className="text-gray-600 text-lg text-center px-8 mb-24 max-w-2xl mx-auto">
       Your success story begins with a single smart decision. Partner with us and make every move count.
