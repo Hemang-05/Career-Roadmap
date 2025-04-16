@@ -7,6 +7,7 @@ import FAQSection from "../components/FAQSection";
 
 import TestimonialsSection from "../components/TestimonialsSection";
 import PricingSection from "@/components/PricingSection";
+import Plans from "@/components/Plans";
 
 export default function LandingPage() {
   return (
@@ -17,6 +18,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <PricingSection />
         <TestimonialsSection />
+        <Plans />
         <FAQSection />
       </main>
     </div>

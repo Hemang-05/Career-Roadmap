@@ -64,7 +64,7 @@ const TestimonialsSection: React.FC = () => {
       imagePosition: 'right' as const
     },
     {
-      testimonial: "I used to rely on self-guidance, but switching to Career Roadmap was a game-changer. The tailored alerts and comprehensive planning made all the difference!",
+      testimonial: "I used to rely on self-guidance, but switching to Career Roadmap was a game changer. The tailored alerts and comprehensive planning made all the difference!",
       name: "Abhimanyu",
       role: "Student",
       image: "https://res.cloudinary.com/ditn9req1/image/upload/v1743662080/a_3d_illustration_of_a_teenager_image__1_-removebg-preview_dpdbtu.png",
@@ -78,7 +78,7 @@ const TestimonialsSection: React.FC = () => {
       imagePosition: 'right' as const
     },
     {
-      testimonial: "Affordable and in-depth, Career Roadmap redefined my career journey. The real-time updates and ultra-tailored guidance mean I'm always on track for success!",
+      testimonial: "Affordable and in-depth, Career Roadmap redefined my career journey. The real-time updates and ultra tailored guidance mean I'm always on track for success!",
       name: "Viaan",
       role: "Student",
       image: "https://res.cloudinary.com/ditn9req1/image/upload/t_Temp/v1743666280/a_3d_illustration_of_a_teenager_image__2_-removebg-preview_zsyxp0.png",
