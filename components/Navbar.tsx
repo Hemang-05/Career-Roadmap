@@ -21,7 +21,7 @@ export default function FloatingNavbar({ navLinks }: FloatingNavbarProps) {
 
   // Default links if none are provided
   const defaultLinks: NavLink[] = [
-    { href: "/dashboard", label: "Dashboard" },
+    { href: "/blog", label: "Blogs" },
     { href: "#features", label: "Features" },
     { href: "#pricing", label: "Pricing" },
     { href: "#testimonials", label: "Testimonials" }
