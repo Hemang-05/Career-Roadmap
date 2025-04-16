@@ -5,7 +5,8 @@ import React from "react";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Script from "next/script";
-import Analytics from "@/utils/analytics";
+import Analysis from "@/utils/analytics";
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -98,8 +99,9 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           suppressHydrationWarning={true}
         >
-          <Analytics />
+          <Analysis />
           {children}
+          <Analytics />
           <Footer />
         </body>
       </html>

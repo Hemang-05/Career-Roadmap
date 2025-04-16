@@ -10,12 +10,12 @@ declare global {
   }
 }
 
-export default function Analytics() {
+export default function Analysis() {
   const pathname = usePathname();
 
   useEffect(() => {
     if (!window.gtag) return;
-    window.gtag("config", "G-XXXXXXXXXX", {
+    window.gtag("config", "G-V4YBRRQJFN", {
       page_path: pathname,
     });
   }, [pathname]);
