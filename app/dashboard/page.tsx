@@ -495,10 +495,10 @@ export default function Dashboard() {
                 </label>
               </label>
               <input
-                type="Text"
+                type="number"
                 value={spendingCapacity}
                 onChange={(e) => setSpendingCapacity(e.target.value)}
-                placeholder="e.g. 500000 rupees"
+                placeholder="eg. 500000"
                 className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]"
                 required
               />
