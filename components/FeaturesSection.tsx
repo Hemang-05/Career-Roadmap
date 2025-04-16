@@ -97,7 +97,7 @@ export default function FeaturesSection() {
   return (
     <section id="features" className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-16 xl:px-44 pb-8 md:pb-16 pt-0">
       <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-center mb-12 md:mb-28">
-        <RoadmapFlipWords/>
+{/*         <RoadmapFlipWords/> */}
       </h2>
 
       <div className="flex flex-col lg:flex-row gap-8">
