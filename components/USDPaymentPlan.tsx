@@ -77,19 +77,19 @@ export default function USDPaymentPlan({
   const plans = [
     {
       name: "Month",
-      totalPrice: "$5.99",
+      totalPrice: "$19.99",
       duration: "30 days",
     },
     {
       name: "Quarter",
-      totalPrice: "$14.99",
-      perMonth: "$5.00",
+      totalPrice: "$49.99",
+      perMonth: "$16.66",
       duration: "90 days",
     },
     {
       name: "Year",
-      totalPrice: "$59.99",
-      perMonth: "$5.00",
+      totalPrice: "$149.99",
+      perMonth: "$12.49",
       duration: "365 days",
     },
   ];
