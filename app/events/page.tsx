@@ -173,306 +173,306 @@ export default function EventsPage() {
   };
 
   // Automatically trigger external events search only on specific dates
-  useEffect(() => {
-    if (isLoaded && user && desiredCareer) {
-      const today = new Date();
-      const dayOfMonth = today.getDate();
-      // Check localStorage for a flag
-      const triggeredMonth = localStorage.getItem("externalSearchTriggered");
-      // Only trigger if today is specified day and the flag for this month is not set
-      if ((dayOfMonth  === 1 || dayOfMonth  === 15)) {
+  // useEffect(() => {
+  //   if (isLoaded && user && desiredCareer) {
+  //     const today = new Date();
+  //     const dayOfMonth = today.getDate();
+  //     // Check localStorage for a flag
+  //     const triggeredMonth = localStorage.getItem("externalSearchTriggered");
+  //     // Only trigger if today is specified day and the flag for this month is not set
+  //     if ((dayOfMonth  === 1 || dayOfMonth  === 15)) {
         
-        const checkIfSearchNeeded = async () => {
-          try {
-            // 1. Get Supabase user ID
-            const { data: userRecord, error: userError } = await supabase
-              .from("users")
-              .select("id")
-              .eq("clerk_id", user.id) // Use non-null assertion since 'user' is checked above
-              .single();
+  //       const checkIfSearchNeeded = async () => {
+  //         try {
+  //           // 1. Get Supabase user ID
+  //           const { data: userRecord, error: userError } = await supabase
+  //             .from("users")
+  //             .select("id")
+  //             .eq("clerk_id", user.id) // Use non-null assertion since 'user' is checked above
+  //             .single();
 
-            if (userError || !userRecord) {
-              console.error("Error fetching Supabase user record for check:", userError);
-              // Decide if you want to proceed without the check or stop
-              // For safety, let's stop here if we can't confirm the user ID
-              return;
-            }
-            const userId = userRecord.id;
+  //           if (userError || !userRecord) {
+  //             console.error("Error fetching Supabase user record for check:", userError);
+  //             // Decide if you want to proceed without the check or stop
+  //             // For safety, let's stop here if we can't confirm the user ID
+  //             return;
+  //           }
+  //           const userId = userRecord.id;
 
-            // 2. Define date range for today
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0); // Set to beginning of the day
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999); // Set to end of the day
+  //           // 2. Define date range for today
+  //           const startOfDay = new Date();
+  //           startOfDay.setHours(0, 0, 0, 0); // Set to beginning of the day
+  //           const endOfDay = new Date();
+  //           endOfDay.setHours(23, 59, 59, 999); // Set to end of the day
 
-            // 3. Check if an event was created today for this user
-            const { count, error: checkError } = await supabase
-              .from("events")
-              .select("id", { count: 'exact', head: true }) // Only need the count
-              .eq("user_id", userId)
-              .gte("created_at", startOfDay.toISOString()) // Check if created_at >= start of today
-              .lte("created_at", endOfDay.toISOString());   // Check if created_at <= end of today
+  //           // 3. Check if an event was created today for this user
+  //           const { count, error: checkError } = await supabase
+  //             .from("events")
+  //             .select("id", { count: 'exact', head: true }) // Only need the count
+  //             .eq("user_id", userId)
+  //             .gte("created_at", startOfDay.toISOString()) // Check if created_at >= start of today
+  //             .lte("created_at", endOfDay.toISOString());   // Check if created_at <= end of today
 
-            if (checkError) {
-              console.error("Error checking for existing events today:", checkError);
-              // Decide if you want to proceed despite the error, maybe default to searching?
-              // Let's be cautious and not search if the check fails
-              return;
-            }
+  //           if (checkError) {
+  //             console.error("Error checking for existing events today:", checkError);
+  //             // Decide if you want to proceed despite the error, maybe default to searching?
+  //             // Let's be cautious and not search if the check fails
+  //             return;
+  //           }
 
-            // 4. Trigger search ONLY if no event was created today (count is 0 or null)
-            if (count === 0) {
-              console.log(
-                "Auto-triggering external events search: No record found for today."
-              );
-              handleExternalSearch(); // Call your existing search function
-              sendEmailNotification(); // Call your existing email function
-              // You might still want a flag (in state or DB) if you need to ensure it runs *only once* per day
-              // even if the component re-mounts, but this check prevents it based on DB data.
-            } else {
-              console.log(
-                "Skipping external events search: Record already exists for today.",
-                `Count: ${count}`
-              );
-            }
-          } catch (err) {
-            console.error("Error in checkIfSearchNeeded:", err);
-          }
-        };
+  //           // 4. Trigger search ONLY if no event was created today (count is 0 or null)
+  //           if (count === 0) {
+  //             console.log(
+  //               "Auto-triggering external events search: No record found for today."
+  //             );
+  //             handleExternalSearch(); // Call your existing search function
+  //             sendEmailNotification(); // Call your existing email function
+  //             // You might still want a flag (in state or DB) if you need to ensure it runs *only once* per day
+  //             // even if the component re-mounts, but this check prevents it based on DB data.
+  //           } else {
+  //             console.log(
+  //               "Skipping external events search: Record already exists for today.",
+  //               `Count: ${count}`
+  //             );
+  //           }
+  //         } catch (err) {
+  //           console.error("Error in checkIfSearchNeeded:", err);
+  //         }
+  //       };
 
-        checkIfSearchNeeded();
-        sendEmailNotification();
-      }
-    }
-  }, [isLoaded, user, desiredCareer]);
+  //       checkIfSearchNeeded();
+  //       sendEmailNotification();
+  //     }
+  //   }
+  // }, [isLoaded, user, desiredCareer]);
 
   // Function to send email notification via your API route for sending emails
-  const sendEmailNotification = async () => {
-    if (!user?.primaryEmailAddress) {
-      console.error("User email not available for sending notification.");
-      return;
-    }
+  // const sendEmailNotification = async () => {
+  //   if (!user?.primaryEmailAddress) {
+  //     console.error("User email not available for sending notification.");
+  //     return;
+  //   }
   
-    let parentEmail = null;
-    try {
-      // We already have the user ID from previous supabase queries in this page
-      const { data: userRecord, error: userError } = await supabase
-        .from("users")
-        .select("id")
-        .eq("clerk_id", user.id)
-        .single();
+  //   let parentEmail = null;
+  //   try {
+  //     // We already have the user ID from previous supabase queries in this page
+  //     const { data: userRecord, error: userError } = await supabase
+  //       .from("users")
+  //       .select("id")
+  //       .eq("clerk_id", user.id)
+  //       .single();
         
-      if (userError || !userRecord) {
-        console.error("Error fetching user record:", userError);
-        // Continue with sending email to user even if parent email fetch fails
-      } else {
-        // Fetch parent_email from career_info table using the user_id
-        const { data: careerInfo, error: careerInfoError } = await supabase
-          .from("career_info")
-          .select("parent_email")
-          .eq("user_id", userRecord.id)
-          .single();
+  //     if (userError || !userRecord) {
+  //       console.error("Error fetching user record:", userError);
+  //       // Continue with sending email to user even if parent email fetch fails
+  //     } else {
+  //       // Fetch parent_email from career_info table using the user_id
+  //       const { data: careerInfo, error: careerInfoError } = await supabase
+  //         .from("career_info")
+  //         .select("parent_email")
+  //         .eq("user_id", userRecord.id)
+  //         .single();
           
-        if (careerInfoError) {
-          console.error("Error fetching parent email:", careerInfoError);
-        } else if (careerInfo && careerInfo.parent_email) {
-          parentEmail = careerInfo.parent_email;
-          console.log("Parent email fetched:", parentEmail);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching parent email:", err);
-      // Continue with sending email to user even if parent email fetch fails
-    }
+  //       if (careerInfoError) {
+  //         console.error("Error fetching parent email:", careerInfoError);
+  //       } else if (careerInfo && careerInfo.parent_email) {
+  //         parentEmail = careerInfo.parent_email;
+  //         console.log("Parent email fetched:", parentEmail);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching parent email:", err);
+  //     // Continue with sending email to user even if parent email fetch fails
+  //   }
   
-    // Create an array of recipients
-    const recipients = [user.primaryEmailAddress.emailAddress];
-    if (parentEmail) {
-      recipients.push(parentEmail);
-    }
+  //   // Create an array of recipients
+  //   const recipients = [user.primaryEmailAddress.emailAddress];
+  //   if (parentEmail) {
+  //     recipients.push(parentEmail);
+  //   }
   
-    // const emailPayload = {
-    //   to: recipients, // Send to both user and parent if available
-    //   subject: "New Career Events Updates!",
-    //   text: `Hi ${
-    //     user.fullName || "there"
-    //   },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nCareer Roadmap Team`,
-    // };
-    const emailPayload = {
-      to: recipients,
-      subject: "New Career Events Available",
-      html: `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Career Events Update</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  //   // const emailPayload = {
+  //   //   to: recipients, // Send to both user and parent if available
+  //   //   subject: "New Career Events Updates!",
+  //   //   text: `Hi ${
+  //   //     user.fullName || "there"
+  //   //   },\n\nWe have received updates regarding new events related to your career. Please open the app to register.\n\nBest,\nCareer Roadmap Team`,
+  //   // };
+  //   const emailPayload = {
+  //     to: recipients,
+  //     subject: "New Career Events Available",
+  //     html: `
+  //       <!DOCTYPE html>
+  //       <html lang="en">
+  //       <head>
+  //         <meta charset="UTF-8">
+  //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  //         <title>Career Events Update</title>
+  //         <style>
+  //           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
             
-            body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.5;
-      color: #1a1a1a;
-      background-color: #f8f9fa;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-            .container {
-      max-width: 600px;
-      width: 100%;
-      margin: 0 auto;
-      background-color: #FDFAF6;
-      border-radius: 32px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    }
-            .header {
-      padding: 28px 0;
-      text-align: center;
-      background: linear-gradient(70deg, #FF6500, #FCB454);
-      color: white;
-    }
-    .logo {
-      font-size: 32px;
-      font-weight: 600;
-      letter-spacing: 1.3px;
-    }
+  //           body {
+  //     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  //     line-height: 1.5;
+  //     color: #1a1a1a;
+  //     background-color: #f8f9fa;
+  //     margin: 0;
+  //     padding: 20px;
+  //     display: flex;
+  //     justify-content: center;
+  //   }
+  //           .container {
+  //     max-width: 600px;
+  //     width: 100%;
+  //     margin: 0 auto;
+  //     background-color: #FDFAF6;
+  //     border-radius: 32px;
+  //     overflow: hidden;
+  //     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  //   }
+  //           .header {
+  //     padding: 28px 0;
+  //     text-align: center;
+  //     background: linear-gradient(70deg, #FF6500, #FCB454);
+  //     color: white;
+  //   }
+  //   .logo {
+  //     font-size: 32px;
+  //     font-weight: 600;
+  //     letter-spacing: 1.3px;
+  //   }
 
-            .content {
-              padding: 40px 36px;
-            }
-            .title {
-              font-size: 24px;
-              font-weight: 600;
-              color: #1a1a1a;
-              margin: 0 0 24px 0;
-              letter-spacing: -0.5px;
-            }
-            .text {
-              font-size: 15px;
-              color: #444;
-              margin-bottom: 20px;
-              font-weight: 400;
-            }
-            .button-container {
-              text-align: center;
-              margin: 32px 0;
-            }
-            .button {
-      display: inline-block;
-      background: linear-gradient(135deg, #FF6500, #FCB454);
-      color: white;
-      text-decoration: none;
-      padding: 14px 32px;
-      border-radius: 32px;
-      font-weight: 500;
-      font-size: 15px;
-      box-shadow: 0 4px 12px rgba(102, 101, 221, 0.3);
-    }
-            .divider {
-              height: 1px;
-              background-color: #eaeaea;
-              margin: 36px 0;
-            }
+  //           .content {
+  //             padding: 40px 36px;
+  //           }
+  //           .title {
+  //             font-size: 24px;
+  //             font-weight: 600;
+  //             color: #1a1a1a;
+  //             margin: 0 0 24px 0;
+  //             letter-spacing: -0.5px;
+  //           }
+  //           .text {
+  //             font-size: 15px;
+  //             color: #444;
+  //             margin-bottom: 20px;
+  //             font-weight: 400;
+  //           }
+  //           .button-container {
+  //             text-align: center;
+  //             margin: 32px 0;
+  //           }
+  //           .button {
+  //     display: inline-block;
+  //     background: linear-gradient(135deg, #FF6500, #FCB454);
+  //     color: white;
+  //     text-decoration: none;
+  //     padding: 14px 32px;
+  //     border-radius: 32px;
+  //     font-weight: 500;
+  //     font-size: 15px;
+  //     box-shadow: 0 4px 12px rgba(102, 101, 221, 0.3);
+  //   }
+  //           .divider {
+  //             height: 1px;
+  //             background-color: #eaeaea;
+  //             margin: 36px 0;
+  //           }
           
-            .event-title {
-              font-size: 17px;
-              font-weight: 600;
-              margin: 0 0 8px 0;
-            }
-            .event-description {
-              font-size: 14px;
-              color: #666;
-              margin: 0;
-            }
-            .footer {
-              background-color: #f8f9fa;
-              padding: 24px;
-              text-align: center;
-              font-size: 13px;
-              color: #888;
-            }
+  //           .event-title {
+  //             font-size: 17px;
+  //             font-weight: 600;
+  //             margin: 0 0 8px 0;
+  //           }
+  //           .event-description {
+  //             font-size: 14px;
+  //             color: #666;
+  //             margin: 0;
+  //           }
+  //           .footer {
+  //             background-color: #f8f9fa;
+  //             padding: 24px;
+  //             text-align: center;
+  //             font-size: 13px;
+  //             color: #888;
+  //           }
            
-            @media only screen and (max-width: 550px) {
-              .content {
-                padding: 30px 24px;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <div class="logo">Career Roadmap</div>
-            </div>
+  //           @media only screen and (max-width: 550px) {
+  //             .content {
+  //               padding: 30px 24px;
+  //             }
+  //           }
+  //         </style>
+  //       </head>
+  //       <body>
+  //         <div class="container">
+  //           <div class="header">
+  //             <div class="logo">Career Roadmap</div>
+  //           </div>
             
-            <div class="content">
-              <h1 class="title">New Career Opportunities Available</h1>
+  //           <div class="content">
+  //             <h1 class="title">New Career Opportunities Available</h1>
               
-              <p class="text">Hello ${user.fullName || "there"},</p>
+  //             <p class="text">Hello ${user.fullName || "there"},</p>
               
-              <p class="text">We're pleased to inform you that new career events matching your professional profile have been added to our platform.</p>
+  //             <p class="text">We're pleased to inform you that new career events matching your professional profile have been added to our platform.</p>
               
-              <div class="event-preview">
-                <h3 class="event-title">Events Notification</h3>
-                <p class="event-description">Check out the new events and improve your chances to reach your dream.</p>
-              </div>
+  //             <div class="event-preview">
+  //               <h3 class="event-title">Events Notification</h3>
+  //               <p class="event-description">Check out the new events and improve your chances to reach your dream.</p>
+  //             </div>
               
-              <div class="button-container">
-                <a href="https://www.careeroadmap.com/events" class="button">View All Events</a>
-              </div>
+  //             <div class="button-container">
+  //               <a href="https://www.careeroadmap.com/events" class="button">View All Events</a>
+  //             </div>
               
-              <div class="divider"></div>
+  //             <div class="divider"></div>
               
-              <p class="text">We carefully curate opportunities to help accelerate your career growth and connect you with ways to improve your portfolio.</p>
+  //             <p class="text">We carefully curate opportunities to help accelerate your career growth and connect you with ways to improve your portfolio.</p>
               
-              <p class="text" style="margin-bottom: 0;">Best regards,<br>The Career Roadmap Team</p>
-            </div>
+  //             <p class="text" style="margin-bottom: 0;">Best regards,<br>The Career Roadmap Team</p>
+  //           </div>
             
-            <div class="footer">
+  //           <div class="footer">
               
-              <div>© 2025 Career Roadmap. All rights reserved.</div>
+  //             <div>© 2025 Career Roadmap. All rights reserved.</div>
   
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-      text: `Hello ${user.fullName || "there"},
+  //           </div>
+  //         </div>
+  //       </body>
+  //       </html>
+  //     `,
+  //     text: `Hello ${user.fullName || "there"},
     
-    We've curated new career events that align with your professional goals. These exclusive opportunities are now available in your personalized dashboard.
+  //   We've curated new career events that align with your professional goals. These exclusive opportunities are now available in your personalized dashboard.
     
-    FEATURED EVENT:
-    Tech Industry Networking Summit - Connect with industry leaders and explore emerging career paths in technology.
+  //   FEATURED EVENT:
+  //   Tech Industry Networking Summit - Connect with industry leaders and explore emerging career paths in technology.
     
-    View all events: [APP_LINK]
+  //   View all events: [APP_LINK]
     
-    Your career growth matters to us. Our team has carefully selected these events based on your profile and interests.
+  //   Your career growth matters to us. Our team has carefully selected these events based on your profile and interests.
     
-    Best regards,
-    The Career Roadmap Team
+  //   Best regards,
+  //   The Career Roadmap Team
     
-    © 2025 Career Roadmap. All rights reserved.
-    `,
-    };
+  //   © 2025 Career Roadmap. All rights reserved.
+  //   `,
+  //   };
   
-    try {
-      const res = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailPayload),
-      });
-      const data = await res.json();
-      console.log("Email notification sent:", data);
-    } catch (err: any) {
-      console.error("Error sending email notification:", err);
-    }
-  };
+  //   try {
+  //     const res = await fetch("/api/send-email", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(emailPayload),
+  //     });
+  //     const data = await res.json();
+  //     console.log("Email notification sent:", data);
+  //   } catch (err: any) {
+  //     console.error("Error sending email notification:", err);
+  //   }
+  // };
 
   // Redirect if user is not signed in
   useEffect(() => {
