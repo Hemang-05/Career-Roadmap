@@ -6,7 +6,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 
 interface USDPaymentPlanProps {
   clerk_id: string;
-  onSuccess?: (plan: "monthly" | "quarterly" | "yearly") => void;
+  onSuccess?: (plan: "month" | "quarter" | "year") => void;
   onClose?: () => void;
   message?: string;
 }
@@ -20,17 +20,18 @@ export default function USDPaymentPlan({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cunt = "US";
 
-  const handlePayment = async (plan: "monthly" | "quarterly" | "yearly") => {
+  const handlePayment = async (plan: "month" | "quarter" | "year") => {
     setLoading(true);
     setError(null);
 
     try {
       // Call the API route to initiate USD subscription using clerk_id
-      const response = await fetch("/api/initiate-usd-subscription", {
+      const response = await fetch("/api/initiate-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clerk_id, plan }),
+        body: JSON.stringify({ clerk_id, plan, cunt }),
       });
 
       const data = await response.json();
@@ -41,11 +42,11 @@ export default function USDPaymentPlan({
       // Optionally update local subscription details immediately
       const now = new Date();
       let endDate = new Date();
-      if (plan === "monthly") {
+      if (plan === "month") {
         endDate.setMonth(now.getMonth() + 1);
-      } else if (plan === "quarterly") {
+      } else if (plan === "quarter") {
         endDate.setMonth(now.getMonth() + 3);
-      } else if (plan === "yearly") {
+      } else if (plan === "year") {
         endDate.setFullYear(now.getFullYear() + 1);
       }
 
@@ -75,18 +76,18 @@ export default function USDPaymentPlan({
 
   const plans = [
     {
-      name: "Monthly",
+      name: "Month",
       totalPrice: "$5.99",
       duration: "30 days",
     },
     {
-      name: "Quarterly",
+      name: "Quarter",
       totalPrice: "$14.99",
       perMonth: "$5.00",
       duration: "90 days",
     },
     {
-      name: "Yearly",
+      name: "Year",
       totalPrice: "$59.99",
       perMonth: "$5.00",
       duration: "365 days",
@@ -109,27 +110,27 @@ export default function USDPaymentPlan({
                 onClick={() =>
                   handlePayment(
                     plan.name.toLowerCase() as
-                      | "monthly"
-                      | "quarterly"
-                      | "yearly"
+                      | "month"
+                      | "quarter"
+                      | "year"
                   )
                 }
                 disabled={loading}
                 className="flex flex-col text-black items-center relative w-[220px] h-[350px] rounded-[20px] overflow-hidden shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {plan.name === "Quarterly" && (
+                {plan.name === "Quarter" && (
                   <span className="absolute top-0 left-12 bg-[#FF6500] text-white text-xs font-bold px-2 py-1 rounded">
                     Recommended
                   </span>
                 )}
                 <img
-                  src={`${plan.name.toLowerCase()}.png`}
+                  src={`${plan.name.toLowerCase()}ly.png`}
                   alt={`${plan.name} Plan Illustration`}
                   className="w-full h-[60%] object-cover"
                 />
                 <div className="w-full h-[40%] p-4 flex flex-col items-center justify-center text-center">
                   <h3 className="text-lg font-semibold mb-1">
-                    {plan.name} Plan
+                    {plan.name}ly Plan
                   </h3>
                   {plan.perMonth ? (
                     <>
