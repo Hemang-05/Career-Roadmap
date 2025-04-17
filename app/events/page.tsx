@@ -39,10 +39,10 @@ export default function EventsPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // State for external events search
-  const [externalEvents, setExternalEvents] = useState<any[]>([]);
-  const [loadingExternal, setLoadingExternal] = useState(false);
-  const [externalError, setExternalError] = useState<string | null>(null);
-  const [externalSearchTriggered, setExternalSearchTriggered] = useState(false);
+  // const [externalEvents, setExternalEvents] = useState<any[]>([]);
+  // const [loadingExternal, setLoadingExternal] = useState(false);
+  // const [externalError, setExternalError] = useState<string | null>(null);
+  // const [externalSearchTriggered, setExternalSearchTriggered] = useState(false);
 
   // New state for horizontal card
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
@@ -137,40 +137,40 @@ export default function EventsPage() {
   }, [selectedMonth, isLoaded, user]);
 
   // Handler for triggering external events search via Tavily API
-  const handleExternalSearch = async () => {
-    if (!desiredCareer) {
-      setExternalError(
-        "Desired career is not available. Please update your career info."
-      );
-      return;
-    }
-    if (!user?.id) {
-      setExternalError("User not available.");
-      return;
-    }
-    setLoadingExternal(true);
-    setExternalError(null);
-    try {
-      const query = `display all upcoming events, scholarship programs, fests, trials, olympiads, exams, and other opportunities relevant to your ${desiredCareer}, in next two months`;
-      const res = await fetch("/api/tavily-search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, clerk_id: user!.id }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        console.log("External events fetched:", data.events);
-        setExternalEvents(data.events || []); // Fallback to an empty array if undefined
-      } else {
-        setExternalError(data.error || "Failed to fetch external events.");
-      }
-    } catch (err: any) {
-      console.error("Error fetching external events:", err);
-      setExternalError("An error occurred while fetching external events.");
-    } finally {
-      setLoadingExternal(false);
-    }
-  };
+  // const handleExternalSearch = async () => {
+  //   if (!desiredCareer) {
+  //     setExternalError(
+  //       "Desired career is not available. Please update your career info."
+  //     );
+  //     return;
+  //   }
+  //   if (!user?.id) {
+  //     setExternalError("User not available.");
+  //     return;
+  //   }
+  //   setLoadingExternal(true);
+  //   setExternalError(null);
+  //   try {
+  //     const query = `display all upcoming events, scholarship programs, fests, trials, olympiads, exams, and other opportunities relevant to your ${desiredCareer}, in next two months`;
+  //     const res = await fetch("/api/tavily-search", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ query, clerk_id: user!.id }),
+  //     });
+  //     const data = await res.json();
+  //     if (data.success) {
+  //       console.log("External events fetched:", data.events);
+  //       setExternalEvents(data.events || []); // Fallback to an empty array if undefined
+  //     } else {
+  //       setExternalError(data.error || "Failed to fetch external events.");
+  //     }
+  //   } catch (err: any) {
+  //     console.error("Error fetching external events:", err);
+  //     setExternalError("An error occurred while fetching external events.");
+  //   } finally {
+  //     setLoadingExternal(false);
+  //   }
+  // };
 
   // Automatically trigger external events search only on specific dates
   // useEffect(() => {

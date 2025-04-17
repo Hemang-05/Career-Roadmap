@@ -12,6 +12,7 @@ import PaymentPlan from "@/components/PaymentPlan";
 import Loader from "@/components/Loader";
 import DifficultySelector from "@/components/DifficultySelector";
 import RoadmapNotification from "@/components/RoadmapNotification";
+import USDPaymentPlan from "@/components/USDPaymentPlan";
 
 type OptionType = {
   label: string;
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showPaymentPlans, setShowPaymentPlans] = useState(false);
+  const [showUSDPaymentPlans, setShowUSDPaymentPlans] = useState(false);
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   // New state for the college form modal
   const [showCollegeForm, setShowCollegeForm] = useState(false);
@@ -129,58 +131,127 @@ export default function Dashboard() {
     if (isLoaded && !isSignedIn) router.push("/");
   }, [isSignedIn, router, isLoaded]);
 
+  const isSouthAsianCountry = (countryCode: string) => {
+    const southAsianCountries = ['IN', 'PK', 'BD']; // India, Pakistan, Bangladesh
+    return southAsianCountries.includes(countryCode);
+  };
+
   // Fetch subscription status, roadmap, and form_filled from career_info
   useEffect(() => {
     if (!isLoaded || !user) return;
+    let isMounted = true;
+
     async function fetchUserData() {
-      // Fetch subscription info
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select(
-          "id, subscription_status, subscription_plan, subscription_start, subscription_end"
-        )
-        .eq("clerk_id", user!.id)
-        .single();
-
-      if (userError || !userData) {
-        console.log("Error fetching user data:", userError);
-        return;
-      }
-      setDbUserId(userData.id);
-      setSubscriptionStatus(userData.subscription_status);
-      setSubscriptionPlan(userData.subscription_plan);
-
-      // Check if subscription has expired
-      if (
-        userData.subscription_end &&
-        new Date(userData.subscription_end) < new Date()
-      ) {
-        await supabase
+      try {
+        // 1️ fetch subscription & user id
+        const { data: userData, error: userError } = await supabase
           .from("users")
-          .update({ subscription_status: false })
-          .eq("clerk_id", user!.id);
-        setSubscriptionStatus(false);
-      }
+          .select(
+            "id, subscription_status, subscription_plan, subscription_start, subscription_end"
+          )
+          .eq("clerk_id", user!.id)
+          .single();
 
-      // Check if roadmap exists and get form_filled from career_info table
-      const { data: careerData, error: careerError } = await supabase
-        .from("career_info")
-        .select("user_id, roadmap, form_filled")
-        .eq("user_id", userData.id)
-        .maybeSingle();
+        if (userError || !userData)
+          throw userError || new Error("User not found");
+        if (!isMounted) return;
 
-      setHasRoadmap(!!(
-          careerData &&
-          careerData.roadmap &&
-          typeof careerData.roadmap === 'object' &&
+        setDbUserId(userData.id);
+        setSubscriptionStatus(userData.subscription_status);
+        setSubscriptionPlan(userData.subscription_plan);
+
+        // auto‑expire if past end date
+        if (
+          userData.subscription_end &&
+          new Date(userData.subscription_end) < new Date()
+        ) {
+          await supabase
+            .from("users")
+            .update({ subscription_status: false })
+            .eq("clerk_id", user!.id);
+          if (isMounted) setSubscriptionStatus(false);
+        }
+
+        // 2️ fetch full career_info row
+        const { data: careerData, error: careerError } = await supabase
+          .from("career_info")
+          .select(
+            `user_id,
+             roadmap,
+             residing_country,
+             spending_capacity,
+             parent_email,
+             current_class,
+             move_abroad,
+             preferred_abroad_country,
+             college_student,
+             difficulty,
+             desired_career,
+             previous_experience`
+          )
+          .eq("user_id", userData.id)
+          .maybeSingle();
+
+        if (careerError) throw careerError;
+        if (!isMounted) return;
+
+        // roadmap & formFilled flags
+        const roadmapExists = !!(
+          careerData?.roadmap &&
+          typeof careerData.roadmap === "object" &&
           Object.keys(careerData.roadmap).length > 0
-        )
-      );
-      if (careerData) {
-        setFormFilled(careerData.form_filled);
+        );
+        setHasRoadmap(roadmapExists);
+        setFormFilled(careerData?.form_filled ?? false);
+
+        if (careerData) {
+          // helper to map a string to OptionType
+          const findOpt = (val?: string) =>
+            countryOptions.find((o) => o.value === val) || null;
+
+          // Common fields
+          setResidingCountry(findOpt(careerData.residing_country));
+          setSpendingCapacity(careerData.spending_capacity?.toString() ?? "");
+          setParentEmail(careerData.parent_email || "");
+          setCurrentClass(careerData.current_class || "");
+          setWillingToMoveAbroad(careerData.move_abroad ?? false);
+          setMoveAbroad(careerData.move_abroad ? "yes" : "suggest");
+          setPreferredAbroadCountry(
+            findOpt(careerData.preferred_abroad_country)
+          );
+          setIsCollegeStudent(careerData.college_student ?? null);
+          setDifficulty(
+            (careerData.difficulty as "easy" | "medium" | "hard") ?? null
+          );
+
+          // Branch‑specific fields
+          const hasPrevExp = !!careerData.previous_experience;
+          const hasDesired = !!careerData.desired_career;
+
+          if (hasDesired && !hasPrevExp) {
+            setCareerOption("unknown");
+            setInterestParagraph(careerData.desired_career || "");
+            setDesiredCareer("");
+            setPreviousExperience("");
+          } else {
+            setCareerOption("known");
+            setDesiredCareer(careerData.desired_career || "");
+            setPreviousExperience(careerData.previous_experience || "");
+            setInterestParagraph("");
+          }
+        }
+
+        // // mark that initial API call is done
+        // setApiCallCompleted(true);
+      } catch (err) {
+        console.error("Error fetching user/career data:", err);
       }
     }
+
     fetchUserData();
+    return () => {
+      isMounted = false;
+    };
   }, [isLoaded, user]);
 
   const dashboardLinks = [
@@ -214,8 +285,12 @@ export default function Dashboard() {
     })();
 
     if (isCollegeStudent && !formFilled) {
-      console.log("Showing college form modal.");
-      setShowCollegeForm(true);
+      if (residingCountry && residingCountry.value === 'IN') {
+        console.log("Showing college form modal for Indian college student.");
+        setShowCollegeForm(true);
+      } else {
+        console.log("College student but not from India - skipping college form.");
+      }
     }
   };
 
@@ -283,12 +358,16 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (apiCallCompleted && (!isCollegeStudent || formFilled)) {
+    if (apiCallCompleted && (
+      !isCollegeStudent || 
+      formFilled || 
+      (isCollegeStudent && residingCountry && residingCountry.value !== 'IN')
+    )) {
       console.log("Conditions met; redirecting to /roadmap.");
       setGenerating(false);
       router.push("/roadmap");
     }
-  }, [apiCallCompleted, formFilled, isCollegeStudent]);
+  }, [apiCallCompleted, formFilled, isCollegeStudent, residingCountry]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,11 +409,22 @@ export default function Dashboard() {
       });
       const result = await res.json();
       console.log("Career info saved:", result);
+
       if (!subscriptionStatus) {
-        setShowPaymentPlans(true);
+        // Check user's country to determine which payment plan to show
+        if (residingCountry && isSouthAsianCountry(residingCountry.value)) {
+          // Show INR pricing for users from India, Pakistan, Bangladesh
+          setShowPaymentPlans(true);
+          setShowUSDPaymentPlans(false);
+        } else {
+          // Show USD pricing for users from other countries
+          setShowPaymentPlans(false);
+          setShowUSDPaymentPlans(true);
+        }
       } else {
         setShowGenerateModal(true);
       }
+
       // Trigger career tag assignment in parallel (fire-and-forget).
       fetch("/api/assign-career-tag", {
         method: "POST",
@@ -806,7 +896,8 @@ export default function Dashboard() {
           </div>
         </form>
       </div>
-
+      
+      {/* INR Payment Plan */}
       {showPaymentPlans && user && (
         <PaymentPlan
           clerk_id={user.id}
@@ -817,6 +908,21 @@ export default function Dashboard() {
             setShowGenerateModal(true);
           }}
           onClose={() => setShowPaymentPlans(false)}
+          message="To generate your career roadmap, please choose a subscription plan:"
+        />
+      )}
+
+      {/* USD Payment Plan */}
+      {showUSDPaymentPlans && user && (
+        <USDPaymentPlan
+          clerk_id={user.id}
+          onSuccess={(plan) => {
+            setShowUSDPaymentPlans(false);
+            setSubscriptionStatus(true);
+            setSubscriptionPlan(plan);
+            setShowGenerateModal(true);
+          }}
+          onClose={() => setShowUSDPaymentPlans(false)}
           message="To generate your career roadmap, please choose a subscription plan:"
         />
       )}
