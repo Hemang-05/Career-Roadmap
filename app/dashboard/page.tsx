@@ -477,7 +477,7 @@ export default function Dashboard() {
               }`}
             >
               <img
-                src="/happy.png"
+                src="https://res.cloudinary.com/ditn9req1/image/upload/v1744969912/happy_dd79nt.png"
                 alt="Known career"
                 className="w-36 h-36  object-contain "
               />
@@ -526,7 +526,7 @@ export default function Dashboard() {
               }`}
             >
               <img
-                src="/sad.png"
+                src="https://res.cloudinary.com/ditn9req1/image/upload/v1744969896/sad_mzj5qf.png"
                 alt="Exploring careers"
                 className="w-36 h-36 object-contain"
               />

@@ -163,16 +163,17 @@ export default function HeroSection() {
 
   // Sample data for enrolled users
   const enrolledUsers = [
-    { id: 1, name: "Alice", designation: "Student", image: "/kid1.jpeg" },
-    { id: 2, name: "Bob", designation: "Student", image: "/kid2.jpeg" },
-    { id: 3, name: "Carol", designation: "Student", image: "/kid3.jpeg" },
-    { id: 4, name: "Jake", designation: "Student", image: "/kid4.jpeg" },
+    { id: 1, name: "Alice", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg" },
+    { id: 2, name: "Bob", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg" },
+    { id: 3, name: "Carol", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg" },
+    { id: 4, name: "Jake", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg" },
   ];
 
   // Debug info for development
   useEffect(() => {
     console.log("hasRoadmap state updated to:", hasRoadmap);
   }, [hasRoadmap]);
+
 
   return (
     <section
@@ -244,10 +245,15 @@ export default function HeroSection() {
 
       {/* 3D Career Illustrations Section */}
       <div
-        className="w-full md:w-1/2 flex  items-center justify-center  relative h-60 md:h-96"
-        ref={containerRef}
-      >
-        {Array.from({ length: 7 }).map((_, index) => (
+      className="w-full md:w-1/2 flex items-center justify-center relative h-60 md:h-96"
+      ref={containerRef}
+    >
+      {Array.from({ length: 7 }).map((_, index) => {
+        // Move these declarations inside the map function where index is available
+        const suffixes = ['wryeik', 'wm1a7k', 'd6xewx', 'yustdy', 'elchjz', 'qu08dk', 'jfj6wx'];
+        const version = index < 4 ? 'v1744967161' : 'v1744967162';
+        
+        return (
           <div
             key={index}
             className="career-illustration absolute transition-transform will-change-transform transform scale-75 md:scale-100"
@@ -257,7 +263,7 @@ export default function HeroSection() {
             }}
           >
             <Image
-              src={`/${index + 1}.png`}
+              src={`https://res.cloudinary.com/ditn9req1/image/upload/${version}/${index + 1}_${suffixes[index]}.png`}
               alt={`career-${index + 1}`}
               width={index === 0 ? 150 : 180}
               height={index === 0 ? 150 : 200}
@@ -266,9 +272,9 @@ export default function HeroSection() {
               priority={index < 3}
             />
           </div>
-        ))}
-      </div>
-      
-    </section>
-  );
+        );
+      })}
+    </div>
+  </section>
+);
 }

@@ -79,18 +79,21 @@ export default function USDPaymentPlan({
       name: "Month",
       totalPrice: "$19.99",
       duration: "30 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png"
     },
     {
       name: "Quarter",
       totalPrice: "$49.99",
       perMonth: "$16.66",
       duration: "90 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png"
     },
     {
       name: "Year",
       totalPrice: "$149.99",
       perMonth: "$12.49",
       duration: "365 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png"
     },
   ];
 
@@ -124,7 +127,7 @@ export default function USDPaymentPlan({
                   </span>
                 )}
                 <img
-                  src={`${plan.name.toLowerCase()}ly.png`}
+                  src={plan.imageUrl}
                   alt={`${plan.name} Plan Illustration`}
                   className="w-full h-[60%] object-cover"
                 />

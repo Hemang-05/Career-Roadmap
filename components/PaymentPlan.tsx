@@ -78,18 +78,21 @@ export default function PaymentPlan({
       name: "Monthly",
       totalPrice: "499 ₹",
       duration: "30 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png"
     },
     {
       name: "Quarterly",
       totalPrice: "1299 ₹",
       perMonth: "433 ₹",
       duration: "90 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png"
     },
     {
       name: "Yearly",
       totalPrice: "4999 ₹",
       perMonth: "416 ₹",
       duration: "365 days",
+      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png"
     },
   ];
 
@@ -123,7 +126,7 @@ export default function PaymentPlan({
                   </span>
                 )}
                 <img
-                  src={`${plan.name.toLowerCase()}.png`}
+                  src={plan.imageUrl}
                   alt={`${plan.name} Plan Illustration`}
                   className="w-full h-[60%] object-cover"
                 />

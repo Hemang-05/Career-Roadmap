@@ -632,35 +632,35 @@ export default function EventsPage() {
                         <div className="w-24 h-24">
                           {idx === 0 && (
                             <img
-                              src="/event2.webp"
+                              src="https://res.cloudinary.com/ditn9req1/image/upload/v1744970734/event2_dgzrdw.webp"
                               alt="Triangle"
                               className="w-full h-full object-contain"
                             />
                           )}
                           {idx === 1 && (
                             <img
-                              src="/event5.webp"
+                              src="https://res.cloudinary.com/ditn9req1/image/upload/v1744970739/event5_trpn3j.webp"
                               alt="Line"
                               className="w-full h-full object-contain"
                             />
                           )}
                           {idx === 2 && (
                             <img
-                              src="/event1.webp"
+                              src="https://res.cloudinary.com/ditn9req1/image/upload/v1744970733/event1_ugxa3g.webp"
                               alt="Circle"
                               className="w-full h-full object-contain"
                             />
                           )}
                           {idx === 3 && (
                             <img
-                              src="/event4.webp"
+                              src="https://res.cloudinary.com/ditn9req1/image/upload/v1744970735/event4_vsa0w7.webp"
                               alt="Circle"
                               className="w-full h-full object-contain"
                             />
                           )}
                           {idx === 4 && (
                             <img
-                              src="/event3.webp"
+                              src="https://res.cloudinary.com/ditn9req1/image/upload/v1744970734/event3_djk8l8.webp"
                               alt="Circle"
                               className="w-full h-full object-contain"
                             />
