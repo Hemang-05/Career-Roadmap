@@ -614,7 +614,7 @@ export default function RoadmapPage() {
     { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg" },
     { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg" },
     { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid1_xkapd9.jpg" },
-    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1743660744/testi3_janwli.png" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744974372/a_3d_illustration_of_a_teenager_girl_ngl8ra.jpg" },
     ];
 
 
