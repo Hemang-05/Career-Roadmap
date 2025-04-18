@@ -668,7 +668,7 @@ export default function RoadmapPage() {
                     id: u?.id ?? Math.random(), // Use unique ID or fallback
                     name: u?.name ?? 'N/A',
                     designation: u?.designation ?? 'Unknown Role',
-                    image: u?.image ?? '/default-avatar.png', // Provide a fallback image
+                    image: u?.image ?? 'https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg', // Provide a fallback image
                     }))}
                 />
             ) : (
