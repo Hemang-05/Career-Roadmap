@@ -678,7 +678,7 @@ export default function RoadmapPage() {
                     id: u?.id ?? Math.random(), // Use unique ID or fallback
                     name: u?.name ?? 'N/A',
                     designation: u?.designation ?? 'Unknown Role',
-                    image: img_[index % img_.length].image, // Provide a fallback image
+                    image: img_[Math.floor(Math.random() * img_.length)].image, // Provide a fallback image
                     }))}
                 />
             ) : (
