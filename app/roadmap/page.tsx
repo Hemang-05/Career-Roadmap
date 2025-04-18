@@ -608,6 +608,16 @@ export default function RoadmapPage() {
       );
     }
 
+  const img_ = [
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid1_xkapd9.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1743660744/testi3_janwli.png" },
+    ];
+
+
 
   // Main Page Content
   return (
@@ -668,7 +678,7 @@ export default function RoadmapPage() {
                     id: u?.id ?? Math.random(), // Use unique ID or fallback
                     name: u?.name ?? 'N/A',
                     designation: u?.designation ?? 'Unknown Role',
-                    image: 'https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg', // Provide a fallback image
+                    image: img_.image, // Provide a fallback image
                     }))}
                 />
             ) : (
