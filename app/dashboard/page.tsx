@@ -1192,13 +1192,6 @@ export default function Dashboard() {
         {/* Buttons */}
         <div className="flex justify-end space-x-4 pt-4">
           <button
-            type="button"
-            onClick={() => setShowCollegeForm(false)}
-            className="px-6 py-2.5 rounded-full bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 font-medium text-sm"
-          >
-            Cancel
-          </button>
-          <button
             type="submit"
             className="px-6 py-2.5 rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-white hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 font-medium text-sm"
           >
