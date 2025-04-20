@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -97,15 +96,16 @@ export default function PaymentPlan({
   ];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative bg-white rounded-lg p-8 shadow-xl max-w-3xl w-full overflow-hidden">
-        <h2 className="text-2xl text-black font-bold mb-4 text-center">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
+      <div className="relative bg-white rounded-lg p-3 sm:p-6 md:p-8 shadow-xl w-full max-w-3xl overflow-y-auto max-h-[95vh]">
+        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-2 sm:mb-4 text-center">
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
-        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
-        <div className="relative bg-white rounded-lg p-8 max-w-3xl w-full overflow-hidden">
-          <div className="flex justify-around space-x-4">
+        {error && <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">{error}</p>}
+        
+        <div className="w-full border- overflow-hidden">
+          <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
             {plans.map((plan) => (
               <button
                 key={plan.name}
@@ -118,37 +118,37 @@ export default function PaymentPlan({
                   )
                 }
                 disabled={loading}
-                className="flex flex-col text-black items-center relative w-[220px] h-[350px] rounded-[20px] overflow-hidden shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col text-black items-center relative w-[100px] sm:w-[150px] md:w-[220px] h-[220px] sm:h-[250px] md:h-[400px] rounded-lg sm:rounded-[20px] overflow-hidden shadow-md sm:shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
                 {plan.name === "Quarterly" && (
-                  <span className="absolute top-0 left-12 bg-[#FF6500] text-white text-xs font-bold px-2 py-1 rounded">
+                  <span className="absolute top-0 left-4 md:left-16 bg-[#FF6500] text-white text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded">
                     Recommended
                   </span>
                 )}
                 <img
                   src={plan.imageUrl}
                   alt={`${plan.name} Plan Illustration`}
-                  className="w-full h-[60%] object-cover"
+                  className="w-full h-[100%] object-cover"
                 />
-                <div className="w-full h-[40%] p-4 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-lg font-semibold mb-1">
+                <div className="w-full h-[40%] p-1 sm:p-2 md:p-4 flex flex-col items-center justify-center text-center">
+                  <h3 className="text-xs sm:text-sm md:text-lg font-semibold mb-0.5 sm:mb-1">
                     {plan.name} Plan
                   </h3>
                   {plan.perMonth ? (
                     <>
-                      <p className="text-lg font-bold text-[#FF6500]">
+                      <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
                         {plan.totalPrice}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-[8px] sm:text-xs md:text-sm text-gray-600">
                         (per month: {plan.perMonth})
                       </p>
                     </>
                   ) : (
-                    <p className="text-lg font-bold text-[#FF6500]">
+                    <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
                       {plan.totalPrice}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-[8px] sm:text-xs md:text-sm text-gray-600 mt-0.5 sm:mt-1 md:mt-2">
                     Access all features for {plan.duration}
                   </p>
                 </div>
@@ -156,10 +156,11 @@ export default function PaymentPlan({
             ))}
           </div>
         </div>
-        <div className="mt-6 text-center">
+        
+        <div className="mt-2 sm:mt-2 md:mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
-            className="text-gray-600 hover:underline"
+            className="text-gray-600 hover:underline text-sm sm:text-base"
           >
             Cancel
           </button>
