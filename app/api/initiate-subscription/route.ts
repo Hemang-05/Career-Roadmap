@@ -19,11 +19,14 @@ const productIds: Record<string, string> = {
   monthly: process.env.PRODUCT_ID_MONTHLY || "pdt_monthly_default",
   quarterly: process.env.PRODUCT_ID_QUARTERLY || "pdt_quarterly_default",
   yearly: process.env.PRODUCT_ID_YEARLY || "pdt_yearly_default",
+  month: process.env.PRODUCT_ID_MONTH|| "pdt_monthly_default",
+  quarter: process.env.PRODUCT_ID_QUARTER || "pdt_quarterly_default",
+  year: process.env.PRODUCT_ID_YEAR || "pdt_yearly_default",
 };
 
 export async function POST(request: Request) {
   try {
-    const { clerk_id, plan } = await request.json();
+    const { clerk_id, plan ,cunt } = await request.json();
 
     if (!clerk_id || !plan) {
       return NextResponse.json(
@@ -39,7 +42,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
     // Fetch the user's email (and full_name) from Supabase using clerk_id
     const { data: user, error: userError } = await supabase
       .from("users")
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
     const response = await dodopayments.subscriptions.create({
       billing: {
         city: "city",
-        country: "IN", // Ensure you use a valid ISO country code
+        country: cunt || "IN", // Ensure you use a valid ISO country code
         state: "state",
         street: "",
         zipcode: "zipcode",
@@ -72,8 +74,9 @@ export async function POST(request: Request) {
       quantity: 1,
       return_url: process.env.NEXT_PUBLIC_RETURN_URL, // Adjust as needed
     });
-
+    
     return NextResponse.json({ subscriptionUrl: response.payment_link });
+    
   } catch (error) {
     console.error("Error initiating subscription:", error);
     return NextResponse.json(

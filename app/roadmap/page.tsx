@@ -10,6 +10,7 @@ import FloatingNavbar from "@/components/Navbar";
 import ProgressBar from "@/components/ProgressBar";
 import { calculateTaskCountProgress } from "@/utils/calcTaskCountProgress";
 import { AnimatedTooltip } from "@/components/ui/AnimatedTooltip";
+import USDPaymentPlan from "@/components/USDPaymentPlan";
 
 function isYearComplete(yearItem: any): boolean {
   // Ensure phases, milestones, and tasks exist before iterating
@@ -296,6 +297,7 @@ export default function RoadmapPage() {
   const [updating, setUpdating] = useState<boolean>(false);
   const [similarUsers, setSimilarUsers] = useState<any[]>([]);
   const [desiredCareer, setDesiredCareer] = useState<string>("");
+  const [userCountryCode, setUserCountryCode] = useState<string | null>(null);
 
   const dashboardLinks = [
     { href: "/dashboard", label: "Renew" },
@@ -356,63 +358,64 @@ export default function RoadmapPage() {
     try {
       if (user) {
         // Fetch user record... (keep existing logic)
-         const { data: userRecord, error: userError } = await supabase
-           .from("users")
-           .select("id, subscription_status, subscription_end")
-           .eq("clerk_id", user.id)
-           .single();
-
-         if (userError || !userRecord) {
-            console.error("Supabase user fetch error:", userError);
-           setErrorMessage("User record not found or failed to fetch.");
-           setLoading(false);
-           return;
-         }
-
-         const {
-           subscription_status,
-           subscription_end,
-           id: userId,
-         } = userRecord;
-         const currentDate = new Date();
-         const subscriptionEndDate = subscription_end ? new Date(subscription_end) : null;
-
-
-        // Check subscription... (keep existing logic)
-         if (!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate) {
-           console.log("Subscription invalid or expired.");
-           setShowPaymentPlan(true);
-           setLoading(false);
-           return;
-         }
-
-
-        // Fetch career info... (keep existing logic)
+        const { data: userRecord, error: userError } = await supabase
+          .from("users")
+          .select("id, subscription_status, subscription_end")
+          .eq("clerk_id", user.id)
+          .single();
+  
+        if (userError || !userRecord) {
+          console.error("Supabase user fetch error:", userError);
+          setErrorMessage("User record not found or failed to fetch.");
+          setLoading(false);
+          return;
+        }
+  
+        const {
+          subscription_status,
+          subscription_end,
+          id: userId,
+        } = userRecord;
+        
+        // Fetch career info with residing_country
         const { data: careerData, error: careerError } = await supabase
           .from("career_info")
-          .select("roadmap, user_id, desired_career") // Ensure user_id is selected if needed later
+          .select("roadmap, user_id, desired_career, residing_country") // Added residing_country
           .eq("user_id", userId)
           .single();
-
-         if (careerError) {
-           console.error("Supabase career_info fetch error:", careerError);
-           setErrorMessage("Error fetching roadmap: " + careerError.message);
-           setLoading(false);
-           return;
-         }
-
-
+  
+        if (careerError) {
+          console.error("Supabase career_info fetch error:", careerError);
+          setErrorMessage("Error fetching roadmap: " + careerError.message);
+          setLoading(false);
+          return;
+        }
+  
+        // Save the country for later use
+        setUserCountryCode(careerData?.residing_country || null);
+  
+        const currentDate = new Date();
+        const subscriptionEndDate = subscription_end ? new Date(subscription_end) : null;
+  
+        // Check subscription... (keep existing logic)
+        if (!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate) {
+          console.log("Subscription invalid or expired.");
+          setShowPaymentPlan(true);
+          setLoading(false);
+          return;
+        }
+  
+        // Rest of your existing code for handling roadmap data...
         if (!careerData?.roadmap) {
-           console.log("No roadmap data found for user:", userId);
-           setErrorMessage("No roadmap found. Please generate your roadmap first.");
-           setLoading(false);
-           // Optionally redirect to generation page: router.push('/generate-roadmap');
-           return;
-         }
-
-
-        setRoadmap(typeof careerData.roadmap === 'string' ? careerData.roadmap : JSON.stringify(careerData.roadmap)); // Store original potentially
-        setDesiredCareer(careerData.desired_career || "Your Goal"); // Set desired career
+          console.log("No roadmap data found for user:", userId);
+          setErrorMessage("No roadmap found. Please generate your roadmap first.");
+          setLoading(false);
+          return;
+        }
+  
+        setRoadmap(typeof careerData.roadmap === 'string' ? careerData.roadmap : JSON.stringify(careerData.roadmap));
+        setDesiredCareer(careerData.desired_career || "Your Goal");
+        
 
 
         try {
@@ -578,17 +581,41 @@ export default function RoadmapPage() {
   }
 
   if (showPaymentPlan && user?.id) {
-    return (
-      <PaymentPlan
-        clerk_id={user.id} // Pass clerk_id correctly
-        onSuccess={() => {
-          console.log("Payment successful, reloading page...");
-          window.location.reload(); // Reload to re-check subscription
-        }}
-        message="Your subscription seems to have expired. Please choose a plan to continue." // Clearer message
-      />
-    );
-  }
+
+    const subcontinentCountryCodes = ["IN", "PK", "BD"]; // Country codes: India, Pakistan, Bangladesh
+    const isSubcontinentUser = userCountryCode && 
+      subcontinentCountryCodes.includes(userCountryCode.toUpperCase());
+
+
+      return isSubcontinentUser ? (
+        <PaymentPlan
+          clerk_id={user.id}
+          onSuccess={() => {
+            console.log("Payment successful, reloading page...");
+            window.location.reload();
+          }}
+          message="Your subscription seems to have expired. Please choose a plan to continue."
+        />
+      ) : (
+        <USDPaymentPlan
+          clerk_id={user.id}
+          onSuccess={() => {
+            console.log("Payment successful, reloading page...");
+            window.location.reload();
+          }}
+          message="Your subscription seems to have expired. Please choose a plan to continue."
+        />
+      );
+    }
+
+  const img_ = [
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid1_xkapd9.jpg" },
+    { image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744974372/a_3d_illustration_of_a_teenager_girl_ngl8ra.jpg" },
+    ];
 
 
 
@@ -651,7 +678,7 @@ export default function RoadmapPage() {
                     id: u?.id ?? Math.random(), // Use unique ID or fallback
                     name: u?.name ?? 'N/A',
                     designation: u?.designation ?? 'Unknown Role',
-                    image: u?.image ?? '/default-avatar.png', // Provide a fallback image
+                    image: img_[Math.floor(Math.random() * img_.length)].image, // Provide a fallback image
                     }))}
                 />
             ) : (
