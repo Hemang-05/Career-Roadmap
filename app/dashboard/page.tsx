@@ -186,6 +186,7 @@ export default function Dashboard() {
              preferred_abroad_country,
              college_student,
              difficulty,
+             form_filled,
              desired_career,
              previous_experience`
           )
