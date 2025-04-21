@@ -79,7 +79,8 @@ export async function POST(request: Request) {
         move_abroad,
         preferred_abroad_country,
         previous_experience,
-        difficulty
+        difficulty,
+        college_student
       `
       )
       .eq("user_id", user_id)
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
       preferred_abroad_country,
       previous_experience,
       difficulty,
+      college_student
     } = careerInfo;
 
     if (!desired_career) {
@@ -122,7 +124,7 @@ export async function POST(request: Request) {
     }. The student has "${previous_experience}" in the field.
 
 The roadmap should:
-- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}"), divided into four 3-month phases per year.
+- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}") or if "${college_student} and course is"${current_class}" then cover graduation year based on course. ", divided into four 3-month phases per year.
 - Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
 - Provide each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in atleast 2 to 3 lines.
 
@@ -134,6 +136,7 @@ Tailor the tasks to the student's specific situation:
 
 Also, structure the roadmap year-wise. For example:
 - If the student is in India and currently in 9th grade, generate a roadmap until 12th grade (4 years). For students in other countries, generate the roadmap until the end of school (before college).
+- If the student in College then according to his current year and course mentioned, generate roadmap till graduation.
 - Within each year, divide the roadmap into four 3-month phases.
 - The roadmap should be sequential, with later years building upon the achievements of previous years.
 - Give detailed explanation about the task in atleast 2 to 3 lines.
@@ -146,7 +149,7 @@ The response must be strictly in JSON format without any additional text, markdo
   "roadmap_summary": "A year-by-year plan, each with four 3-month phases, guiding the student from their current class until the end of secondary education.",
   "yearly_roadmap": [
     {
-      "year": "Year Label (e.g., 9th Grade)",
+      "year": "Year Label (e.g., 9th Grade, 1st year/2nd year)",
       "overview": "Overview for the year, describing main focus or goals",
       "phases": [
         {
