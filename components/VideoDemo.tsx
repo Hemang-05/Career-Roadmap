@@ -28,7 +28,7 @@ const VideoDemo: React.FC = ({}) => {
     : "";
 
   return (
-    <section className="my-16 mx-16 p-20 flex justify-center bg-white">
+    <section className="my-4 mx-4 p-4 sm:my-16 sm:mx-16 sm:p-20 flex justify-center bg-white">
       <div
         ref={containerRef}
         className="relative box-content w-full  max-h-[80svh] aspect-[2.1892816419612315] py-10 bg-white"
