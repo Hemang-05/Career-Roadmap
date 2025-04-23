@@ -8,6 +8,7 @@ import FAQSection from "../components/FAQSection";
 import TestimonialsSection from "../components/TestimonialsSection";
 import PricingSection from "@/components/PricingSection";
 import Plans from "@/components/Plans";
+import VideoDemo from "@/components/VideoDemo";
 
 export default function LandingPage() {
   return (
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <Navbar />
       <main className="flex-grow w-full pt-24">
         <HeroSection />
+        <VideoDemo />
         <FeaturesSection />
         <PricingSection />
         <TestimonialsSection />
