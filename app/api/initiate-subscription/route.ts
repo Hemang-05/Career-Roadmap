@@ -71,6 +71,8 @@ export async function POST(request: Request) {
       },
       payment_link: true,
       product_id,
+      discount_id: "dsc_8gxTbEaGIXewLWzqsSYk5",
+      code: "",
       quantity: 1,
       return_url: process.env.NEXT_PUBLIC_RETURN_URL, // Adjust as needed
     });
