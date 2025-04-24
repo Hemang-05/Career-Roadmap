@@ -13,6 +13,7 @@
     "@clerk/clerk-sdk-node": "^5.1.6",
     "@clerk/nextjs": "^6.12.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@tailwindcss/typography": "^0.5.16",
     "@tavily/core": "^0.3.1",
     "@vercel/analytics": "^1.5.0",
     "clsx": "^2.1.1",

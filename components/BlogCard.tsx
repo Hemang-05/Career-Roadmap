@@ -38,9 +38,6 @@ export default function BlogCard({ blog }: Props) {
             {format(new Date(blog.created_at), "MMM dd, yyyy")}{" "}
             {blog.author && `· ${blog.author}`}
           </p>
-          <div className="text-gray-700 prose text-thin">
-            <ReactMarkdown>{excerpt}</ReactMarkdown>
-          </div>
         </div>
       </div>
     </Link>
