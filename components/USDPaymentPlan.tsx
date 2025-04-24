@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
+import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 
 interface USDPaymentPlanProps {
   clerk_id: string;
@@ -55,19 +55,20 @@ export default function USDPaymentPlan({
     }
   }
 
+  // 2️⃣ Payment handler
   const handlePayment = async (plan: "month" | "quarter" | "year") => {
     setLoading(true);
     setError(null);
 
     try {
+      // build payload
       const payload: any = { clerk_id, plan, cunt };
       if (isValid) payload.discountCode = discountCode;
 
-      // Call the API route to initiate USD subscription using clerk_id
       const response = await fetch("/api/initiate-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -75,18 +76,13 @@ export default function USDPaymentPlan({
         throw new Error(data.error || "Failed to initiate subscription");
       }
 
-      // Optionally update local subscription details immediately
+      // update your local Supabase record
       const now = new Date();
       let endDate = new Date();
-      if (plan === "month") {
-        endDate.setMonth(now.getMonth() + 1);
-      } else if (plan === "quarter") {
-        endDate.setMonth(now.getMonth() + 3);
-      } else if (plan === "year") {
-        endDate.setFullYear(now.getFullYear() + 1);
-      }
+      if (plan === "month") endDate.setMonth(now.getMonth() + 1);
+      if (plan === "quarter") endDate.setMonth(now.getMonth() + 3);
+      if (plan === "year") endDate.setFullYear(now.getFullYear() + 1);
 
-      // Update the user record in Supabase for local tracking
       const { error: updateError } = await supabase
         .from("users")
         .update({
@@ -95,16 +91,12 @@ export default function USDPaymentPlan({
           subscription_end: endDate.toISOString(),
         })
         .eq("clerk_id", clerk_id);
+      if (updateError) throw updateError;
 
-      if (updateError) {
-        console.error("Error updating subscription:", updateError);
-        throw new Error("Failed to update subscription.");
-      }
-
-      // Redirect to the payment link provided by your payment service
+      // redirect to Dodo checkout
       window.location.href = data.subscriptionUrl;
     } catch (err: any) {
-      console.error("Error processing payment:", err);
+      console.error(err);
       setError(err.message);
       setLoading(false);
     }
@@ -139,18 +131,16 @@ export default function USDPaymentPlan({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
       <div className="relative bg-white rounded-lg p-3 sm:p-6 md:p-8 shadow-xl w-full max-w-3xl overflow-y-auto max-h-[95vh]">
-        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-2 sm:mb-4 text-center">
-          {message ||
-            "Your subscription has expired. Please choose a payment plan."}
+        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-4 text-center">
+          {message || "Your subscription has expired. Please choose a plan."}
         </h2>
         {error && (
-          <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">
-            {error}
-          </p>
+          <p className="text-red-600 text-center mb-4 text-sm">{error}</p>
         )}
 
+        {/* plan buttons */}
         <div className="w-full overflow-hidden">
-          <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
+          <div className="flex justify-around flex-wrap gap-4">
             {plans.map((plan) => (
               <button
                 key={plan.name}
@@ -160,47 +150,35 @@ export default function USDPaymentPlan({
                   )
                 }
                 disabled={loading}
-                className="flex flex-col text-black items-center relative w-[100px] sm:w-[150px] md:w-[220px] h-[220px] sm:h-[250px] md:h-[350px] rounded-lg sm:rounded-[20px] overflow-hidden shadow-md sm:shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                className="flex flex-col items-center w-40 h-56 rounded-lg shadow-md bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {plan.name === "Quarter" && (
-                  <span className="absolute top-0 left-4 md:left-12 bg-[#FF6500] text-white text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded">
+                  <span className="absolute top-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
                     Recommended
                   </span>
                 )}
                 <img
                   src={plan.imageUrl}
-                  alt={`${plan.name} Plan Illustration`}
-                  className="w-full h-[60%] object-cover"
+                  alt={`${plan.name} Plan`}
+                  className="w-full h-2/3 object-cover"
                 />
-                <div className="w-full h-[40%] p-1 sm:p-2 md:p-4 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-xs sm:text-sm md:text-lg font-semibold mb-0.5 sm:mb-1">
-                    {plan.name}ly Plan
-                  </h3>
-                  {plan.perMonth ? (
-                    <>
-                      <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
-                        {plan.totalPrice}
-                      </p>
-                      <p className="text-[8px] sm:text-xs md:text-sm text-gray-600">
-                        (per month: {plan.perMonth})
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
-                      {plan.totalPrice}
+                <div className="p-2 text-center">
+                  <h3 className="font-semibold">{plan.name} Plan</h3>
+                  <p className="font-bold text-orange-500">{plan.totalPrice}</p>
+                  {plan.perMonth && (
+                    <p className="text-xs text-gray-600">
+                      (per mo. {plan.perMonth})
                     </p>
                   )}
-                  <p className="text-[8px] sm:text-xs md:text-sm text-gray-600 mt-0.5 sm:mt-1 md:mt-2">
-                    Access all features for {plan.duration}
-                  </p>
+                  <p className="text-xs text-gray-600">{plan.duration}</p>
                 </div>
               </button>
             ))}
           </div>
         </div>
 
-        {/* 1️⃣ Coupon + Check button */}
-        <div className="flex items-center justify-center text-green-800 rounded-md  m-4 space-x-2">
+        {/* coupon + apply */}
+        <div className="flex items-center justify-center mb-4 space-x-2">
           <input
             type="text"
             value={discountCode}
@@ -210,12 +188,12 @@ export default function USDPaymentPlan({
               setErrorMsg(null);
             }}
             placeholder="Enter discount code"
-            className="border p-2 text-green-800 rounded-2xl flex-1 max-w-xs"
+            className="border p-2 rounded flex-1 max-w-xs"
           />
           <button
             onClick={handleValidate}
             disabled={isValidating}
-            className="p-2 px-4 rounded-2xl text-green-600 bg-gray-200 hover:bg-gray-300 transition"
+            className="p-2 rounded bg-gray-200 hover:bg-gray-300 transition"
           >
             {isValidating ? (
               <FaSpinner className="w-5 h-5 animate-spin" />
@@ -229,13 +207,13 @@ export default function USDPaymentPlan({
           </button>
         </div>
         {errorMsg && (
-          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+          <p className="text-red-600 text-sm text-center mb-4">{errorMsg}</p>
         )}
 
-        <div className="mt-2 sm:mt-4 md:mt-6 text-center">
+        <div className="mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
-            className="text-gray-600 hover:text-red-700 text-sm sm:text-base"
+            className="text-gray-600 hover:text-red-500 hover:underline text-sm sm:text-base"
           >
             Cancel
           </button>
