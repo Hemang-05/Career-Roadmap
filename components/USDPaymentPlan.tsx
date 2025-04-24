@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { FaCheck, FaSpinner, FaTimes } from "react-icons/fa";
 
 interface USDPaymentPlanProps {
   clerk_id: string;
@@ -22,16 +23,51 @@ export default function USDPaymentPlan({
   const [error, setError] = useState<string | null>(null);
   const cunt = "US";
 
+  // discount-related state
+  const [discountCode, setDiscountCode] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [isValid, setIsValid] = useState<boolean | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // 1️⃣ Validate button handler
+  async function handleValidate() {
+    if (!discountCode.trim()) return;
+    setIsValidating(true);
+    setErrorMsg(null);
+    setIsValid(null);
+
+    try {
+      const res = await fetch("/api/validate-discount", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discountCode }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.valid) {
+        throw new Error(json.error || "Invalid code");
+      }
+      setIsValid(true);
+    } catch (err: any) {
+      setIsValid(false);
+      setErrorMsg(err.message);
+    } finally {
+      setIsValidating(false);
+    }
+  }
+
   const handlePayment = async (plan: "month" | "quarter" | "year") => {
     setLoading(true);
     setError(null);
 
     try {
+      const payload: any = { clerk_id, plan, cunt };
+      if (isValid) payload.discountCode = discountCode;
+
       // Call the API route to initiate USD subscription using clerk_id
       const response = await fetch("/api/initiate-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clerk_id, plan, cunt }),
+        body: JSON.stringify({ payload }),
       });
 
       const data = await response.json();
@@ -59,7 +95,7 @@ export default function USDPaymentPlan({
           subscription_end: endDate.toISOString(),
         })
         .eq("clerk_id", clerk_id);
-      
+
       if (updateError) {
         console.error("Error updating subscription:", updateError);
         throw new Error("Failed to update subscription.");
@@ -79,21 +115,24 @@ export default function USDPaymentPlan({
       name: "Month",
       totalPrice: "$19.99",
       duration: "30 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png",
     },
     {
       name: "Quarter",
       totalPrice: "$49.99",
       perMonth: "$16.66",
       duration: "90 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png",
     },
     {
       name: "Year",
       totalPrice: "$149.99",
       perMonth: "$12.49",
       duration: "365 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png",
     },
   ];
 
@@ -104,8 +143,12 @@ export default function USDPaymentPlan({
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
-        {error && <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">{error}</p>}
-        
+        {error && (
+          <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">
+            {error}
+          </p>
+        )}
+
         <div className="w-full overflow-hidden">
           <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
             {plans.map((plan) => (
@@ -113,10 +156,7 @@ export default function USDPaymentPlan({
                 key={plan.name}
                 onClick={() =>
                   handlePayment(
-                    plan.name.toLowerCase() as
-                      | "month"
-                      | "quarter"
-                      | "year"
+                    plan.name.toLowerCase() as "month" | "quarter" | "year"
                   )
                 }
                 disabled={loading}
@@ -158,11 +198,44 @@ export default function USDPaymentPlan({
             ))}
           </div>
         </div>
-        
+
+        {/* 1️⃣ Coupon + Check button */}
+        <div className="flex items-center justify-center text-green-800 rounded-md  m-4 space-x-2">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value);
+              setIsValid(null);
+              setErrorMsg(null);
+            }}
+            placeholder="Enter discount code"
+            className="border p-2 text-green-800 rounded-2xl flex-1 max-w-xs"
+          />
+          <button
+            onClick={handleValidate}
+            disabled={isValidating}
+            className="p-2 px-4 rounded-2xl text-green-600 bg-gray-200 hover:bg-gray-300 transition"
+          >
+            {isValidating ? (
+              <FaSpinner className="w-5 h-5 animate-spin" />
+            ) : isValid === true ? (
+              <FaCheck className="w-5 h-5 text-green-600" />
+            ) : isValid === false ? (
+              <FaTimes className="w-5 h-5 text-red-600" />
+            ) : (
+              "Apply"
+            )}
+          </button>
+        </div>
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
+
         <div className="mt-2 sm:mt-4 md:mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
-            className="text-gray-600 hover:underline text-sm sm:text-base"
+            className="text-gray-600 hover:text-red-700 text-sm sm:text-base"
           >
             Cancel
           </button>
