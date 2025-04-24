@@ -1,3 +1,5 @@
+//app/api/initiate-subscription/route.ts
+
 import { dodopayments } from "@/utils/dodopayment";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -19,14 +21,14 @@ const productIds: Record<string, string> = {
   monthly: process.env.PRODUCT_ID_MONTHLY || "pdt_monthly_default",
   quarterly: process.env.PRODUCT_ID_QUARTERLY || "pdt_quarterly_default",
   yearly: process.env.PRODUCT_ID_YEARLY || "pdt_yearly_default",
-  month: process.env.PRODUCT_ID_MONTH|| "pdt_monthly_default",
+  month: process.env.PRODUCT_ID_MONTH || "pdt_monthly_default",
   quarter: process.env.PRODUCT_ID_QUARTER || "pdt_quarterly_default",
   year: process.env.PRODUCT_ID_YEAR || "pdt_yearly_default",
 };
 
 export async function POST(request: Request) {
   try {
-    const { clerk_id, plan ,cunt } = await request.json();
+    const { clerk_id, plan, discountCode, cunt } = await request.json();
 
     if (!clerk_id || !plan) {
       return NextResponse.json(
@@ -71,12 +73,12 @@ export async function POST(request: Request) {
       },
       payment_link: true,
       product_id,
+      discount_code: discountCode || null,
       quantity: 1,
       return_url: process.env.NEXT_PUBLIC_RETURN_URL, // Adjust as needed
     });
-    
+
     return NextResponse.json({ subscriptionUrl: response.payment_link });
-    
   } catch (error) {
     console.error("Error initiating subscription:", error);
     return NextResponse.json(
