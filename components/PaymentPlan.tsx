@@ -1,8 +1,11 @@
+//components/PaymentPlan.tsx
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 
 interface PaymentPlanProps {
   clerk_id: string;
@@ -21,6 +24,36 @@ export default function PaymentPlan({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // new state
+  const [discountCode, setDiscountCode] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [isValid, setIsValid] = useState<boolean | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function handleValidate() {
+    if (!discountCode.trim()) return;
+    setIsValidating(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/validate-discount", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discountCode }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.valid) {
+        throw new Error(json.error || "Invalid code");
+      }
+      setIsValid(true);
+    } catch (err: any) {
+      setIsValid(false);
+      setErrorMsg(err.message);
+    } finally {
+      setIsValidating(false);
+    }
+  }
+
   const handlePayment = async (plan: "monthly" | "quarterly" | "yearly") => {
     setLoading(true);
     setError(null);
@@ -30,7 +63,7 @@ export default function PaymentPlan({
       const response = await fetch("/api/initiate-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clerk_id, plan }),
+        body: JSON.stringify({ clerk_id, plan, discountCode }),
       });
 
       const data = await response.json();
@@ -77,21 +110,24 @@ export default function PaymentPlan({
       name: "Monthly",
       totalPrice: "499 ₹",
       duration: "30 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970242/monthly_qcfqdl.png",
     },
     {
       name: "Quarterly",
       totalPrice: "1299 ₹",
       perMonth: "433 ₹",
       duration: "90 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970243/quarterly_hq7je1.png",
     },
     {
       name: "Yearly",
       totalPrice: "4999 ₹",
       perMonth: "416 ₹",
       duration: "365 days",
-      imageUrl: "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png"
+      imageUrl:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744970248/yearly_ipoftu.png",
     },
   ];
 
@@ -102,8 +138,12 @@ export default function PaymentPlan({
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
-        {error && <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">{error}</p>}
-        
+        {error && (
+          <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">
+            {error}
+          </p>
+        )}
+
         <div className="w-full border- overflow-hidden">
           <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
             {plans.map((plan) => (
@@ -156,7 +196,40 @@ export default function PaymentPlan({
             ))}
           </div>
         </div>
-        
+
+        {/* 1️⃣ Coupon + Check button */}
+        <div className="flex items-center justify-center mb-4 space-x-2">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value);
+              setIsValid(null);
+              setErrorMsg(null);
+            }}
+            placeholder="Enter discount code"
+            className="border p-2 rounded flex-1 max-w-xs"
+          />
+          <button
+            onClick={handleValidate}
+            disabled={isValidating}
+            className="p-2 rounded bg-gray-200 hover:bg-gray-300 transition"
+          >
+            {isValidating ? (
+              <FaSpinner className="w-5 h-5 animate-spin" />
+            ) : isValid === true ? (
+              <FaCheck className="w-5 h-5 text-green-600" />
+            ) : isValid === false ? (
+              <FaTimes className="w-5 h-5 text-red-600" />
+            ) : (
+              "Check"
+            )}
+          </button>
+        </div>
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
+
         <div className="mt-2 sm:mt-2 md:mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
