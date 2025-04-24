@@ -449,12 +449,12 @@ export default function PaymentPlan({
               setErrorMsg(null);
             }}
             placeholder="Enter discount code"
-            className="border p-2 text-green-800 rounded-md flex-1 max-w-xs"
+            className="border p-2 text-green-800 rounded-2xl flex-1 max-w-xs"
           />
           <button
             onClick={handleValidate}
             disabled={isValidating}
-            className="p-2 rounded-md text-blue-600 bg-gray-900 hover:bg-gray-700 transition"
+            className="p-2 px-4 rounded-2xl text-green-600 bg-gray-200 hover:bg-gray-300 transition"
           >
             {isValidating ? (
               <FaSpinner className="w-5 h-5 animate-spin" />
@@ -463,7 +463,7 @@ export default function PaymentPlan({
             ) : isValid === false ? (
               <FaTimes className="w-5 h-5 text-red-600" />
             ) : (
-              "Check"
+              "Apply"
             )}
           </button>
         </div>
@@ -474,7 +474,7 @@ export default function PaymentPlan({
         <div className="mt-2 sm:mt-2 md:mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
-            className="text-gray-600 hover:underline text-sm sm:text-base"
+            className="text-gray-600 hover:text-red-800 text-sm sm:text-base"
           >
             Cancel
           </button>
