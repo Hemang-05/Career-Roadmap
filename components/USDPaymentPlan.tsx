@@ -131,16 +131,18 @@ export default function USDPaymentPlan({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
       <div className="relative bg-white rounded-lg p-3 sm:p-6 md:p-8 shadow-xl w-full max-w-3xl overflow-y-auto max-h-[95vh]">
-        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-4 text-center">
-          {message || "Your subscription has expired. Please choose a plan."}
+        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-2 sm:mb-4 text-center">
+          {message ||
+            "Your subscription has expired. Please choose a payment plan."}
         </h2>
         {error && (
-          <p className="text-red-600 text-center mb-4 text-sm">{error}</p>
+          <p className="text-red-600 text-center mb-2 sm:mb-4 text-sm sm:text-base">
+            {error}
+          </p>
         )}
 
-        {/* plan buttons */}
-        <div className="w-full overflow-hidden">
-          <div className="flex justify-around flex-wrap gap-4">
+        <div className="w-full border- overflow-hidden">
+          <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
             {plans.map((plan) => (
               <button
                 key={plan.name}
@@ -150,35 +152,47 @@ export default function USDPaymentPlan({
                   )
                 }
                 disabled={loading}
-                className="flex flex-col items-center w-40 h-56 rounded-lg shadow-md bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col text-black items-center relative w-[100px] sm:w-[150px] md:w-[220px] h-[220px] sm:h-[250px] md:h-[400px] rounded-lg sm:rounded-[20px] overflow-hidden shadow-md sm:shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                {plan.name === "Quarter" && (
-                  <span className="absolute top-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                {plan.name === "Quarterly" && (
+                  <span className="absolute top-0 left-4 md:left-16 bg-[#FF6500] text-white text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded">
                     Recommended
                   </span>
                 )}
                 <img
                   src={plan.imageUrl}
-                  alt={`${plan.name} Plan`}
-                  className="w-full h-2/3 object-cover"
+                  alt={`${plan.name} Plan Illustration`}
+                  className="w-full h-[100%] object-cover"
                 />
-                <div className="p-2 text-center">
-                  <h3 className="font-semibold">{plan.name} Plan</h3>
-                  <p className="font-bold text-orange-500">{plan.totalPrice}</p>
-                  {plan.perMonth && (
-                    <p className="text-xs text-gray-600">
-                      (per mo. {plan.perMonth})
+                <div className="w-full h-[40%] p-1 sm:p-2 md:p-4 flex flex-col items-center justify-center text-center">
+                  <h3 className="text-xs sm:text-sm md:text-lg font-semibold mb-0.5 sm:mb-1">
+                    {plan.name} Plan
+                  </h3>
+                  {plan.perMonth ? (
+                    <>
+                      <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
+                        {plan.totalPrice}
+                      </p>
+                      <p className="text-[8px] sm:text-xs md:text-sm text-gray-600">
+                        (per month: {plan.perMonth})
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
+                      {plan.totalPrice}
                     </p>
                   )}
-                  <p className="text-xs text-gray-600">{plan.duration}</p>
+                  <p className="text-[8px] sm:text-xs md:text-sm text-gray-600 mt-0.5 sm:mt-1 md:mt-2">
+                    Access all features for {plan.duration}
+                  </p>
                 </div>
               </button>
             ))}
           </div>
         </div>
 
-        {/* coupon + apply */}
-        <div className="flex items-center justify-center mb-4 space-x-2">
+        {/* 1️⃣ Coupon + Check button */}
+        <div className="flex items-center justify-center text-green-800 rounded-md  m-4 space-x-2">
           <input
             type="text"
             value={discountCode}
@@ -188,12 +202,12 @@ export default function USDPaymentPlan({
               setErrorMsg(null);
             }}
             placeholder="Enter discount code"
-            className="border p-2 rounded flex-1 max-w-xs"
+            className="border p-2 text-green-800 rounded-2xl flex-1 max-w-xs"
           />
           <button
             onClick={handleValidate}
             disabled={isValidating}
-            className="p-2 rounded bg-gray-200 hover:bg-gray-300 transition"
+            className="p-2 px-4 rounded-2xl text-green-600 bg-gray-200 hover:bg-gray-300 transition"
           >
             {isValidating ? (
               <FaSpinner className="w-5 h-5 animate-spin" />
@@ -207,13 +221,13 @@ export default function USDPaymentPlan({
           </button>
         </div>
         {errorMsg && (
-          <p className="text-red-600 text-sm text-center mb-4">{errorMsg}</p>
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
         )}
 
-        <div className="mt-6 text-center">
+        <div className="mt-2 sm:mt-2 md:mt-6 text-center">
           <button
             onClick={() => (onClose ? onClose() : router.back())}
-            className="text-gray-600 hover:text-red-500 hover:underline text-sm sm:text-base"
+            className="text-gray-600 hover:text-red-800 text-sm sm:text-base"
           >
             Cancel
           </button>
