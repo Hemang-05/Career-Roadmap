@@ -6,7 +6,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 import Analysis from "@/utils/analytics";
-import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     title: "Career Roadmap",
     description:
       "A personalized career roadmap ai platform for students—get step-by-step guidance, study resources, and event updates to reach your dream profession with ease.",
-    url: "https://www.careeroadmap.com",
+    url: "www.careeroadmap.com",
     siteName: "Career Roadmap",
     images: [
       {
-        url: "https://www.careeroadmap.com/og-image.png",
+        url: "www.careeroadmap.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Career Roadmap Preview",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://www.careeroadmap.com",
+    canonical: "www.careeroadmap.com",
   },
 };
 
@@ -85,11 +85,11 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Career Roadmap",
-              url: "https://https://www.careeroadmap.com",
+              url: "https://careeroadmap.com",
               potentialAction: {
                 "@type": "SearchAction",
                 target:
-                  "https://https://www.careeroadmap.com/search?q={search_term_string}",
+                  "https://www.careeroadmap.com/search?q={search_term_string}",
                 "query-input": "required name=search_term_string",
               },
             })}
