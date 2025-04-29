@@ -414,7 +414,7 @@ export async function GET(request: Request) {
     for (const userInfo of usersNeedingUpdates) {
       try {
         // Create query based on desired career
-        const query = `display all upcoming events, scholarship programs, fests, trials, olympiads, exams, and other opportunities relevant to your ${userInfo.desired_career}, in next two months`;
+        const query = `display all upcoming events, scholarship programs, fests, trials, olympiads, exams, and other opportunities relevant to your ${userInfo.desired_career} that'll help my portfolio`;
         
         // Initialize Tavily with API key
         const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
