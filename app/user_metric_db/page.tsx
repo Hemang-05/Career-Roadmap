@@ -124,7 +124,7 @@ export default function UserMetricsPage() {
   };
 
   const handlePasswordSubmit = () => {
-    const correct = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    const correct = process.env.NEXT_PUBLIC_ADMIN;
     if (password === correct) {
       setAuthenticated(true);
     } else {
