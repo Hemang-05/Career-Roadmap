@@ -137,10 +137,18 @@ export default function UserMetricsPage() {
   const [counts, setCounts] = useState<Record<string, MetricCounts>>({
     "signed-in": { total: 0 },
     paid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
+    unpaid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
     details: { total: 0, school: 0, college: 0 },
   });
   const [growthData, setGrowthData] = useState<UserGrowthPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showPaid, setShowPaid] = useState<boolean>(true);
+  const [periodCounts, setPeriodCounts] = useState<{ [key: string]: number }>({
+    "3d": 0,
+    "7d": 0,
+    "30d": 0,
+    "90d": 0,
+  });
 
   // animate totals
   const [displayValues, setDisplayValues] = useState({
@@ -188,6 +196,29 @@ export default function UserMetricsPage() {
           .eq("subscription_status", true)
           .eq("subscription_plan", "yearly"),
       ]);
+      
+      // Get unpaid users with subscription plans
+      const [
+        { count: unpaidMonthly },
+        { count: unpaidQuarterly },
+        { count: unpaidYearly },
+      ] = await Promise.all([
+        supabase
+          .from("users")
+          .select("*", { count: "exact", head: true })
+          .eq("subscription_status", false)
+          .eq("subscription_plan", "monthly"),
+        supabase
+          .from("users")
+          .select("*", { count: "exact", head: true })
+          .eq("subscription_status", false)
+          .eq("subscription_plan", "quarterly"),
+        supabase
+          .from("users")
+          .select("*", { count: "exact", head: true })
+          .eq("subscription_status", false)
+          .eq("subscription_plan", "yearly"),
+      ]);
 
       const [
         { count: dt },
@@ -205,6 +236,51 @@ export default function UserMetricsPage() {
           .eq("college_student", true),
       ]);
 
+      // Calculate users in different time periods
+      const now = new Date();
+      const periods = {
+        "3d": new Date(now.setDate(now.getDate() - 3)),
+        "7d": new Date(now.setDate(now.getDate() - 4)), // -7 total
+        "30d": new Date(now.setDate(now.getDate() - 23)), // -30 total
+        "90d": new Date(now.setDate(now.getDate() - 60)), // -90 total
+      };
+
+      // Reset now
+      now.setTime(new Date().getTime());
+
+      // Get all user creation dates
+      const { data: userData } = await supabase
+        .from("users")
+        .select("created_at");
+
+      if (userData) {
+        const periodCounts: { [key: string]: number } = {
+          "3d": 0,
+          "7d": 0,
+          "30d": 0,
+          "90d": 0,
+        };
+
+        userData.forEach((user: { created_at: string }) => {
+          const createDate = new Date(user.created_at);
+          
+          if (createDate >= periods["3d"] && createDate <= now) {
+            periodCounts["3d"]++;
+          }
+          if (createDate >= periods["7d"] && createDate <= now) {
+            periodCounts["7d"]++;
+          }
+          if (createDate >= periods["30d"] && createDate <= now) {
+            periodCounts["30d"]++;
+          }
+          if (createDate >= periods["90d"] && createDate <= now) {
+            periodCounts["90d"]++;
+          }
+        });
+
+        setPeriodCounts(periodCounts);
+      }
+
       setCounts({
         "signed-in": { total: si ?? 0 },
         paid: {
@@ -212,6 +288,12 @@ export default function UserMetricsPage() {
           monthly: monthly ?? 0,
           quarterly: quarterly ?? 0,
           yearly: yearly ?? 0,
+        },
+        unpaid: {
+          monthly: unpaidMonthly ?? 0,
+          quarterly: unpaidQuarterly ?? 0,
+          yearly: unpaidYearly ?? 0,
+          total: (unpaidMonthly ?? 0) + (unpaidQuarterly ?? 0) + (unpaidYearly ?? 0),
         },
         details: {
           total: dt ?? 0,
@@ -302,6 +384,26 @@ export default function UserMetricsPage() {
     };
   }, [authenticated, counts]);
 
+  // Function to get subscription plan data based on showPaid state
+  const getSubscriptionData = () => {
+    if (showPaid) {
+      return [
+        { name: "Monthly", value: counts.paid.monthly ?? 0 },
+        { name: "Quarterly", value: counts.paid.quarterly ?? 0 },
+        { name: "Yearly", value: counts.paid.yearly ?? 0 },
+      ];
+    } else {
+      // For unpaid users with subscription plans
+      const noSubscriptionCount = (counts["signed-in"].total - counts.paid.total) - counts.unpaid.total;
+      
+      return [
+        { name: "Monthly", value: counts.unpaid.monthly ?? 0 },
+        { name: "Quarterly", value: counts.unpaid.quarterly ?? 0 },
+        { name: "Yearly", value: counts.unpaid.yearly ?? 0 },
+      ];
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-800 text-gray-200 flex flex-col relative">
       {/* Password modal */}
@@ -317,7 +419,7 @@ export default function UserMetricsPage() {
       {/* Dashboard (only when authenticated) */}
       {authenticated && (
         <div className="flex-1 flex flex-col">
-          <header className="flex items-center justify-between p-4 bg-gray-900 mb-2  z-10">
+          <header className="flex items-center justify-between p-4 bg-gray-900 mb-2 z-10">
             <h1 className="text-2xl font-semibold">CareerRoadmap</h1>
           </header>
 
@@ -325,8 +427,13 @@ export default function UserMetricsPage() {
             {/* First Card (Signed In Users) - Takes full width on top */}
             <div className="bg-gray-900 rounded-3xl p-4 w-full text-center">
               <h2 className="text-3xl mb-6 font-semibold">Users Signed In</h2>
-              <div className="text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-4">
-                {displayValues["signed-in"].toLocaleString()}
+              <div className="flex flex-col items-center">
+                <div className="text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                  {periodCounts[timeFrame].toLocaleString()}
+                </div>
+                <div className="text-lg text-gray-400 mt-1">
+                  / {counts["signed-in"].total.toLocaleString()} 
+                </div>
               </div>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -364,18 +471,26 @@ export default function UserMetricsPage() {
             <div className="flex flex-col md:flex-row gap-4 pb-4">
               {/* Second Card (Paid Users) */}
               <div className="bg-gray-900 rounded-3xl p-8 flex-1 text-center">
-                <h2 className="text-3xl mb-6 font-semibold">Paid Users</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-semibold">
+                    {showPaid ? "Paid Users" : "Unpaid Users"}
+                  </h2>
+                  <button
+                    onClick={() => setShowPaid(!showPaid)}
+                    className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm"
+                  >
+                    Show {showPaid ? "Unpaid" : "Paid"}
+                  </button>
+                </div>
                 <div className="text-5xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-6">
-                  {displayValues["paid"].toLocaleString()}
+                  {showPaid 
+                    ? displayValues["paid"].toLocaleString()
+                    : counts.unpaid.total.toLocaleString()}
                 </div>
                 <div className="h-48 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
-                      data={[
-                        { name: "Monthly", value: counts.paid.monthly ?? 0 },
-                        { name: "Quarterly", value: counts.paid.quarterly ?? 0 },
-                        { name: "Yearly", value: counts.paid.yearly ?? 0 },
-                      ]}
+                      data={getSubscriptionData()}
                     >
                       <XAxis dataKey="name" stroke="#9CA3AF" />
                       <YAxis stroke="#9CA3AF" domain={[0, "dataMax"]} />
@@ -385,7 +500,7 @@ export default function UserMetricsPage() {
                       />
                       <Bar
                         dataKey="value"
-                        fill="#FF6500"
+                        fill={showPaid ? "#FF6500" : "#9CA3AF"}
                         radius={[8, 8, 0, 0]}
                         isAnimationActive={false}
                         barSize={50}

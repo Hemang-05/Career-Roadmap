@@ -2,58 +2,51 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
 async function generateRoadmap(prompt: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-1219:generateContent?key=${apiKey}`;
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash-exp:free" ,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      top_p: 1,
-      temperature: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      repetition_penalty: 1,
-      top_k: 0,
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
     }),
   });
 
-
-  const data = await response.json();
-  // console.log('OpenRouter API response:', data);
-
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error("No choices returned from OpenRouter API");
+  const data = await res.json();
+  if (!data.candidates || data.candidates.length === 0) {
+    console.error("Empty response from Gemini API:", data);
+    throw new Error("No candidates returned from Gemini API");
   }
 
-  const rawContent = data.choices[0].message.content.trim();
+  // Extract the generated text
+  let raw = data.candidates[0].content.parts[0].text as string;
 
-  // Attempt to extract just the JSON part using regex
-  const jsonMatch =
-    rawContent.match(/```json\s*([\s\S]*?)\s*```/i) ||
-    rawContent.match(/{[\s\S]*}/);
-  if (!jsonMatch) {
-    throw new Error("No valid JSON found in response");
+  // Strip any ```json fences or grab the JSON object
+  const match =
+    raw.match(/```json\s*([\s\S]*?)\s*```/i) ||
+    raw.match(/({[\s\S]*})/);
+  if (!match) {
+    console.error("No JSON payload found in Gemini reply:", raw);
+    throw new Error("Failed to locate JSON in Gemini response");
   }
 
-  const cleanContent = jsonMatch[1] || jsonMatch[0]; // Depending on which pattern matched
-  return cleanContent.trim();
+  return match[1].trim();
 }
 
 export async function POST(request: Request) {
   try {
-    // Parse the JSON payload sent by the client
+    // 1. Parse incoming payload
     const { clerk_id } = await request.json();
     if (!clerk_id) {
       return NextResponse.json({ error: "Missing clerk_id" }, { status: 400 });
     }
 
-    // Look up the user record in the users table using clerk_id
+    // 2. Lookup user_id
     const { data: userRecord, error: userError } = await supabase
       .from("users")
       .select("id")
@@ -67,7 +60,7 @@ export async function POST(request: Request) {
     }
     const user_id = userRecord.id;
 
-    // Fetch the career_info record for that user, including difficulty
+    // 3. Fetch career_info
     const { data: careerInfo, error: careerInfoError } = await supabase
       .from("career_info")
       .select(
@@ -101,32 +94,35 @@ export async function POST(request: Request) {
       preferred_abroad_country,
       previous_experience,
       difficulty,
-      college_student
+      college_student,
     } = careerInfo;
 
     if (!desired_career) {
       return NextResponse.json(
-        { error: "Desired career not found in career_info" },
+        { error: "Desired career not found" },
         { status: 400 }
       );
     }
 
-    // Get current day and month
+    // 4. Build prompt
     const now = new Date();
     const current_day = now.getDate();
     const current_month = now.toLocaleString("default", { month: "long" });
 
-    // Define the base prompt
-    const basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${
+    let basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}". The student ${
       move_abroad
-        ? "plans to move abroad to " + preferred_abroad_country
+        ? `plans to move abroad to ${preferred_abroad_country}`
         : "does not plan to move abroad"
     }. The student has "${previous_experience}" in the field.
 
 The roadmap should:
-- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}") or if "${college_student} and course is"${current_class}" then cover graduation year based on course. ", divided into four 3-month phases per year.
+- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}")${
+      college_student
+        ? ` or if college student in ${current_class}, then until graduation year`
+        : ""
+    }, divided into four 3-month phases per year.
 - Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
-- Provide each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in atleast 2 to 3 lines.
+- Provide each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in at least 2 to 3 lines.
 
 Tailor the tasks to the student's specific situation:
 - Residing Country: Incorporate relevant exams, qualifications, or educational requirements specific to "${residing_country}".
@@ -136,12 +132,13 @@ Tailor the tasks to the student's specific situation:
 
 Also, structure the roadmap year-wise. For example:
 - If the student is in India and currently in 9th grade, generate a roadmap until 12th grade (4 years). For students in other countries, generate the roadmap until the end of school (before college).
-- If the student in College then according to his current year and course mentioned, generate roadmap till graduation.
+- If the student is in college, generate the roadmap until graduation.
 - Within each year, divide the roadmap into four 3-month phases.
 - The roadmap should be sequential, with later years building upon the achievements of previous years.
-- Give detailed explanation about the task in atleast 2 to 3 lines.
+- Give detailed explanation about the task in at least 2 to 3 lines.
 - Use the current day and month ("${current_day} ${current_month}") as the starting point for planning the phases.
-- Include the required Youtube tutorials/video if suggesting to start a course and learning or websites which might be helpful in "${desired_career}".
+- Include the required YouTube tutorials/videos or websites that might be helpful in "${desired_career}".
+
 The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
 
 {
@@ -177,7 +174,7 @@ The response must be strictly in JSON format without any additional text, markdo
   "final_notes": "Keep track of each task's progress. Update tasks as they are completed, and use the weight values to measure overall progress."
 }`;
 
-    // Select the prompt based on difficulty
+    // 5. Replace placeholder based on difficulty
     let prompt: string;
     switch (difficulty) {
       case "easy":
@@ -185,35 +182,31 @@ The response must be strictly in JSON format without any additional text, markdo
           "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
           "each milestone with 3-4 actionable tasks"
         );
-        // console.log('Prompt sent for EASY difficulty:', prompt);
         break;
       case "medium":
         prompt = basePrompt.replace(
           "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
           "each milestone with 4-6 actionable tasks"
         );
-        // console.log('Prompt sent for MEDIUM difficulty:', prompt);
         break;
       case "hard":
         prompt = basePrompt.replace(
           "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
           "each milestone with 6-8 actionable tasks"
         );
-        // console.log('Prompt sent for HARD difficulty:', prompt);
         break;
       default:
-        console.error("Invalid difficulty level:", difficulty);
         return NextResponse.json(
           { error: "Invalid difficulty level" },
           { status: 400 }
         );
     }
 
-    // Call the OpenRouter API to generate the roadmap
+    // 6. Call Gemini API
     const roadmap = await generateRoadmap(prompt);
 
-    // Update the career_info record with the generated roadmap
-    const { data, error } = await supabase
+    // 7. Save to Supabase
+    const { error } = await supabase
       .from("career_info")
       .update({ roadmap, updated_at: new Date().toISOString() })
       .eq("user_id", user_id);
@@ -223,7 +216,7 @@ The response must be strictly in JSON format without any additional text, markdo
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Return a success response
+    // 8. Return success
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("Error in POST /api/generate-roadmap:", err);
