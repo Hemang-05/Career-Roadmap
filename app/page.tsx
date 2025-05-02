@@ -9,11 +9,13 @@ import TestimonialsSection from "../components/TestimonialsSection";
 import PricingSection from "@/components/PricingSection";
 import Plans from "@/components/Plans";
 import VideoDemo from "@/components/VideoDemo";
+import { NotificationPopup } from "@/components/NotificationPopup";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
+      <NotificationPopup />
       <main className="flex-grow w-full pt-24">
         <HeroSection />
         <VideoDemo />
