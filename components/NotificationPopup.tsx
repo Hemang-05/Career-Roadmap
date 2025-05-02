@@ -14,14 +14,13 @@ export const NotificationPopup: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Polling every 10s
+  // Polling every 10s – fetch *all* messages (or set a high limit)
   useEffect(() => {
     const fetchNotifications = async () => {
       const { data, error } = await supabase
         .from("notifications")
-        .select("id, message, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .select("id, message, created_at");
+      // .limit(50)  // optional: cap if your DB is huge
       if (error) console.error("Error fetching notifications:", error.message);
       else if (data) setNotifications(data);
     };
@@ -31,11 +30,11 @@ export const NotificationPopup: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Rotate notifications every 3 seconds
+  // Rotate notifications every 3 seconds – pick a random one each time
   useEffect(() => {
-    if (!notifications.length) return;
+    if (notifications.length === 0) return;
     const rotate = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % notifications.length);
+      setCurrentIndex(Math.floor(Math.random() * notifications.length));
     }, 3000);
     return () => clearInterval(rotate);
   }, [notifications]);
