@@ -662,9 +662,9 @@ export default function Dashboard() {
             </div>
             <div>
               <label className="block text-gray-800 mb-4">
-                Share your parent's email id.
+                Share email id of someone you want to be accountable to.
                 <label className="font-style: italic text-sm text-gray-400">
-                  (Parent, Guardian, Teacher)
+                  (Parent, Guardian, Teacher or Friend)
                 </label>
               </label>
               <input
@@ -988,7 +988,7 @@ export default function Dashboard() {
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-1 mx-2">
-                    Select "Other" if yours not present
+                    Type and select "Other" if yours not present
             </p>
             {isSuggestionsOpen && inputValue && (
               <div className="absolute z-10 w-full mt-1 bg-white text-gray-700 rounded-xl shadow-xl max-h-60 overflow-auto border border-gray-100">
