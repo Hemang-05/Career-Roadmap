@@ -987,6 +987,9 @@ export default function Dashboard() {
               required
               autoComplete="off"
             />
+            <p className="text-xs text-gray-500 mt-1 mx-2">
+                    Select "Other" if yours not present
+            </p>
             {isSuggestionsOpen && inputValue && (
               <div className="absolute z-10 w-full mt-1 bg-white text-gray-700 rounded-xl shadow-xl max-h-60 overflow-auto border border-gray-100">
                 {universities
