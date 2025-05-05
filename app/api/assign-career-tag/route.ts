@@ -21,7 +21,7 @@ For a desired career "${desired_career}", determine the most appropriate career 
 8. Science & Environment – for scientists, researchers, environmentalists, and lab professionals
 9. Sports & Fitness – for athletes, coaches, trainers, and sports managers
 10. Culinary & Hospitality – for chefs, restaurant managers, travel experts, and hospitality professionals
-11. Others – for any niche or emerging professions that do not fit into the above categories
+11. Others – for any other entry or niche or emerging professions that do not fit into the above categories
 
 Return only the category name without numbering or explanation.
 `;
