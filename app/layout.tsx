@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import Script from "next/script";
 import Analysis from "@/utils/analytics";
 import { Analytics } from "@vercel/analytics/next";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,6 +102,7 @@ export default function RootLayout({
         >
           <Analysis />
           {children}
+          <FeedbackWidget />
           <Analytics />
           <Footer />
         </body>
