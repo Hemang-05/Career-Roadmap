@@ -1,13 +1,12 @@
-
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 
 /**
  * Helper: Use the AI API to generate a career tag.
- * In this example, the AI call is made using model "deepseek/deepseek-r1:free".
+ * In this example, the AI call is made using model "meta-llama/llama-3.3-8b-instruct:free".
+ * If the API does not return a valid response or an empty tag, it falls back to "Not Assigned".
  */
 async function generateCareerTag(desired_career: string): Promise<string> {
-  // const prompt = `Determine the common career category for the desired career: "${desired_career}". Options include "Doctor", "Entertainment", "Engineer", or "General". Return only the category name.`;
   const prompt = `
 For a desired career "${desired_career}", determine the most appropriate career category from the following options:
 
@@ -25,35 +24,42 @@ For a desired career "${desired_career}", determine the most appropriate career 
 
 Return only the category name without numbering or explanation.
 `;
+
   const apiKey = process.env.OPENROUTER_API_KEY_TAG;
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.0-flash-exp:free",
-      messages: [{ role: "user", content: prompt }],
-      top_p: 1,
-      temperature: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      repetition_penalty: 1,
-      top_k: 0,
-    }),
-  });
-  
-  const data = await response.json();
-  console.log('AI response for career tag:', data);
-  
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error('No choices returned from AI API');
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.3-8b-instruct:free",
+        messages: [{ role: "user", content: prompt }],
+        top_p: 1,
+        temperature: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+        repetition_penalty: 1,
+        top_k: 0,
+      }),
+    });
+
+    const data = await response.json();
+    console.log('AI response for career tag:', data);
+
+    if (!data.choices || data.choices.length === 0) {
+      console.warn('No choices returned from AI API, defaulting to "Not Assigned"');
+      return "Not Assigned";
+    }
+
+    const tag = data.choices[0].message.content.trim();
+    console.log(`Generated tag for desired career "${desired_career}":`, tag);
+    return tag || "Not Assigned";
+  } catch (error) {
+    console.error('Error calling AI API for career tag:', error);
+    return "Not Assigned";
   }
-  
-  const tag = data.choices[0].message.content.trim();
-  console.log(`Generated tag for desired career "${desired_career}":`, tag);
-  return tag || "General";
 }
 
 export async function POST(request: Request) {
@@ -71,97 +77,85 @@ export async function POST(request: Request) {
       .select('id, clerk_id')
       .eq('clerk_id', clerk_id)
       .single();
-    
+
     if (userError || !userRecord) {
       console.error("User not found:", userError);
       return NextResponse.json({ error: 'User not found by clerk_id' }, { status: 404 });
     }
-    
-    // Extract the user's UUID from the record
+
     const user_id = userRecord.id;
     console.log("Found user record:", userRecord, "User UUID:", user_id);
 
     // Generate the career tag for the desired career
-    let assignedTag = "";
-    try {
-        assignedTag = await generateCareerTag(desired_career);
-        console.log(`Determined tag for "${desired_career}": ${assignedTag}`);
-    } catch (aiError: any) {
-        console.error("Error generating career tag:", aiError);
-        assignedTag = "General"; // Fallback
+    const assignedTag = await generateCareerTag(desired_career);
+    console.log(`Determined tag for "${desired_career}": ${assignedTag}`);
+
+    // If the tag is "Not Assigned", skip domain grouping to avoid mixing with other domains
+    if (assignedTag === "Not Assigned") {
+      // Update the user's career_tag column and return
+      const { error: updateUserError } = await supabase
+        .from('users')
+        .update({ career_tag: assignedTag })
+        .eq('clerk_id', clerk_id);
+
+      if (updateUserError) {
+        console.error("Error updating user's career_tag to Not Assigned:", updateUserError);
+        return NextResponse.json({ error: updateUserError.message }, { status: 500 });
+      }
+
+      console.log('User career_tag set to "Not Assigned", no further domain operations.');
+      return NextResponse.json({ success: true, career_tag: assignedTag });
     }
 
-    // Check if a record with this career_tag already exists
+    // Proceed with grouping into career_tag table
     const { data: existingTagRecord, error: tagCheckError } = await supabase
-        .from('career_tag')
-        .select('*')
-        .eq('career_tag', assignedTag)
-        .maybeSingle();
+      .from('career_tag')
+      .select('*')
+      .eq('career_tag', assignedTag)
+      .maybeSingle();
 
     if (tagCheckError) {
-        console.error("Error checking for existing career tag:", tagCheckError);
-        return NextResponse.json({ error: tagCheckError.message }, { status: 500 });
+      console.error("Error checking for existing career tag:", tagCheckError);
+      return NextResponse.json({ error: tagCheckError.message }, { status: 500 });
     }
 
     if (existingTagRecord) {
-        // TAG EXISTS: Update its desired_careers array and user_ids array if needed
-        console.log(`Tag "${assignedTag}" found. Record ID: ${existingTagRecord.id}`);
-        
-        // Get current values or initialize if undefined
-        const currentDesiredCareers: string[] = existingTagRecord.desired_careers || [];
-        const currentUserIds: string[] = existingTagRecord.user_ids || [];
-        
-        // Check if desired_career needs to be added
-        const careerNeedsUpdate = !currentDesiredCareers.includes(desired_career);
-        // Check if user_id needs to be added
-        const userIdNeedsUpdate = !currentUserIds.includes(user_id);
-        
-        // Only update if something needs to change
-        if (careerNeedsUpdate || userIdNeedsUpdate) {
-            const updatedData: any = {};
-            
-            if (careerNeedsUpdate) {
-                updatedData.desired_careers = [...currentDesiredCareers, desired_career];
-            }
-            
-            if (userIdNeedsUpdate) {
-                updatedData.user_ids = [...currentUserIds, user_id];
-            }
-            
-            updatedData.updated_at = new Date().toISOString();
-            
-            const { error: updateTagError } = await supabase
-                .from('career_tag')
-                .update(updatedData)
-                .eq('id', existingTagRecord.id);
+      console.log(`Tag "${assignedTag}" found. Record ID: ${existingTagRecord.id}`);
 
-            if (updateTagError) {
-                console.error("Error updating career_tag record:", updateTagError);
-                // Continue with user update even if this fails
-            } else {
-                console.log(`Updated career_tag "${assignedTag}" with new data:`, updatedData);
-            }
-        } else {
-            console.log(`"${desired_career}" and user_id "${user_id}" already exist in tag "${assignedTag}". No update needed.`);
-        }
+      const currentDesiredCareers: string[] = existingTagRecord.desired_careers || [];
+      const currentUserIds: string[] = existingTagRecord.user_ids || [];
+
+      const careerNeedsUpdate = !currentDesiredCareers.includes(desired_career);
+      const userIdNeedsUpdate = !currentUserIds.includes(user_id);
+
+      if (careerNeedsUpdate || userIdNeedsUpdate) {
+        const updatedData: any = {};
+        if (careerNeedsUpdate) updatedData.desired_careers = [...currentDesiredCareers, desired_career];
+        if (userIdNeedsUpdate) updatedData.user_ids = [...currentUserIds, user_id];
+        updatedData.updated_at = new Date().toISOString();
+
+        const { error: updateTagError } = await supabase
+          .from('career_tag')
+          .update(updatedData)
+          .eq('id', existingTagRecord.id);
+
+        if (updateTagError) console.error("Error updating career_tag record:", updateTagError);
+        else console.log(`Updated career_tag "${assignedTag}" with new data:`, updatedData);
+      } else {
+        console.log(`"${desired_career}" and user_id "${user_id}" already exist in tag "${assignedTag}". No update needed.`);
+      }
     } else {
-        // TAG DOES NOT EXIST: Insert a new record with both desired_career and user_id
-        console.log(`Tag "${assignedTag}" not found. Inserting new record.`);
-        const { error: insertError } = await supabase
-            .from('career_tag')
-            .insert([{
-                career_tag: assignedTag,
-                desired_careers: [desired_career], // Start with the current desired career
-                user_ids: [user_id] // Start with the current user's UUID
-                // created_at and updated_at should be handled by DB defaults if configured
-            }]);
+      console.log(`Tag "${assignedTag}" not found. Inserting new record.`);
+      const { error: insertError } = await supabase
+        .from('career_tag')
+        .insert([{ career_tag: assignedTag, desired_careers: [desired_career], user_ids: [user_id] }]);
 
-        if (insertError) {
-            console.error("Error inserting new career tag record:", insertError);
-            return NextResponse.json({ error: insertError.message }, { status: 500 });
-        } else {
-            console.log(`Successfully inserted new tag "${assignedTag}" with career "${desired_career}" and user_id "${user_id}"`);
-        }
+      if (insertError) {
+        console.error("Error inserting new career tag record:", insertError);
+        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      } else {
+        console.log(`Successfully inserted new tag "${assignedTag}" with career "${desired_career}" and user_id "${user_id}"`);
+      }
     }
 
     // Update the user's career_tag column in the users table
@@ -169,12 +163,12 @@ export async function POST(request: Request) {
       .from('users')
       .update({ career_tag: assignedTag })
       .eq('clerk_id', clerk_id);
-    
+
     if (updateUserError) {
       console.error("Error updating user's career_tag:", updateUserError);
       return NextResponse.json({ error: updateUserError.message }, { status: 500 });
     }
-    
+
     console.log("Successfully updated user's career_tag to:", assignedTag);
     return NextResponse.json({ success: true, career_tag: assignedTag });
   } catch (err: any) {
