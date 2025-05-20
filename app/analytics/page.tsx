@@ -100,7 +100,7 @@ export default function AnalyticsDashboard() {
         subscription_status === "inactive" ||
         subscriptionEndDate < currentDate
       ) {
-        setShowPaymentPlan(true);
+        setShowPaymentPlan(false);        // make it true
         setLoading(false);
         return;
       }
