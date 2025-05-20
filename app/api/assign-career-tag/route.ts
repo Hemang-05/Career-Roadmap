@@ -33,7 +33,7 @@ Return only the category name without numbering or explanation.
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "deepseek/deepseek-r1:free",
+      model: "google/gemini-2.0-flash-exp:free",
       messages: [{ role: "user", content: prompt }],
       top_p: 1,
       temperature: 1,
