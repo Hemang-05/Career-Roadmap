@@ -360,7 +360,7 @@ export default function RoadmapPage() {
         // Fetch user record... (keep existing logic)
         const { data: userRecord, error: userError } = await supabase
           .from("users")
-          .select("id, subscription_status, subscription_end")
+          .select("id, subscription_status")      //add .select("id, subscription_status, subscription_end")
           .eq("clerk_id", user.id)
           .single();
   
@@ -398,7 +398,7 @@ export default function RoadmapPage() {
         const subscriptionEndDate = subscription_end ? new Date(subscription_end) : null;
   
         // Check subscription... (keep existing logic)
-        if (!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate) {
+        if (subscription_status !== true) {          //(!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate)
           console.log("Subscription invalid or expired.");
           setShowPaymentPlan(true);
           setLoading(false);
