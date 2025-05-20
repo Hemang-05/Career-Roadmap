@@ -32,6 +32,7 @@ interface MetricCounts {
   yearly?: number;
   school?: number;
   college?: number;
+  roadmap?: number;
 }
 
 // ─── Password Modal ───────────────────────────────────────────────────────────
@@ -138,11 +139,12 @@ export default function UserMetricsPage() {
     "signed-in": { total: 0 },
     paid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
     unpaid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
-    details: { total: 0, school: 0, college: 0 },
+    details: { total: 0, school: 0, college: 0, roadmap: 0 },
   });
   const [growthData, setGrowthData] = useState<UserGrowthPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [showPaid, setShowPaid] = useState<boolean>(true);
+  const [showRoadmap, setShowRoadmap] = useState<boolean>(false);
   const [periodCounts, setPeriodCounts] = useState<{ [key: string]: number }>({
     "3d": 0,
     "7d": 0,
@@ -154,12 +156,14 @@ export default function UserMetricsPage() {
   const [displayValues, setDisplayValues] = useState({
     "signed-in": 0,
     paid: 0,
-    details: 0
+    details: 0,
+    roadmap: 0
   });
   const animRefs = useRef<{[key: string]: NodeJS.Timeout | null}>({
     "signed-in": null,
     paid: null,
-    details: null
+    details: null,
+    roadmap: null
   });
 
   // ─ Fetch counts (only when authenticated) ────────────────────────────────
@@ -224,6 +228,7 @@ export default function UserMetricsPage() {
         { count: dt },
         { count: school },
         { count: college },
+        { count: roadmap },
       ] = await Promise.all([
         supabase.from("career_info").select("*", { count: "exact", head: true }),
         supabase
@@ -234,6 +239,10 @@ export default function UserMetricsPage() {
           .from("career_info")
           .select("*", { count: "exact", head: true })
           .eq("college_student", true),
+        supabase
+          .from("career_info")
+          .select("*", { count: "exact", head: true })
+          .not("roadmap", "is", null),
       ]);
 
       // Calculate users in different time periods
@@ -299,6 +308,7 @@ export default function UserMetricsPage() {
           total: dt ?? 0,
           school: school ?? 0,
           college: college ?? 0,
+          roadmap: roadmap ?? 0,
         },
       });
 
@@ -345,10 +355,10 @@ export default function UserMetricsPage() {
   useEffect(() => {
     if (!authenticated) return;
     
-    const sections = ["signed-in", "paid", "details"];
+    const sections = ["signed-in", "paid", "details", "roadmap"];
     
     sections.forEach(section => {
-      const target = counts[section].total;
+      const target = section === "roadmap" ? counts.details.roadmap || 0 : counts[section].total;
       if (animRefs.current[section]) clearInterval(animRefs.current[section]!);
       
       let step = 0;
@@ -382,7 +392,7 @@ export default function UserMetricsPage() {
         if (animRefs.current[section]) clearInterval(animRefs.current[section]!);
       });
     };
-  }, [authenticated, counts]);
+  }, [authenticated, counts, showRoadmap]);
 
   // Function to get subscription plan data based on showPaid state
   const getSubscriptionData = () => {
@@ -510,57 +520,78 @@ export default function UserMetricsPage() {
                 </div>
               </div>
               
-              {/* Third Card (Details Filled) */}
+              {/* Third Card (Details Filled / Roadmap Generated) */}
               <div className="bg-gray-900 rounded-3xl p-8 flex-1 text-center">
-                <h2 className="text-3xl mb-6 font-semibold">Users Filled Details</h2>
-                <div className="text-5xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-6">
-                  {displayValues["details"].toLocaleString()}
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-semibold">
+                    {showRoadmap ? "Roadmap Generated" : "Users Filled Details"}
+                  </h2>
+                  <button
+                    onClick={() => setShowRoadmap(!showRoadmap)}
+                    className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm"
+                  >
+                    Show {showRoadmap ? "Details Filled" : "Roadmap Generated"}
+                  </button>
                 </div>
-                <div className="h-48 w-full flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "School", value: counts.details.school ?? 0 },
-                          { name: "College", value: counts.details.college ?? 0 },
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius="50%"
-                        outerRadius="80%"
-                        paddingAngle={4}
-                        isAnimationActive={false}
-                      >
-                        {[
-                          { name: "School", value: counts.details.school ?? 0 },
-                          { name: "College", value: counts.details.college ?? 0 },
-                        ].map((_, idx) => (
-                          <Cell key={idx} fill={["#4ADE80", "#60A5FA"][idx]} />
-                        ))}
-                      </Pie>
-                      <ReTooltip
-                        contentStyle={{ backgroundColor: "#1F2937", border: "none" }}
-                        itemStyle={{ color: "#fff" }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex justify-center space-x-6 text-sm mt-4">
-                  <div className="flex items-center space-x-1">
-                    <span
-                      className="w-3 h-3 block rounded-full"
-                      style={{ backgroundColor: "#4ADE80" }}
-                    />
-                    <span>School</span>
+                
+                {showRoadmap ? (
+                  // Roadmap Generated View - Just the count with larger font
+                  <div className="text-6xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 h-48 flex items-center justify-center">
+                    {displayValues["roadmap"].toLocaleString()}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span
-                      className="w-3 h-3 block rounded-full"
-                      style={{ backgroundColor: "#60A5FA" }}
-                    />
-                    <span>College</span>
-                  </div>
-                </div>
+                ) : (
+                  // Details Filled View - Original content
+                  <>
+                    <div className="text-5xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-6">
+                      {displayValues["details"].toLocaleString()}
+                    </div>
+                    <div className="h-48 w-full flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: "School", value: counts.details.school ?? 0 },
+                              { name: "College", value: counts.details.college ?? 0 },
+                            ]}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="50%"
+                            outerRadius="80%"
+                            paddingAngle={4}
+                            isAnimationActive={false}
+                          >
+                            {[
+                              { name: "School", value: counts.details.school ?? 0 },
+                              { name: "College", value: counts.details.college ?? 0 },
+                            ].map((_, idx) => (
+                              <Cell key={idx} fill={["#4ADE80", "#60A5FA"][idx]} />
+                            ))}
+                          </Pie>
+                          <ReTooltip
+                            contentStyle={{ backgroundColor: "#1F2937", border: "none" }}
+                            itemStyle={{ color: "#fff" }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-center space-x-6 text-sm mt-4">
+                      <div className="flex items-center space-x-1">
+                        <span
+                          className="w-3 h-3 block rounded-full"
+                          style={{ backgroundColor: "#4ADE80" }}
+                        />
+                        <span>School</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span
+                          className="w-3 h-3 block rounded-full"
+                          style={{ backgroundColor: "#60A5FA" }}
+                        />
+                        <span>College</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
