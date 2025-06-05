@@ -19,6 +19,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dodopayments": "^1.11.0",
+    "lucide-react": "^0.507.0",
     "micro": "^10.0.1",
     "motion": "^12.4.10",
     "next": "^15.2.4",
@@ -35,7 +36,8 @@
     "recharts": "^2.15.2",
     "standardwebhooks": "^1.0.0",
     "svix": "^1.59.2",
-    "tailwind-merge": "^3.0.2"
+    "tailwind-merge": "^3.0.2",
+    "yt-search": "^2.13.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

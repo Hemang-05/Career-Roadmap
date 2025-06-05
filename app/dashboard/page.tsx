@@ -97,7 +97,7 @@ export default function Dashboard() {
   const [interestParagraph, setInterestParagraph] = useState("");
 
   // Subscription states
-  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(true);      //status to false and default supabse value to false
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("");
 
   // Roadmap state
@@ -167,9 +167,9 @@ export default function Dashboard() {
         ) {
           await supabase
             .from("users")
-            .update({ subscription_status: false })
+            .update({ subscription_status: true })         //status to false
             .eq("clerk_id", user!.id);
-          if (isMounted) setSubscriptionStatus(false);
+          if (isMounted) setSubscriptionStatus(true);      //status to false
         }
 
         // 2️ fetch full career_info row

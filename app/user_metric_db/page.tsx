@@ -16,8 +16,6 @@ import {
   Cell,
 } from "recharts";
 import { supabase } from "@/utils/supabase/supabaseClient";
-
-// Add this import for useLayoutEffect
 import { useLayoutEffect } from "react";
 
 interface UserGrowthPoint {
@@ -32,9 +30,9 @@ interface MetricCounts {
   yearly?: number;
   school?: number;
   college?: number;
+  roadmap?: number;
 }
 
-// ─── Password Modal ───────────────────────────────────────────────────────────
 function PasswordModal({
   value,
   error,
@@ -73,12 +71,7 @@ function PasswordModal({
   );
 }
 
-// Custom tooltip component with proper dark styling
-const CustomTooltip = ({ 
-  active, 
-  payload, 
-  label 
-}: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-800 text-white p-2 rounded shadow-lg border-none">
@@ -89,115 +82,96 @@ const CustomTooltip = ({
   return null;
 };
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 export default function UserMetricsPage() {
-  // ─ Footer Hiding Logic ──────────────────
+  // Hide site footer on this page
   useLayoutEffect(() => {
-    // Add a custom class to the document body to identify this page
-    document.body.classList.add('user-metrics-page');
-    
-    // Create a style element to hide the footer
-    const styleElement = document.createElement('style');
-    styleElement.innerHTML = `
-      /* Hide footer when on the metrics page */
-      body.user-metrics-page footer {
-        display: none !important;
-      }
-    `;
-    document.head.appendChild(styleElement);
-    
-    // Cleanup function
+    document.body.classList.add("user-metrics-page");
+    const style = document.createElement("style");
+    style.innerHTML = `body.user-metrics-page footer { display: none !important; }`;
+    document.head.appendChild(style);
     return () => {
-      document.body.classList.remove('user-metrics-page');
-      document.head.removeChild(styleElement);
+      document.body.classList.remove("user-metrics-page");
+      document.head.removeChild(style);
     };
   }, []);
 
-  // ─ Password Gate States ──────────────────
+  // Authentication
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
-
   const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
     if (error) setError("");
   };
-
   const handlePasswordSubmit = () => {
-    const correct = process.env.NEXT_PUBLIC_ADMIN;
-    if (password === correct) {
+    if (password === process.env.NEXT_PUBLIC_ADMIN) {
       setAuthenticated(true);
     } else {
       setError("Incorrect password");
     }
   };
 
-  // ─ Dashboard States ──────────────────────
-  const [timeFrame, setTimeFrame] = useState<"3d" | "7d" | "30d" | "90d">("30d");
-  const [counts, setCounts] = useState<Record<string, MetricCounts>>({
-    "signed-in": { total: 0 },
-    paid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
-    unpaid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
-    details: { total: 0, school: 0, college: 0 },
-  });
-  const [growthData, setGrowthData] = useState<UserGrowthPoint[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [showPaid, setShowPaid] = useState<boolean>(true);
-  const [periodCounts, setPeriodCounts] = useState<{ [key: string]: number }>({
+  // Dashboard state
+  const [timeFrame, setTimeFrame] = useState<"1d" | "3d" | "7d" | "30d" | "90d">("30d");
+  const [periodCounts, setPeriodCounts] = useState<Record<string, number>>({
+    "1d": 0,
     "3d": 0,
     "7d": 0,
     "30d": 0,
     "90d": 0,
   });
-
-  // animate totals
+  const [counts, setCounts] = useState<Record<string, MetricCounts>>({
+    "signed-in": { total: 0 },
+    paid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
+    unpaid: { total: 0, monthly: 0, quarterly: 0, yearly: 0 },
+    details: { total: 0, school: 0, college: 0, roadmap: 0 },
+  });
+  const [growthData, setGrowthData] = useState<UserGrowthPoint[]>([]);
   const [displayValues, setDisplayValues] = useState({
     "signed-in": 0,
     paid: 0,
-    details: 0
+    details: 0,
+    roadmap: 0,
   });
-  const animRefs = useRef<{[key: string]: NodeJS.Timeout | null}>({
+  const animRefs = useRef<Record<string, NodeJS.Timeout | null>>({
     "signed-in": null,
     paid: null,
-    details: null
+    details: null,
+    roadmap: null,
   });
+  const [showPaid, setShowPaid] = useState(true);
+  const [showRoadmap, setShowRoadmap] = useState(false);
 
-  // ─ Fetch counts (only when authenticated) ────────────────────────────────
+  // Fetch all counts + periodCounts
   useEffect(() => {
     if (!authenticated) return;
-
-    setLoading(true);
     (async () => {
+      // 1) Total & subscription counts
       const [
-        { count: si },
-        { count: p },
+        { count: totalUsers },
+        { count: paidTotal },
         { count: monthly },
         { count: quarterly },
         { count: yearly },
       ] = await Promise.all([
-        supabase.from("users").select("*", { count: "exact", head: true }),
+        supabase.from("users").select("*", { head: true, count: "exact" }),
+        supabase.from("users").select("*", { head: true, count: "exact" }).eq("subscription_status", true),
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
-          .eq("subscription_status", true),
-        supabase
-          .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", true)
           .eq("subscription_plan", "monthly"),
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", true)
           .eq("subscription_plan", "quarterly"),
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", true)
           .eq("subscription_plan", "yearly"),
       ]);
-      
-      // Get unpaid users with subscription plans
       const [
         { count: unpaidMonthly },
         { count: unpaidQuarterly },
@@ -205,208 +179,169 @@ export default function UserMetricsPage() {
       ] = await Promise.all([
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", false)
           .eq("subscription_plan", "monthly"),
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", false)
           .eq("subscription_plan", "quarterly"),
         supabase
           .from("users")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("subscription_status", false)
           .eq("subscription_plan", "yearly"),
       ]);
-
+      // 2) Details / roadmap counts
       const [
         { count: dt },
         { count: school },
         { count: college },
+        { count: roadmap },
       ] = await Promise.all([
-        supabase.from("career_info").select("*", { count: "exact", head: true }),
+        supabase.from("career_info").select("*", { head: true, count: "exact" }),
         supabase
           .from("career_info")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("college_student", false),
         supabase
           .from("career_info")
-          .select("*", { count: "exact", head: true })
+          .select("*", { head: true, count: "exact" })
           .eq("college_student", true),
+        supabase
+          .from("career_info")
+          .select("*", { head: true, count: "exact" })
+          .not("roadmap", "is", null),
       ]);
 
-      // Calculate users in different time periods
-      const now = new Date();
-      const periods = {
-        "3d": new Date(now.setDate(now.getDate() - 3)),
-        "7d": new Date(now.setDate(now.getDate() - 4)), // -7 total
-        "30d": new Date(now.setDate(now.getDate() - 23)), // -30 total
-        "90d": new Date(now.setDate(now.getDate() - 60)), // -90 total
+      // 3) Compute period breakpoints by DATE only
+      const today = new Date();
+      const iso = (d: Date) => d.toISOString().split("T")[0];
+      const periods: Record<string, string> = {
+        "1d": iso(today),
+        "3d": iso(new Date(today.getTime() - 2 * 864e5)),
+        "7d": iso(new Date(today.getTime() - 6 * 864e5)),
+        "30d": iso(new Date(today.getTime() - 29 * 864e5)),
+        "90d": iso(new Date(today.getTime() - 89 * 864e5)),
       };
 
-      // Reset now
-      now.setTime(new Date().getTime());
+      // 4) Count users by created_at date
+      const { data: userData } = await supabase.from("users").select("created_at");
+      const pc: Record<string, number> = { "1d": 0, "3d": 0, "7d": 0, "30d": 0, "90d": 0 };
+      userData?.forEach((u : { created_at: string }) => {
+        const day = u.created_at.split("T")[0];
+        if (day === periods["1d"]) pc["1d"]++;
+        if (day >= periods["3d"]) pc["3d"]++;
+        if (day >= periods["7d"]) pc["7d"]++;
+        if (day >= periods["30d"]) pc["30d"]++;
+        if (day >= periods["90d"]) pc["90d"]++;
+      });
 
-      // Get all user creation dates
-      const { data: userData } = await supabase
-        .from("users")
-        .select("created_at");
-
-      if (userData) {
-        const periodCounts: { [key: string]: number } = {
-          "3d": 0,
-          "7d": 0,
-          "30d": 0,
-          "90d": 0,
-        };
-
-        userData.forEach((user: { created_at: string }) => {
-          const createDate = new Date(user.created_at);
-          
-          if (createDate >= periods["3d"] && createDate <= now) {
-            periodCounts["3d"]++;
-          }
-          if (createDate >= periods["7d"] && createDate <= now) {
-            periodCounts["7d"]++;
-          }
-          if (createDate >= periods["30d"] && createDate <= now) {
-            periodCounts["30d"]++;
-          }
-          if (createDate >= periods["90d"] && createDate <= now) {
-            periodCounts["90d"]++;
-          }
-        });
-
-        setPeriodCounts(periodCounts);
-      }
-
+      setPeriodCounts(pc);
       setCounts({
-        "signed-in": { total: si ?? 0 },
+        "signed-in": { total: totalUsers ?? 0 },
         paid: {
-          total: p ?? 0,
+          total: paidTotal ?? 0,
           monthly: monthly ?? 0,
           quarterly: quarterly ?? 0,
           yearly: yearly ?? 0,
         },
         unpaid: {
+          total: (unpaidMonthly ?? 0) + (unpaidQuarterly ?? 0) + (unpaidYearly ?? 0),
           monthly: unpaidMonthly ?? 0,
           quarterly: unpaidQuarterly ?? 0,
           yearly: unpaidYearly ?? 0,
-          total: (unpaidMonthly ?? 0) + (unpaidQuarterly ?? 0) + (unpaidYearly ?? 0),
         },
-        details: {
-          total: dt ?? 0,
-          school: school ?? 0,
-          college: college ?? 0,
-        },
+        details: { total: dt ?? 0, school: school ?? 0, college: college ?? 0, roadmap: roadmap ?? 0 },
       });
-
-      setLoading(false);
     })();
   }, [authenticated]);
 
-  // ─ Fetch growth data ──────────────────────────────────────────────
+  // Build cumulative growth series by date
   useEffect(() => {
     if (!authenticated) return;
-
     (async () => {
       const now = new Date();
       const start = new Date(now);
-      if (timeFrame === "3d") start.setDate(now.getDate() - 3);
-      if (timeFrame === "7d") start.setDate(now.getDate() - 7);
-      if (timeFrame === "30d") start.setDate(now.getDate() - 30);
-      if (timeFrame === "90d") start.setDate(now.getDate() - 90);
+      switch (timeFrame) {
+        case "1d":
+          start.setDate(now.getDate());
+          break;
+        case "3d":
+          start.setDate(now.getDate() - 3);
+          break;
+        case "7d":
+          start.setDate(now.getDate() - 7);
+          break;
+        case "30d":
+          start.setDate(now.getDate() - 30);
+          break;
+        case "90d":
+          start.setDate(now.getDate() - 90);
+          break;
+      }
 
       const { data } = await supabase.from("users").select("created_at");
       const bucket = new Map<string, number>();
-      let d = new Date(start);
-      while (d <= now) {
+      for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
         bucket.set(d.toISOString().split("T")[0], 0);
-        d.setDate(d.getDate() + 1);
       }
       data?.forEach((u: { created_at: string }) => {
         const day = u.created_at.split("T")[0];
         if (bucket.has(day)) bucket.set(day, bucket.get(day)! + 1);
       });
+
       let cum = 0;
       const out: UserGrowthPoint[] = [];
       Array.from(bucket.entries())
-        .sort(([a], [b]) => (a < b ? -1 : 1))
-        .forEach(([day, cnt]) => {
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([date, cnt]) => {
           cum += cnt;
-          out.push({ date: day, count: cum });
+          out.push({ date, count: cum });
         });
       setGrowthData(out);
     })();
   }, [authenticated, timeFrame]);
 
-  // ─ Animate totals on change ────────────────────────────────────────────────
+  // Animate the totals
   useEffect(() => {
     if (!authenticated) return;
-    
-    const sections = ["signed-in", "paid", "details"];
-    
-    sections.forEach(section => {
-      const target = counts[section].total;
-      if (animRefs.current[section]) clearInterval(animRefs.current[section]!);
-      
+    ["signed-in", "paid", "details", "roadmap"].forEach((sec) => {
+      const target = sec === "roadmap" ? counts.details.roadmap! : counts[sec].total;
+      if (animRefs.current[sec]) clearInterval(animRefs.current[sec]!);
       let step = 0;
-      const totalSteps = 60;
-      const inc = target / totalSteps;
-      
-      setDisplayValues(prev => ({
-        ...prev,
-        [section]: 0
-      }));
-
-      animRefs.current[section] = setInterval(() => {
+      const steps = 60;
+      const inc = target / steps;
+      setDisplayValues((prev) => ({ ...prev, [sec]: 0 }));
+      animRefs.current[sec] = setInterval(() => {
         step++;
-        if (step >= totalSteps) {
-          setDisplayValues(prev => ({
-            ...prev,
-            [section]: target
-          }));
-          clearInterval(animRefs.current[section]!);
+        if (step >= steps) {
+          setDisplayValues((prev) => ({ ...prev, [sec]: target }));
+          clearInterval(animRefs.current[sec]!);
         } else {
-          setDisplayValues(prev => ({
-            ...prev,
-            [section]: Math.floor(inc * step)
-          }));
+          setDisplayValues((prev) => ({ ...prev, [sec]: Math.floor(inc * step) }));
         }
-      }, 1500 / totalSteps);
+      }, 1500 / steps);
     });
+    return () => Object.values(animRefs.current).forEach((t) => t && clearInterval(t));
+  }, [authenticated, counts, showRoadmap]);
 
-    return () => {
-      sections.forEach(section => {
-        if (animRefs.current[section]) clearInterval(animRefs.current[section]!);
-      });
-    };
-  }, [authenticated, counts]);
-
-  // Function to get subscription plan data based on showPaid state
-  const getSubscriptionData = () => {
-    if (showPaid) {
-      return [
-        { name: "Monthly", value: counts.paid.monthly ?? 0 },
-        { name: "Quarterly", value: counts.paid.quarterly ?? 0 },
-        { name: "Yearly", value: counts.paid.yearly ?? 0 },
-      ];
-    } else {
-      // For unpaid users with subscription plans
-      const noSubscriptionCount = (counts["signed-in"].total - counts.paid.total) - counts.unpaid.total;
-      
-      return [
-        { name: "Monthly", value: counts.unpaid.monthly ?? 0 },
-        { name: "Quarterly", value: counts.unpaid.quarterly ?? 0 },
-        { name: "Yearly", value: counts.unpaid.yearly ?? 0 },
-      ];
-    }
-  };
+  const getSubscriptionData = () =>
+    showPaid
+      ? [
+          { name: "Monthly", value: counts.paid.monthly! },
+          { name: "Quarterly", value: counts.paid.quarterly! },
+          { name: "Yearly", value: counts.paid.yearly! },
+        ]
+      : [
+          { name: "Monthly", value: counts.unpaid.monthly! },
+          { name: "Quarterly", value: counts.unpaid.quarterly! },
+          { name: "Yearly", value: counts.unpaid.yearly! },
+        ];
 
   return (
     <div className="min-h-screen bg-gray-800 text-gray-200 flex flex-col relative">
-      {/* Password modal */}
       {!authenticated && (
         <PasswordModal
           value={password}
@@ -416,7 +351,6 @@ export default function UserMetricsPage() {
         />
       )}
 
-      {/* Dashboard (only when authenticated) */}
       {authenticated && (
         <div className="flex-1 flex flex-col">
           <header className="flex items-center justify-between p-4 bg-gray-900 mb-2 z-10">
@@ -424,16 +358,14 @@ export default function UserMetricsPage() {
           </header>
 
           <div className="flex flex-col space-y-2 px-16">
-            {/* First Card (Signed In Users) - Takes full width on top */}
+            {/* Users Signed In */}
             <div className="bg-gray-900 rounded-3xl p-4 w-full text-center">
               <h2 className="text-3xl mb-6 font-semibold">Users Signed In</h2>
-              <div className="flex flex-col items-center">
-                <div className="text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
-                  {periodCounts[timeFrame].toLocaleString()}
-                </div>
-                <div className="text-lg text-gray-400 mt-1">
-                  / {counts["signed-in"].total.toLocaleString()} 
-                </div>
+              <div className="text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                {periodCounts[timeFrame].toLocaleString()}
+              </div>
+              <div className="text-lg text-gray-400 mt-1">
+                / {counts["signed-in"].total.toLocaleString()}
               </div>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -451,7 +383,7 @@ export default function UserMetricsPage() {
                 </ResponsiveContainer>
               </div>
               <div className="flex justify-center space-x-2 text-xs mt-3">
-                {(["3d", "7d", "30d", "90d"] as const).map((tf) => (
+                {(["1d", "3d", "7d", "30d", "90d"] as const).map((tf) => (
                   <button
                     key={tf}
                     onClick={() => setTimeFrame(tf)}
@@ -510,57 +442,78 @@ export default function UserMetricsPage() {
                 </div>
               </div>
               
-              {/* Third Card (Details Filled) */}
+              {/* Third Card (Details Filled / Roadmap Generated) */}
               <div className="bg-gray-900 rounded-3xl p-8 flex-1 text-center">
-                <h2 className="text-3xl mb-6 font-semibold">Users Filled Details</h2>
-                <div className="text-5xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-6">
-                  {displayValues["details"].toLocaleString()}
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-semibold">
+                    {showRoadmap ? "Roadmap Generated" : "Users Filled Details"}
+                  </h2>
+                  <button
+                    onClick={() => setShowRoadmap(!showRoadmap)}
+                    className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm"
+                  >
+                    Show {showRoadmap ? "Details Filled" : "Roadmap Generated"}
+                  </button>
                 </div>
-                <div className="h-48 w-full flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "School", value: counts.details.school ?? 0 },
-                          { name: "College", value: counts.details.college ?? 0 },
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius="50%"
-                        outerRadius="80%"
-                        paddingAngle={4}
-                        isAnimationActive={false}
-                      >
-                        {[
-                          { name: "School", value: counts.details.school ?? 0 },
-                          { name: "College", value: counts.details.college ?? 0 },
-                        ].map((_, idx) => (
-                          <Cell key={idx} fill={["#4ADE80", "#60A5FA"][idx]} />
-                        ))}
-                      </Pie>
-                      <ReTooltip
-                        contentStyle={{ backgroundColor: "#1F2937", border: "none" }}
-                        itemStyle={{ color: "#fff" }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex justify-center space-x-6 text-sm mt-4">
-                  <div className="flex items-center space-x-1">
-                    <span
-                      className="w-3 h-3 block rounded-full"
-                      style={{ backgroundColor: "#4ADE80" }}
-                    />
-                    <span>School</span>
+                
+                {showRoadmap ? (
+                  // Roadmap Generated View - Just the count with larger font
+                  <div className="text-6xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 h-48 flex items-center justify-center">
+                    {displayValues["roadmap"].toLocaleString()}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span
-                      className="w-3 h-3 block rounded-full"
-                      style={{ backgroundColor: "#60A5FA" }}
-                    />
-                    <span>College</span>
-                  </div>
-                </div>
+                ) : (
+                  // Details Filled View - Original content
+                  <>
+                    <div className="text-5xl font-normal text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 mb-6">
+                      {displayValues["details"].toLocaleString()}
+                    </div>
+                    <div className="h-48 w-full flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: "School", value: counts.details.school ?? 0 },
+                              { name: "College", value: counts.details.college ?? 0 },
+                            ]}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="50%"
+                            outerRadius="80%"
+                            paddingAngle={4}
+                            isAnimationActive={false}
+                          >
+                            {[
+                              { name: "School", value: counts.details.school ?? 0 },
+                              { name: "College", value: counts.details.college ?? 0 },
+                            ].map((_, idx) => (
+                              <Cell key={idx} fill={["#4ADE80", "#60A5FA"][idx]} />
+                            ))}
+                          </Pie>
+                          <ReTooltip
+                            contentStyle={{ backgroundColor: "#1F2937", border: "none" }}
+                            itemStyle={{ color: "#fff" }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-center space-x-6 text-sm mt-4">
+                      <div className="flex items-center space-x-1">
+                        <span
+                          className="w-3 h-3 block rounded-full"
+                          style={{ backgroundColor: "#4ADE80" }}
+                        />
+                        <span>School</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span
+                          className="w-3 h-3 block rounded-full"
+                          style={{ backgroundColor: "#60A5FA" }}
+                        />
+                        <span>College</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
