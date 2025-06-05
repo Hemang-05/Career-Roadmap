@@ -44,7 +44,16 @@ export function getPaceFromPhaseName(
   );
 
   const today = new Date();
-  if (today < startDate)   return "Behind Track";
-  if (today > endDate)     return "Ahead Of Track";
-  return "On Track";
+  
+  // Compare current date with phase range
+  if (today > endDate) {
+    // Current date is after the phase range - Behind Track
+    return "Behind Track";
+  } else if (today < startDate) {
+    // Current date is before the phase range - Ahead Of Track
+    return "Ahead Of Track";
+  } else {
+    // Current date is within the phase range - On Track
+    return "On Track";
+  }
 }

@@ -724,8 +724,8 @@ export default function RoadmapPage() {
     <div className="min-h-screen bg-[#f8fcf7] md:bg-[#fafff9] flex flex-col pt-20 md:pt-24">
       <FloatingNavbar navLinks={dashboardLinks} />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-16 2xl:px-48 mt-8 md:mt-12 flex-grow">
-        {/* TEST BUTTON - Added at the top for API testing */}
-        {parsedRoadmap && (
+        {/* TEST BUTTON - Added at the top for API testing  */}
+        {/* {parsedRoadmap && (
           <div className="mb-6 flex justify-center">
             <button
               onClick={refreshFutureRoadmap}
@@ -750,7 +750,7 @@ export default function RoadmapPage() {
               )}
             </button>
           </div>
-        )}
+        )} */}
 
         <h1 className="text-3xl sm:text-4xl lg:text-5xl text-black font-bold mb-8 md:mb-12 lg:mb-16 text-center sm:text-left">
           Your <span className="text-[#FF6500]">Career</span> Roadmap
