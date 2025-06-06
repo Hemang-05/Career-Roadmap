@@ -4,6 +4,11 @@ import yts from 'yt-search';
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress'; 
 import { calculateWeightProgress } from '@/utils/calcWeightProgress'; 
 
+
+
+export const runtime = 'nodejs';
+
+
 // --- Helper Functions ---
 type YtVideo = {
   url: string;

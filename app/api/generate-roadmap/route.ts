@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import yts from 'yt-search';
 
-// Move yt-search import inside a try-catch to handle potential import issues
-let yts: any;
-try {
-  yts = require('yt-search');
-} catch (error) {
-  console.error('Failed to import yt-search:', error);
-  yts = null;
-}
+
+export const runtime = 'nodejs';
+
 
 type YtVideo = {
   url: string;
@@ -32,6 +28,7 @@ function sanitizeJSON(raw: string): string {
   return s;
 }
 
+
 async function generateRoadmap(prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-1219:generateContent?key=${apiKey}`;
@@ -40,13 +37,13 @@ async function generateRoadmap(prompt: string): Promise<string> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({  
+    body: JSON.stringify({
       contents: [
         {
           parts: [
             { 
               text: `You are Careeroadmap's AI expert. Always respond strictly in JSON format with no markdown or extra text:
-- Provide single tutorial video or channel link, unless you truly can't find one embeddable video that covers the topic of that task.
+- Provide single tutorial video or channel link, unless you truly can’t find one embeddable video that covers the topic of that task.
 - Only emit a "video_channel" object if **no** suitable, publicly embeddable video exists; otherwise emit a "video" object with "{ title, url, thumbnail }".  
 - Provide a platform, free course or any website relevant to the task.
 - Provide an "importance_explanation" field: 1–2 sentences explaining why the task's weight matters.
@@ -75,7 +72,7 @@ ${prompt}`
   // Extract the generated text
   let raw = data.candidates[0].content.parts[0].text as string;
   
-  // Grab everything between the first "{" and the last "}"
+// Grab everything between the first “{” and the last “}”
   const text = raw.trim();
   const first = text.indexOf("{");
   const last  = text.lastIndexOf("}");
@@ -92,93 +89,72 @@ ${prompt}`
  * filtering out Shorts (URLs with "/shorts/") and only keeping watch?v= links.
  */
 async function enrichRoadmapVideos(rawRoadmap: any) {
-  // Check if yt-search is available
-  if (!yts) {
-    console.warn("yt-search not available, skipping video enrichment");
-    return rawRoadmap;
-  }
-
-  try {
-    // 1) Collect all the queries in order
-    const queries: string[] = [];
-    rawRoadmap.yearly_roadmap.forEach((year: any) =>
-      year.phases.forEach((phase: any) =>
-        phase.milestones.forEach((ms: any) =>
-          ms.tasks.forEach((task: any) => {
-            if (task.video?.url) {
-              queries.push(`${task.task_title}: ${task.description}`);
-            }
-          })
-        )
+  // 1) Collect all the queries in order
+  const queries: string[] = [];
+  rawRoadmap.yearly_roadmap.forEach((year: any) =>
+    year.phases.forEach((phase: any) =>
+      phase.milestones.forEach((ms: any) =>
+        ms.tasks.forEach((task: any) => {
+          if (task.video?.url) {
+            queries.push(`${task.task_title}: ${task.description}`);
+          }
+        })
       )
-    );
+    )
+  );
 
-    // 2) Run them in parallel with timeout and error handling
-    const results = await Promise.all(
-      queries.map(async (q: string) => {
-        try {
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Search timeout')), 10000)
-          );
-          
-          const searchPromise = yts(q + " tutorial");
-          const r = await Promise.race([searchPromise, timeoutPromise]);
-          
-          const vids: YtVideo[] = r.videos || [];
+  // 2) Run them in parallel, filtering for standard watch URLs ≥ 120s
+  const results = await Promise.all(
+    queries.map(async (q: string) => {
+      const r = await yts(q + " tutorial");
+      const vids: YtVideo[] = r.videos || [];
 
-          // Filter for watch URLs, no shorts, and duration ≥ 120s
-          const longVids = vids.filter((v) => {
-            if (!v.url.includes("watch?v=") || v.url.includes("/shorts/")) return false;
-            // use v.seconds if valid, else parse v.timestamp
-            const lengthSec =
-              typeof v.seconds === "number" && v.seconds > 0
-                ? v.seconds
-                : v.timestamp
-                ? parseTimestamp(v.timestamp)
-                : 0;
-            return lengthSec >= 120;
-          });
+      // Filter for watch URLs, no shorts, and duration ≥ 120s
+      const longVids = vids.filter((v) => {
+        if (!v.url.includes("watch?v=") || v.url.includes("/shorts/")) return false;
+        // use v.seconds if valid, else parse v.timestamp
+        const lengthSec =
+          typeof v.seconds === "number" && v.seconds > 0
+            ? v.seconds
+            : v.timestamp
+            ? parseTimestamp(v.timestamp)
+            : 0;
+        return lengthSec >= 120;
+      });
 
-          // fallback to the first standard video if none ≥ 2 min
-          const firstStandard = vids.find(
-            (v) =>
-              v.url.includes("watch?v=") && !v.url.includes("/shorts/")
-          );
+      // fallback to the first standard video if none ≥ 2 min
+      const firstStandard = vids.find(
+        (v) =>
+          v.url.includes("watch?v=") && !v.url.includes("/shorts/")
+      );
 
-          return longVids[0] || firstStandard || null;
-        } catch (error) {
-          console.error(`Failed to fetch video for query: ${q}`, error);
-          return null;
-        }
-      })
-    );
+      return longVids[0] || firstStandard || null;
+    })
+  );
 
-    // 3) Merge back in order
-    let idx = 0;
-    rawRoadmap.yearly_roadmap.forEach((year: any) =>
-      year.phases.forEach((phase: any) =>
-        phase.milestones.forEach((ms: any) =>
-          ms.tasks.forEach((task: any) => {
-            if (task.video?.url) {
-              const v = results[idx++];
-              if (v) {
-                task.video.url = v.url;
-                task.video.title = v.title;
-                task.video.thumbnail = v.thumbnail;
-              }
+  // 3) Merge back in order
+  let idx = 0;
+  rawRoadmap.yearly_roadmap.forEach((year: any) =>
+    year.phases.forEach((phase: any) =>
+      phase.milestones.forEach((ms: any) =>
+        ms.tasks.forEach((task: any) => {
+          if (task.video?.url) {
+            const v = results[idx++];
+            if (v) {
+              task.video.url = v.url;
+              task.video.title = v.title;
+              task.video.thumbnail = v.thumbnail;
             }
-          })
-        )
+          }
+        })
       )
-    );
+    )
+  );
 
-    return rawRoadmap;
-  } catch (error) {
-    console.error("Video enrichment failed, continuing without video updates:", error);
-    return rawRoadmap; // Return original roadmap if enrichment fails
-  }
+  return rawRoadmap;
 }
+
+  
 
 export async function POST(request: Request) {
   try {
@@ -228,9 +204,9 @@ export async function POST(request: Request) {
 
     // Build the base prompt with dynamic context
     const now = new Date();
-    const current_day = now.getDate();
-    const current_month = now.toLocaleString("default", { month: "long" });
-    const current_year = now.getFullYear();
+const current_day = now.getDate();
+const current_month = now.toLocaleString("default", { month: "long" });
+const current_year = now.getFullYear();
 
     let basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}", currency of "${residing_country}" . The student ${
       move_abroad
@@ -260,7 +236,7 @@ Also, structure the roadmap year-wise. For example:
 - The roadmap should be sequential, with later years building upon the achievements of previous years.
 - Give detailed explanation about the task in at least 3 to 4 lines. 
 - Use the current day and month ("${current_day} ${current_month} ${current_year}") as the starting point for planning the phases.
-- Include *working* YouTube watch-URLs only. Each URL must point to a public video that you have verified can be embedded. If you can't find an embeddable video for a task, leave "video" blank and provide a "video_channel" fallback. Provide when needed.
+- Include *working* YouTube watch-URLs only. Each URL must point to a public video that you have verified can be embedded. If you can’t find an embeddable video for a task, leave "video" blank and provide a "video_channel" fallback. Provide when needed.
 - Add relevant platforms, websites or free courses.
  
 The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
@@ -300,7 +276,7 @@ The response must be strictly in JSON format without any additional text, markdo
                   "platform_links": [
                     { "name": "Coursera", "url": "https://coursera.org/…" }
                   ],
-                  "importance_explanation": "A short 1–2-sentence rationale for this task's weight."
+                  "importance_explanation": "A short 1–2-sentence rationale for this task’s weight."
                 }
               ]
             }
@@ -345,43 +321,34 @@ The response must be strictly in JSON format without any additional text, markdo
 
     // Generate roadmap
     const raw = await generateRoadmap(prompt);
-    
-    // 1) grab braces
-    const text = raw.trim();
-    const first = text.indexOf("{");
-    const last  = text.lastIndexOf("}");
-    if (first < 0 || last < 0) {
-      console.error("No JSON braces found in Gemini reply:", raw);
-      throw new Error("Failed to locate JSON in Gemini response");
-    }
+      // 1) grab braces
+      const text = raw.trim();
+      const first = text.indexOf("{");
+      const last  = text.lastIndexOf("}");
+      if (first < 0 || last < 0) {
+        console.error("No JSON braces found in Gemini reply:", raw);
+        throw new Error("Failed to locate JSON in Gemini response");
+      }
 
-    // 2) extract and clean
-    const sliced = text.slice(first, last + 1);
-    const clean = sanitizeJSON(sliced);
+      // 2) extract and clean
+      const sliced = text.slice(first, last + 1);
+      const clean = sanitizeJSON(sliced);
 
-    let obj: any;
-    try {
-      obj = JSON.parse(clean);
-    } catch (parseErr) {
-      console.error("⛔︎ JSON.parse failed. Cleaned payload was:", clean);
-      console.error("Original raw:", raw);
-      throw new Error("Invalid JSON from Gemini, see server log");
-    }
-
-    // Try to enrich videos, but don't fail if it doesn't work
-    let enriched;
-    try {
-      enriched = await enrichRoadmapVideos(obj);
-    } catch (error) {
-      console.error("Video enrichment failed, using original roadmap:", error);
-      enriched = obj;
-    }
+      let obj: any;
+      try {
+        obj = JSON.parse(clean);
+      } catch (parseErr) {
+        console.error("⛔︎ JSON.parse failed. Cleaned payload was:", clean);
+        console.error("Original raw:", raw);
+        throw new Error("Invalid JSON from Gemini, see server log");
+      }
+    const enriched = await enrichRoadmapVideos(obj);
 
     // Save to Supabase
-    const { error: updateError } = await supabase
-      .from("career_info")
-      .update({ roadmap: enriched, updated_at: new Date().toISOString() })
-      .eq("user_id", user_id);
+        const { error: updateError } = await supabase
+          .from("career_info")
+          .update({ roadmap: enriched, updated_at: new Date().toISOString() })
+          .eq("user_id", user_id);
 
     if (updateError) {
       console.error("Error updating career_info:", updateError);
