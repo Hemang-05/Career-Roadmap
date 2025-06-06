@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import yts from 'yt-search';
-import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress'; // Assuming these utils are correct
-import { calculateWeightProgress } from '@/utils/calcWeightProgress'; // Assuming these utils are correct
+import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress'; 
+import { calculateWeightProgress } from '@/utils/calcWeightProgress'; 
 
 // --- Helper Functions ---
 type YtVideo = {
