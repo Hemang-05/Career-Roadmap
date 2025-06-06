@@ -100,9 +100,11 @@ export default function AnalyticsDashboard() {
         subscription_status === "inactive" ||
         subscriptionEndDate < currentDate
       ) {
-        setShowPaymentPlan(false);        // make it true
-        setLoading(false);
-        return;
+        setShowPaymentPlan(false);     
+
+        // setLoading(false);
+        // return;
+
       }
 
       // Fetch Career Info
@@ -196,6 +198,20 @@ export default function AnalyticsDashboard() {
     }
   }, [isLoaded, isSignedIn, user, router]);
 
+   // listen for any in‐page update and re‐fetch
+ useEffect(() => {
+   function onAnalyticsUpdated() {
+     if (isLoaded && isSignedIn && user) {
+       fetchAnalytics();
+     }
+   }
+   window.addEventListener("analyticsUpdated", onAnalyticsUpdated);
+   return () => {
+     window.removeEventListener("analyticsUpdated", onAnalyticsUpdated);
+   };
+ }, [isLoaded, isSignedIn, user, fetchAnalytics]);
+
+
   // Data for pie chart
   const pieChartData =
     tasksCompleted !== null && totalTasks !== null
@@ -286,9 +302,14 @@ export default function AnalyticsDashboard() {
               Selected Difficulty
             </h3>
             <div className="flex items-center justify-between">
-              <span className="text-xl font-semibold text-slate-800">
-                {difficulty || "Not Set"}
-              </span>
+            <span className="text-xl font-semibold text-slate-800">
+              {difficulty
+                ? difficulty
+                    .split(" ")
+                    .map(w => w[0].toUpperCase() + w.slice(1).toLowerCase())
+                    .join(" ")
+                : "Not Set"}
+            </span>
               <div className="h-8 w-8 rounded-full bg-[#FF6500] opacity-80"></div>
             </div>
           </div>
@@ -341,9 +362,9 @@ export default function AnalyticsDashboard() {
                       <p className="text-sm text-slate-500 mb-2">
                         {tasksCompleted} of {totalTasks} tasks completed
                       </p>
-                      <div className="text-3xl font-bold text-[#FF6500]">
+                      {/* <div className="text-3xl font-bold text-[#FF6500]">
                         {taskCompletionPercentage.toFixed(1)}%
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 

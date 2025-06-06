@@ -1,15 +1,18 @@
-//util/calcWeightProgress.ts
-
+// utils/calcWeightProgress.ts
 export function calculateWeightProgress(roadmap: any): number {
   let totalWeight = 0;
   let completedWeight = 0;
 
+  if (!roadmap?.yearly_roadmap) return 0;
+
   roadmap.yearly_roadmap.forEach((year: any) => {
+    if (!year?.phases) return;
     year.phases.forEach((phase: any) => {
+      if (!phase?.milestones) return;
       phase.milestones.forEach((milestone: any) => {
+        if (!milestone?.tasks) return;
         milestone.tasks.forEach((task: any) => {
-          // Convert weight to a number explicitly.
-          const taskWeight = Number(task.weight) || 1;
+          const taskWeight = Number(task.weight) || 1; // Default weight if invalid or missing
           totalWeight += taskWeight;
           if (task.completed === true) {
             completedWeight += taskWeight;

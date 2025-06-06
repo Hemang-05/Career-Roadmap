@@ -97,7 +97,9 @@ export default function Dashboard() {
   const [interestParagraph, setInterestParagraph] = useState("");
 
   // Subscription states
-  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(true);        //status to false and default supabse value to false
+
+  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(true);      //status to false and default supabse value to false
+
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("");
 
   // Roadmap state

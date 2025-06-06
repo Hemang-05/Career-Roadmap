@@ -1,6 +1,4 @@
 // app/api/update-task/route.ts
-
-
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress';
@@ -30,8 +28,11 @@ export async function POST(request: Request) {
     
     let taskFound = false;
     parsedRoadmap.yearly_roadmap.forEach((year: any) => {
+      if (!year?.phases) return;
       year.phases.forEach((phase: any) => {
+        if (!phase?.milestones) return;
         phase.milestones.forEach((milestone: any) => {
+          if (!milestone?.tasks) return;
           milestone.tasks.forEach((task: any) => {
             if (task.task_title === task_title) {
               task.completed = completed;
@@ -57,8 +58,9 @@ export async function POST(request: Request) {
     }
 
     // Calculate progress metrics.
-    const completedTasksCount = calculateTaskCountProgress(parsedRoadmap); // integer count
-    const weightProgress = calculateWeightProgress(parsedRoadmap);         // float percentage
+    const taskProgressData = calculateTaskCountProgress(parsedRoadmap); // This returns a TaskProgress object
+    const completedTasksCount = taskProgressData.completedTasks;        // Extract just the count
+    const weightProgress = calculateWeightProgress(parsedRoadmap);      // float percentage
 
     // Determine pace directly from the phase name, passing the completed tasks count
     console.log("Using phase name for pace:", currentPhaseIdentifier);
