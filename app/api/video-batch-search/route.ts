@@ -1,5 +1,5 @@
 // app/api/video-batch-search/route.ts
-import yts from 'yt-search';
+const yts = require('yt-search');
 
 export const runtime = 'nodejs';
 

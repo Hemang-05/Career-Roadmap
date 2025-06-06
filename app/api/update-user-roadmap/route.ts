@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
-import yts from 'yt-search';
+const yts = require('yt-search');
 import { calculateTaskCountProgress } from '@/utils/calcTaskCountProgress'; 
 import { calculateWeightProgress } from '@/utils/calcWeightProgress'; 
 
