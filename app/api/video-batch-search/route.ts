@@ -1,6 +1,9 @@
 // app/api/video-batch-search/route.ts
 import yts from 'yt-search';
 
+export const runtime = 'nodejs';
+
+
 const cache: Record<string, { url: string; title: string; thumbnail: string }> = {};
 
 export async function POST(request: Request) {
