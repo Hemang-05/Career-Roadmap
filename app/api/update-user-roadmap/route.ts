@@ -22,6 +22,7 @@ async function lookupYouTubeVideo(
   query: string,
   minSeconds?: number    // renamed for clarity
 ): Promise<{ url: string; title: string; thumbnail: string } | null> {
+  const { default: yts } = await import('yt-search');
   const r = await yts(query + " tutorial");
   const vids: YtVideo[] = r.videos || [];
 
