@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
-const yts = require('yt-search');
 
+// REMOVED: const yts = require('yt-search');
 
 export const runtime = 'nodejs';
-
 
 type YtVideo = {
   url: string;
@@ -28,7 +27,6 @@ function sanitizeJSON(raw: string): string {
   return s;
 }
 
-
 async function generateRoadmap(prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-1219:generateContent?key=${apiKey}`;
@@ -41,7 +39,7 @@ async function generateRoadmap(prompt: string): Promise<string> {
       contents: [
         {
           parts: [
-            { 
+            {
               text: `You are Careeroadmap's AI expert. Always respond strictly in JSON format with no markdown or extra text:
 - Provide single tutorial video or channel link, unless you truly can’t find one embeddable video that covers the topic of that task.
 - Only emit a "video_channel" object if **no** suitable, publicly embeddable video exists; otherwise emit a "video" object with "{ title, url, thumbnail }".  
@@ -106,6 +104,8 @@ async function enrichRoadmapVideos(rawRoadmap: any) {
   // 2) Run them in parallel, filtering for standard watch URLs ≥ 120s
   const results = await Promise.all(
     queries.map(async (q: string) => {
+      // ADDED: Dynamic import for yt-search
+      const { default: yts } = await import('yt-search');
       const r = await yts(q + " tutorial");
       const vids: YtVideo[] = r.videos || [];
 
@@ -154,7 +154,6 @@ async function enrichRoadmapVideos(rawRoadmap: any) {
   return rawRoadmap;
 }
 
-  
 
 export async function POST(request: Request) {
   try {
