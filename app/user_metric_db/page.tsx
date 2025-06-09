@@ -127,17 +127,23 @@ export default function UserMetricsPage() {
     details: { total: 0, school: 0, college: 0, roadmap: 0 },
   });
   const [growthData, setGrowthData] = useState<UserGrowthPoint[]>([]);
+
+
   const [displayValues, setDisplayValues] = useState({
     "signed-in": 0,
     paid: 0,
     details: 0,
+
     roadmap: 0,
+
   });
   const animRefs = useRef<Record<string, NodeJS.Timeout | null>>({
     "signed-in": null,
     paid: null,
     details: null,
+
     roadmap: null,
+
   });
   const [showPaid, setShowPaid] = useState(true);
   const [showRoadmap, setShowRoadmap] = useState(false);
@@ -211,7 +217,9 @@ export default function UserMetricsPage() {
           .eq("college_student", true),
         supabase
           .from("career_info")
+
           .select("*", { head: true, count: "exact" })
+
           .not("roadmap", "is", null),
       ]);
 
@@ -252,6 +260,7 @@ export default function UserMetricsPage() {
           monthly: unpaidMonthly ?? 0,
           quarterly: unpaidQuarterly ?? 0,
           yearly: unpaidYearly ?? 0,
+
         },
         details: { total: dt ?? 0, school: school ?? 0, college: college ?? 0, roadmap: roadmap ?? 0 },
       });
@@ -307,9 +316,11 @@ export default function UserMetricsPage() {
   // Animate the totals
   useEffect(() => {
     if (!authenticated) return;
+
     ["signed-in", "paid", "details", "roadmap"].forEach((sec) => {
       const target = sec === "roadmap" ? counts.details.roadmap! : counts[sec].total;
       if (animRefs.current[sec]) clearInterval(animRefs.current[sec]!);
+
       let step = 0;
       const steps = 60;
       const inc = target / steps;
@@ -339,6 +350,7 @@ export default function UserMetricsPage() {
           { name: "Quarterly", value: counts.unpaid.quarterly! },
           { name: "Yearly", value: counts.unpaid.yearly! },
         ];
+
 
   return (
     <div className="min-h-screen bg-gray-800 text-gray-200 flex flex-col relative">

@@ -542,6 +542,8 @@ export default function RoadmapPage() {
         const currentDate = new Date();
         const subscriptionEndDate = subscription_end ? new Date(subscription_end) : null;
 
+
+
         if (subscription_status !== true) {          //(!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate)
           console.log("Subscription invalid or expired.");
           setShowPaymentPlan(true);
