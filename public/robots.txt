@@ -1,7 +1,7 @@
 # *
 User-agent: *
+Disallow: /api/
 Allow: /
-Disallow: /api
 
 # Host
 Host: https://www.careeroadmap.com
