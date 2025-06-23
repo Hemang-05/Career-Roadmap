@@ -1,3 +1,5 @@
+// components/HeroSection.tsx
+
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -8,9 +10,6 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number | null>(null);
-  const angleRef = useRef(0);
   const { user, isSignedIn, isLoaded } = useUser();
   const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -19,52 +18,6 @@ export default function HeroSection() {
 
   // Track if the user state just changed (e.g., just signed in)
   const [userJustSignedIn, setUserJustSignedIn] = useState<boolean>(false);
-
-  // Animation effect for the 3D illustrations
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const illustrations = container.querySelectorAll(".career-illustration");
-    const totalItems = illustrations.length;
-
-    function mapRange(
-      value: number,
-      in_min: number,
-      in_max: number,
-      out_min: number,
-      out_max: number
-    ) {
-      return (
-        ((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
-      );
-    }
-
-    const animate = () => {
-      const radius = 220;
-
-      illustrations.forEach((illustration, index) => {
-        const offset = ((Math.PI * 2) / totalItems) * index;
-        const x = Math.cos(angleRef.current + offset) * radius;
-        const z = Math.sin(angleRef.current + offset) * radius;
-        const scale = mapRange(z, -radius, radius, 0.6, 1.2);
-        const opacity = mapRange(z, -radius, radius, 0.7, 1);
-        const zIndex = Math.floor(mapRange(z, -radius, radius, 1, 10));
-        const el = illustration as HTMLElement;
-        el.style.transform = `translateX(${x}px) scale(${scale})`;
-        el.style.opacity = opacity.toString();
-        el.style.zIndex = zIndex.toString();
-      });
-
-      angleRef.current += 0.005;
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, []);
 
   // Track when user signs in
   useEffect(() => {
@@ -124,7 +77,7 @@ export default function HeroSection() {
           const roadmapExists = !!(
             careerData &&
             careerData.roadmap &&
-            typeof careerData.roadmap === 'object' &&
+            typeof careerData.roadmap === "object" &&
             Object.keys(careerData.roadmap).length > 0
           );
           console.log("Does roadmap exist and have content?", roadmapExists);
@@ -163,10 +116,34 @@ export default function HeroSection() {
 
   // Sample data for enrolled users
   const enrolledUsers = [
-    { id: 1, name: "Alice", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg" },
-    { id: 2, name: "Bob", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg" },
-    { id: 3, name: "Carol", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg" },
-    { id: 4, name: "Jake", designation: "Student", image: "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg" },
+    {
+      id: 1,
+      name: "Alice",
+      designation: "Student",
+      image:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg",
+    },
+    {
+      id: 2,
+      name: "Bob",
+      designation: "Student",
+      image:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg",
+    },
+    {
+      id: 3,
+      name: "Carol",
+      designation: "Student",
+      image:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg",
+    },
+    {
+      id: 4,
+      name: "Jake",
+      designation: "Student",
+      image:
+        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg",
+    },
   ];
 
   // Debug info for development
@@ -174,11 +151,10 @@ export default function HeroSection() {
     console.log("hasRoadmap state updated to:", hasRoadmap);
   }, [hasRoadmap]);
 
-
   return (
     <section
       id="hero"
-      className="container mx-auto flex flex-col md:flex-row items-center justify-center px-44 py-12 relative overflow-hidden"
+      className="container  mx-auto flex flex-col md:flex-row items-center justify-center px-44 py-12 relative overflow-hidden"
     >
       {/* Text content */}
       <div className="md:w-1/2 mb-10  md:mb-0 md:pr-8 text-center md:text-left z-10">
@@ -189,7 +165,8 @@ export default function HeroSection() {
           </div>
         </h1>
         <p className="text-xl text-gray-600 mb-20">
-        AI-driven roadmaps, real-time updates, exclusive opportunities, and personalized guidance—your complete career partner, all in one place.
+          AI-driven roadmaps, real-time updates, exclusive opportunities, and
+          personalized guidance—your complete career partner, all in one place.
         </p>
         {/* Button Section */}
         <div className="flex flex-col md:flex-row md:space-x-12 items-center justify-center md:justify-start mt-8">
@@ -233,48 +210,17 @@ export default function HeroSection() {
                 </button>
               </SignInButton>
             )}
-            <div className="flex flex-col items-center mt-4 pointer-events-none">
+            {/* <div className="flex flex-col items-center mt-4 pointer-events-none">
               <AnimatedTooltip items={enrolledUsers} />
-            </div>
+            </div> */}
           </div>
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        {/* <p className="text-gray-500 text-sm mt-2">
           1278+ joined for achieving their goal
-        </p>
+        </p> */}
       </div>
 
       {/* 3D Career Illustrations Section */}
-      <div
-      className="w-full md:w-1/2 flex items-center justify-center relative h-60 md:h-96"
-      ref={containerRef}
-    >
-      {Array.from({ length: 7 }).map((_, index) => {
-        // Move these declarations inside the map function where index is available
-        const suffixes = ['wryeik', 'wm1a7k', 'd6xewx', 'yustdy', 'elchjz', 'qu08dk', 'jfj6wx'];
-        const version = index < 4 ? 'v1744967161' : 'v1744967162';
-        
-        return (
-          <div
-            key={index}
-            className="career-illustration absolute transition-transform will-change-transform transform scale-75 md:scale-100"
-            style={{
-              transformOrigin: "center center",
-              willChange: "transform, opacity",
-            }}
-          >
-            <Image
-              src={`https://res.cloudinary.com/ditn9req1/image/upload/${version}/${index + 1}_${suffixes[index]}.png`}
-              alt={`career-${index + 1}`}
-              width={index === 0 ? 150 : 180}
-              height={index === 0 ? 150 : 200}
-              className="object-contain"
-              loading="eager"
-              priority={index < 3}
-            />
-          </div>
-        );
-      })}
-    </div>
-  </section>
-);
+    </section>
+  );
 }
