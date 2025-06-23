@@ -2,7 +2,7 @@
 "use client";
 export default function Footer() {
   return (
-    <footer className="bg-[#ffffff] py-4">
+    <footer className=" py-4">
       <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-orange-500">
         {/* Left side */}
         <div className="flex space-x-4 text-sm mb-2 md:mb-0">

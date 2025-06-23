@@ -70,19 +70,19 @@ interface Pricing {
 // Pre‑define price sets
 const INDIA_PRICING: Pricing = {
   symbol: "₹",
-  monthly: 499,
-  quarterly: 1299,
-  yearly: 4999,
-  quarterlyStrike: 1497,
-  yearlyStrike: 5988,
+  monthly: 99,
+  quarterly: 249,
+  yearly: 999,
+  quarterlyStrike: 299,
+  yearlyStrike: 1199,
 };
 const GLOBAL_PRICING: Pricing = {
   symbol: "$",
-  monthly: 19,
-  quarterly: 49,
-  yearly: 149,
-  quarterlyStrike: 59,
-  yearlyStrike: 239,
+  monthly: 5,
+  quarterly: 15,
+  yearly: 49,
+  quarterlyStrike: 19,
+  yearlyStrike: 59,
 };
 
 export default function Plans() {
