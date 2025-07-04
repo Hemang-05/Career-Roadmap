@@ -214,7 +214,7 @@ export default function PaymentPlan({
 
         <div className="mt-2 sm:mt-2 md:mt-6 text-center">
           <button
-            onClick={() => (onClose ? onClose() : router.back())}
+            onClick={() => (onClose ? onClose() : router.push("/dashboard"))}
             className="text-gray-600 hover:text-red-800 text-sm sm:text-base"
           >
             Cancel
