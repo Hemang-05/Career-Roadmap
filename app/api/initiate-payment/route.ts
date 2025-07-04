@@ -49,11 +49,18 @@ export async function POST(request: Request) {
       street: "",
       zipcode: "zipcode",
     },
+    billing_currency: "INR",
     customer: {
       email: user.email,
       name: user.full_name || "",
     },
     product_cart: [{ product_id: productId, quantity: 1 }],
+    allowed_payment_method_types: [
+      "upi_intent", // for QR‐code / UPI apps
+      "upi_collect", // auto‐collect (if supported)
+      "credit",
+      "debit",
+    ],
     payment_link: true,
     discount_code: discountCode || null,
     metadata: { plan },
