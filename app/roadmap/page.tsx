@@ -100,7 +100,7 @@ export default function RoadmapPage() {
       if (user) {
         const { data: userRecord, error: userError } = await supabase
           .from("users")
-          .select("id, subscription_status") //add .select("id, subscription_status, subscription_end")
+          .select("id, subscription_status, subscription_end") // ← added subscription_end
           .eq("clerk_id", user.id)
           .single();
 
@@ -135,13 +135,18 @@ export default function RoadmapPage() {
 
         setUserCountryCode(careerData.residing_country || null);
 
+        // ← New: parse the stored end date
         const currentDate = new Date();
         const subscriptionEndDate = subscription_end
           ? new Date(subscription_end)
           : null;
 
-        if (subscription_status !== true) {
-          //(!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate)
+        // ← UPDATED: now we treat expired or never‑paid as invalid
+        if (
+          subscription_status !== true ||
+          !subscriptionEndDate ||
+          subscriptionEndDate < currentDate
+        ) {
           console.log("Subscription invalid or expired.");
           setShowPaymentPlan(true);
           setLoading(false);
@@ -182,9 +187,7 @@ export default function RoadmapPage() {
           }
 
           setParsedRoadmap(parsed);
-          // Set initial weighted progress
           setWeightedOverallProgress(calculateWeightProgress(parsed));
-          // Set initial count-based percentage progress using your updated function
           setTaskCountPercentageProgress(
             calculateTaskCountProgress(parsed).percentage
           );
@@ -221,6 +224,137 @@ export default function RoadmapPage() {
       setLoading(false);
     }
   }, [user, openYearIndices.length]);
+
+  // const fetchRoadmap = useCallback(async () => {
+  //   setLoading(true);
+  //   setErrorMessage(null);
+  //   setShowPaymentPlan(false);
+
+  //   try {
+  //     if (user) {
+  //       const { data: userRecord, error: userError } = await supabase
+  //         .from("users")
+  //         .select("id, subscription_status") //add .select("id, subscription_status, subscription_end")
+  //         .eq("clerk_id", user.id)
+  //         .single();
+
+  //       if (userError || !userRecord) {
+  //         console.error("Supabase user fetch error:", userError);
+  //         setErrorMessage("User record not found or failed to fetch.");
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       const {
+  //         subscription_status,
+  //         subscription_end,
+  //         id: userId,
+  //       } = userRecord;
+
+  //       const { data: careerData, error: careerError } = await supabase
+  //         .from("career_info")
+  //         .select("roadmap, user_id, desired_career, residing_country")
+  //         .eq("user_id", userId)
+  //         .single();
+
+  //       if (careerError || !careerData) {
+  //         console.error("Supabase career_info fetch error:", careerError);
+  //         setErrorMessage(
+  //           "Error fetching roadmap details: " +
+  //             (careerError?.message || "Not found")
+  //         );
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       setUserCountryCode(careerData.residing_country || null);
+
+  //       const currentDate = new Date();
+  //       const subscriptionEndDate = subscription_end
+  //         ? new Date(subscription_end)
+  //         : null;
+
+  //       if (subscription_status !== true) {
+  //         //(!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate)
+  //         console.log("Subscription invalid or expired.");
+  //         setShowPaymentPlan(true);
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       if (!careerData.roadmap) {
+  //         console.log("No roadmap data found for user:", userId);
+  //         setErrorMessage(
+  //           "No roadmap found. Please generate your roadmap first from the dashboard."
+  //         );
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       setDesiredCareer(careerData.desired_career || "Your Goal");
+
+  //       try {
+  //         const roadmapString =
+  //           typeof careerData.roadmap === "string"
+  //             ? careerData.roadmap
+  //             : JSON.stringify(careerData.roadmap);
+
+  //         const cleanedRoadmap = cleanJSONString(roadmapString);
+  //         const parsed = JSON.parse(cleanedRoadmap);
+
+  //         parsed.user_id = userId;
+
+  //         if (
+  //           !parsed ||
+  //           typeof parsed !== "object" ||
+  //           !Array.isArray(parsed.yearly_roadmap)
+  //         ) {
+  //           console.error("Invalid roadmap structure after parsing:", parsed);
+  //           throw new Error(
+  //             "Invalid roadmap structure. Try regenerating from dashboard."
+  //           );
+  //         }
+
+  //         setParsedRoadmap(parsed);
+  //         // Set initial weighted progress
+  //         setWeightedOverallProgress(calculateWeightProgress(parsed));
+  //         // Set initial count-based percentage progress using your updated function
+  //         setTaskCountPercentageProgress(
+  //           calculateTaskCountProgress(parsed).percentage
+  //         );
+
+  //         if (
+  //           parsed.yearly_roadmap.length > 0 &&
+  //           openYearIndices.length === 0
+  //         ) {
+  //           setOpenYearIndices([0]);
+  //         }
+  //       } catch (parseError: any) {
+  //         console.error("Detailed JSON Parsing/Cleaning Error:", parseError);
+  //         console.error(
+  //           "Original Roadmap Data (first 2000 chars):",
+  //           String(careerData.roadmap).substring(0, 2000)
+  //         );
+  //         setErrorMessage(
+  //           `Failed to process roadmap data. Please try regenerating your roadmap from the dashboard. (Error: ${
+  //             parseError.message || "Unknown parse error"
+  //           })`
+  //         );
+  //       }
+  //     } else {
+  //       setErrorMessage("User data not available.");
+  //     }
+  //   } catch (err: any) {
+  //     console.error("Unexpected Error in fetchRoadmap:", err);
+  //     setErrorMessage(
+  //       `An unexpected error occurred: ${
+  //         err.message || "Please try again later."
+  //       }`
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [user, openYearIndices.length]);
 
   /**
    * 1) Batch-fetch fresh video info for tasks that already have a `video` object

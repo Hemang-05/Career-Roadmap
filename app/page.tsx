@@ -50,7 +50,7 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="fixed inset-0 z-0">
-        <Image
+        {/* <Image
           src={backgroundImageSrc}
           alt="Parallax background"
           layout="fill" // Stretches the image to fill the parent div
@@ -58,7 +58,7 @@ export default function LandingPage() {
           quality={100} // Optional: Adjust quality (default is 75)
           priority // Optional: Loads this image with high priority
           className="pointer-events-none" // Prevents interaction with the image itself
-        />
+        /> */}
         {/* Optional: Add an overlay for better text readability */}
         <div className="absolute inset-0"></div>
         {/* Your existing background animation (if desired) */}
@@ -66,7 +66,7 @@ export default function LandingPage() {
       {/* Main content container - this is what will scroll */}
       <div className="relative z-10 bg-transparent">
         <Navbar />
-        <NotificationPopup />
+        {/* <NotificationPopup /> */}
         <main className="flex-grow w-full pt-24">
           {/* <HeroSection /> */}
           <Hero />
@@ -77,7 +77,6 @@ export default function LandingPage() {
 
           <Plans />
           <FAQSection />
-          <Footer />
         </main>
       </div>
     </div>

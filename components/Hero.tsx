@@ -123,7 +123,7 @@ export default function Hero() {
         />
       </div>
 
-      <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <div className="relative px-4 mx-auto max-w-6xl sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-y-4 lg:items-center lg:grid-cols-2 xl:grid-cols-2">
           <div className="text-center xl:col-span-1 lg:text-left md:px-16 lg:px-0 xl:pr-20">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-8">
@@ -211,9 +211,6 @@ export default function Hero() {
                 </p>
               </div>
             </div>
-
-            {/* Optional: Add a subtle overlay on hover for better contrast */}
-            {/* <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl pointer-events-none"></div> */}
           </div>
         </div>
       </div>
