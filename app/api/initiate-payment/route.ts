@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       "upi_collect", // auto‐collect (if supported)
       "credit",
       "debit",
+      "google_pay",
     ],
     payment_link: true,
     discount_code: discountCode || null,
