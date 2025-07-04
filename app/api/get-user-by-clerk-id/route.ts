@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { clerkClient } from '@clerk/nextjs/server';
 
 export async function POST(request: Request) {
   try {
@@ -9,8 +9,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing clerk_id' }, { status: 400 });
     }
     
-    // Fetch user from Clerk
-    const user = await clerkClient.users.getUser(clerk_id);
+    const client = await clerkClient();
+    const user   = await client.users.getUser(clerk_id);
     
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
