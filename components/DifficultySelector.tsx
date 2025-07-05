@@ -1,5 +1,4 @@
 import React from 'react';
-import { Dispatch, SetStateAction } from 'react';
 
 // --- DifficultyCard Component ---
 // Adjusted width for responsiveness
@@ -63,13 +62,13 @@ const DifficultyCard = ({
 
 
 // --- DifficultySelector Component ---
-// Adjusted flex container for responsiveness
+// Fixed the type to match what DashboardForm is passing
 export default function DifficultySelector({
   difficulty,
   setDifficulty
 }: {
   difficulty: 'easy' | 'medium' | 'hard' | null;
-  setDifficulty: Dispatch<SetStateAction<'easy' | 'medium' | 'hard' | null>>;
+  setDifficulty: (value: 'easy' | 'medium' | 'hard' | null) => void;
 }) {
   const difficulties = [
     {
