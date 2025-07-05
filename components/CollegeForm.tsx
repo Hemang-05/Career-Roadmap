@@ -61,7 +61,7 @@ const CollegeForm: React.FC<CollegeFormProps> = ({
     );
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 transition-all duration-300">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-[60] transition-all duration-300">
             <div className="bg-gradient-to-br from-white to-gray-50 p-8 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-auto border border-gray-100">
                 <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-red-600">University Rating</h2>
                 <form onSubmit={onSubmit} className="space-y-8">

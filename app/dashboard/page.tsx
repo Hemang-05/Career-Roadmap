@@ -242,6 +242,12 @@ export default function Dashboard() {
   // Generate roadmap
   const handleGenerateRoadmap = async () => {
     setGenerating(true);
+    
+    // FIXED: Show college form immediately when generation starts (if conditions are met)
+    if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
+      setShowCollegeForm(true);
+    }
+    
     try {
       const res = await fetch("/api/generate-roadmap", {
         method: "POST",
@@ -253,9 +259,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setGenerating(false);
-    }
-    if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
-      setShowCollegeForm(true);
     }
   };
 
@@ -278,7 +281,8 @@ export default function Dashboard() {
       await supabase.from("career_info").update({ form_filled: true }).eq("user_id", dbUserId);
       setFormFilled(true);
       setShowCollegeForm(false);
-      if (apiDone) router.push("/roadmap"); else handleGenerateRoadmap();
+      
+      // No redirection logic needed here - the useEffect will handle it automatically
     } catch (err) {
       console.error(err);
     }
@@ -295,7 +299,6 @@ export default function Dashboard() {
   }, [apiDone, formFilled]);
 
   const dashboardLinks = [{ href: "/roadmap", label: "Roadmap" }, { href: "/blog", label: "Blogs" }];
-
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -379,6 +382,7 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* FIXED: College form appears during generation (above the loader) */}
       <CollegeForm
         show={showCollegeForm}
         onSubmit={handleCollegeFormSubmit}
@@ -392,9 +396,9 @@ export default function Dashboard() {
         setSelectedUniversityId={setSelectedUniversityId}
       />
 
-      {/* FIXED: Full screen loader that covers everything during generation */}
-      {generating && !showCollegeForm && (
-         <div className="fixed inset-0 justify-center items-center z-50 "><Loader /></div>
+      {/* FIXED: Loader appears behind college form when both are active */}
+      {generating && (
+         <div className="fixed inset-0 justify-center items-center z-50"><Loader /></div>
        )}
      </div>
   );
