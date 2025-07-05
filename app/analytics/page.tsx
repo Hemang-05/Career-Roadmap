@@ -100,9 +100,11 @@ export default function AnalyticsDashboard() {
         subscription_status === "inactive" ||
         subscriptionEndDate < currentDate
       ) {
-        setShowPaymentPlan(false);        // make it true
+        setShowPaymentPlan(false);     
+
         // setLoading(false);
         // return;
+
       }
 
       // Fetch Career Info

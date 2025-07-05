@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase/supabaseClient';
 
-/**
- * Helper: Use the AI API to generate a career tag.
- * In this example, the AI call is made using model "deepseek/deepseek-r1:free".
- * If the API does not return a valid response or an empty tag, it falls back to "Not Assigned".
- */
+
 async function generateCareerTag(desired_career: string): Promise<string> {
   const prompt = `
 For a desired career "${desired_career}", determine the most appropriate career category from the following options:
