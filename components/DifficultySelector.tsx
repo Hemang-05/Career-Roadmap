@@ -1,5 +1,4 @@
 import React from 'react';
-
 // --- DifficultyCard Component ---
 // Adjusted width for responsiveness
 const DifficultyCard = ({
