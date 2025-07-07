@@ -244,8 +244,8 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await res.json();
-      console.log("Career info saved:", result);
+      // const result = await res.json();
+      // console.log("Career info saved:", result);
 
       if (!subscriptionStatus) {
         // Check user's country to determine which payment plan to show
