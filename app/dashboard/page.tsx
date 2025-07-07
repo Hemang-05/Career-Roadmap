@@ -14,7 +14,10 @@ import RoadmapNotification from "@/components/RoadmapNotification";
 import DashboardForm, { OptionType } from "@/components/DashboardForm";
 import CollegeForm from "@/components/CollegeForm";
 
-interface University { id: number; name: string; }
+interface University {
+  id: number;
+  name: string;
+}
 
 export default function Dashboard() {
   useSyncUser();
@@ -26,7 +29,8 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState<boolean>(false);
   const [showGenerateModal, setShowGenerateModal] = useState<boolean>(false);
   const [showPaymentPlans, setShowPaymentPlans] = useState<boolean>(false);
-  const [showUSDPaymentPlans, setShowUSDPaymentPlans] = useState<boolean>(false);
+  const [showUSDPaymentPlans, setShowUSDPaymentPlans] =
+    useState<boolean>(false);
   const [showCollegeForm, setShowCollegeForm] = useState<boolean>(false);
 
   // User & subscription
@@ -41,16 +45,27 @@ export default function Dashboard() {
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
   // Main form state
-  const [residingCountry, setResidingCountry] = useState<OptionType | null>(null);
+  const [residingCountry, setResidingCountry] = useState<OptionType | null>(
+    null
+  );
   const [spendingCapacity, setSpendingCapacity] = useState<string>("");
   const [parentEmail, setParentEmail] = useState<string>("");
   const [currentClass, setCurrentClass] = useState<string>("");
-  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(null);
-  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(false);
+  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(
+    null
+  );
+  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<
+    boolean | null
+  >(false);
   const [moveAbroad, setMoveAbroad] = useState<"yes" | "suggest">("suggest");
-  const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
-  const [careerOption, setCareerOption] = useState<"known" | "unknown">("known");
+  const [preferredAbroadCountry, setPreferredAbroadCountry] =
+    useState<OptionType | null>(null);
+  const [difficulty, setDifficulty] = useState<
+    "easy" | "medium" | "hard" | null
+  >(null);
+  const [careerOption, setCareerOption] = useState<"known" | "unknown">(
+    "known"
+  );
   const [desiredCareer, setDesiredCareer] = useState<string>("");
   const [previousExperience, setPreviousExperience] = useState<string>("");
   const [interestParagraph, setInterestParagraph] = useState<string>("");
@@ -66,7 +81,9 @@ export default function Dashboard() {
     highestCTC: "",
     avgCTC: "",
   });
-  const [selectedUniversityId, setSelectedUniversityId] = useState<number | null>(null);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<
+    number | null
+  >(null);
   const [uniInputValue, setUniInputValue] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
@@ -76,12 +93,15 @@ export default function Dashboard() {
   }, [isSignedIn, isLoaded, router]);
 
   // Helper for INR vs USD
-  const isSouthAsianCountry = (code: string) => ["IN", "PK", "BD"].includes(code);
+  const isSouthAsianCountry = (code: string) =>
+    ["IN", "PK", "BD"].includes(code);
 
   // Get country option from code
   const getCountryOption = (countryCode: string): OptionType | null => {
     const countryOptions = countryList().getData() as OptionType[];
-    return countryOptions.find(option => option.value === countryCode) || null;
+    return (
+      countryOptions.find((option) => option.value === countryCode) || null
+    );
   };
 
   // Fetch user & career info with data persistence
@@ -92,7 +112,9 @@ export default function Dashboard() {
       try {
         const { data: u, error: uErr } = await supabase
           .from("users")
-          .select("id, subscription_status, subscription_plan, subscription_end")
+          .select(
+            "id, subscription_status, subscription_plan, subscription_end"
+          )
           .eq("clerk_id", user.id)
           .single();
         if (uErr || !u) throw uErr || new Error("User not found");
@@ -115,10 +137,10 @@ export default function Dashboard() {
           .maybeSingle();
         if (cErr) throw cErr;
         if (!mounted) return;
-        
+
         setHasRoadmap(!!(c?.roadmap && Object.keys(c.roadmap).length));
         setFormFilled(c?.form_filled ?? false);
-        
+
         // DATA PERSISTENCE: Load existing career info into form fields
         if (c) {
           if (c.residing_country) {
@@ -144,7 +166,9 @@ export default function Dashboard() {
               setMoveAbroad("suggest");
             } else {
               setMoveAbroad("yes");
-              setPreferredAbroadCountry(getCountryOption(c.preferred_abroad_country));
+              setPreferredAbroadCountry(
+                getCountryOption(c.preferred_abroad_country)
+              );
             }
           }
           if (c.difficulty) {
@@ -165,14 +189,16 @@ export default function Dashboard() {
             setPreviousExperience(c.previous_experience);
           }
         }
-        
+
         setDataLoaded(true);
       } catch (err) {
         console.error(err);
         setDataLoaded(true);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [isLoaded, user]);
 
   // Load universities when showing college form
@@ -206,34 +232,54 @@ export default function Dashboard() {
       parent_email: parentEmail,
       college_student: isCollegeStudent,
       difficulty,
-      desired_career: careerOption === "known" ? desiredCareer : interestParagraph,
+      desired_career:
+        careerOption === "known" ? desiredCareer : interestParagraph,
       previous_experience: careerOption === "known" ? previousExperience : "",
       roadmap: null,
     };
+
     try {
-      await fetch("/api/save-career-info", {
+      const res = await fetch("/api/save-career-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      // fire-and-forget tag assignment
-      fetch("/api/assign-career-tag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clerk_id: user?.id, desired_career: payload.desired_career }),
-      }).catch(console.error);
+      const result = await res.json();
+      console.log("Career info saved:", result);
 
       if (!subscriptionStatus) {
+        // Check user's country to determine which payment plan to show
         if (residingCountry && isSouthAsianCountry(residingCountry.value)) {
+          // Show INR pricing for users from India, Pakistan, Bangladesh
           setShowPaymentPlans(true);
+          // setShowUSDPaymentPlans(false);
         } else {
+          // Show USD pricing for users from other countries
+          // setShowPaymentPlans(false);
           setShowUSDPaymentPlans(true);
         }
       } else {
         setShowGenerateModal(true);
       }
-    } catch (err) {
-      console.error(err);
+
+      // Trigger career tag assignment in parallel (fire-and-forget).
+      fetch("/api/assign-career-tag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clerk_id: user?.id,
+          desired_career: payload.desired_career,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Career tag assigned:", data);
+        })
+        .catch((error) => {
+          console.error("Error assigning career tag:", error);
+        });
+    } catch (error) {
+      console.log("Error saving career info:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -242,12 +288,12 @@ export default function Dashboard() {
   // Generate roadmap
   const handleGenerateRoadmap = async () => {
     setGenerating(true);
-    
+
     // FIXED: Show college form immediately when generation starts (if conditions are met)
     if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
       setShowCollegeForm(true);
     }
-    
+
     try {
       const res = await fetch("/api/generate-roadmap", {
         method: "POST",
@@ -278,10 +324,13 @@ export default function Dashboard() {
         highestCTC: parseInt(collegeFormData.highestCTC) || null,
         avgCTC: parseInt(collegeFormData.avgCTC) || null,
       });
-      await supabase.from("career_info").update({ form_filled: true }).eq("user_id", dbUserId);
+      await supabase
+        .from("career_info")
+        .update({ form_filled: true })
+        .eq("user_id", dbUserId);
       setFormFilled(true);
       setShowCollegeForm(false);
-      
+
       // No redirection logic needed here - the useEffect will handle it automatically
     } catch (err) {
       console.error(err);
@@ -290,25 +339,38 @@ export default function Dashboard() {
 
   // Redirect after generation
   useEffect(() => {
-    if (apiDone && (
-      !isCollegeStudent || formFilled || (isCollegeStudent && residingCountry?.value !== "IN")
-    )) {
+    if (
+      apiDone &&
+      (!isCollegeStudent ||
+        formFilled ||
+        (isCollegeStudent && residingCountry?.value !== "IN"))
+    ) {
       setGenerating(false);
       router.push("/roadmap");
     }
   }, [apiDone, formFilled]);
 
-  const dashboardLinks = [{ href: "/roadmap", label: "Roadmap" }, { href: "/blog", label: "Blogs" }];
+  const dashboardLinks = [
+    { href: "/roadmap", label: "Roadmap" },
+    { href: "/blog", label: "Blogs" },
+  ];
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
       <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-36">
-      <h1 className="text-3xl text-black font-bold mb-6">Welcome, <span className="text-[#FF6500]">{user?.firstName}</span></h1>
-        {hasRoadmap
-          ? <RoadmapNotification />
-          : <div className="mb-6 p-3 bg-orange-50 text-orange-700 rounded-md"><p>Fill in the fields below to get your personalized career roadmap.</p></div>
-        }
+        <h1 className="text-3xl text-black font-bold mb-6">
+          Welcome, <span className="text-[#FF6500]">{user?.firstName}</span>
+        </h1>
+        {hasRoadmap ? (
+          <RoadmapNotification />
+        ) : (
+          <div className="mb-6 p-3 bg-orange-50 text-orange-700 rounded-md">
+            <p>
+              Fill in the fields below to get your personalized career roadmap.
+            </p>
+          </div>
+        )}
         <DashboardForm
           onSubmit={handleMainFormSubmit}
           isSubmitting={isSubmitting}
@@ -372,11 +434,25 @@ export default function Dashboard() {
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-12 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Generate <span className="text-[#FF6500]">Career</span> Roadmap</h2>
-            <p className="mb-4 text-gray-700">Would you like to generate your career roadmap now?</p>
+            <h2 className="text-2xl text-black font-bold mb-4">
+              Generate <span className="text-[#FF6500]">Career</span> Roadmap
+            </h2>
+            <p className="mb-4 text-gray-700">
+              Would you like to generate your career roadmap now?
+            </p>
             <div className="flex justify-end space-x-4">
-              <button onClick={() => setShowGenerateModal(false)} className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-red-500">Cancel</button>
-              <button onClick={handleGenerateRoadmap} className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-green-400">Generate</button>
+              <button
+                onClick={() => setShowGenerateModal(false)}
+                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-red-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGenerateRoadmap}
+                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-green-400"
+              >
+                Generate
+              </button>
             </div>
           </div>
         </div>
@@ -398,8 +474,10 @@ export default function Dashboard() {
 
       {/* FIXED: Loader appears behind college form when both are active */}
       {generating && (
-         <div className="fixed inset-0 justify-center items-center z-50"><Loader /></div>
-       )}
-     </div>
+        <div className="fixed inset-0 justify-center items-center z-50">
+          <Loader />
+        </div>
+      )}
+    </div>
   );
 }
