@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { tavily } from "@tavily/core";
+
 
 // Set maximum duration for serverless function (Vercel's limit)
+export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes
 
 export async function GET(request: Request) {
@@ -93,57 +94,46 @@ export async function GET(request: Request) {
     );
 
     // Process each user who needs an update
+    
     for (const userInfo of usersNeedingUpdates) {
       try {
-        // Create query based on desired career
-        const query = `display all upcoming events, scholarship programs, fests, trials, olympiads, exams, and other opportunities relevant to your ${userInfo.desired_career} that'll help my portfolio`;
+        // 1) Trigger your Gemini‑powered endpoint (which itself inserts into Supabase)
+        const gemRes = await fetch(
+          `${process.env.API_BASE_URL}/api/events-api-gemini`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userInfo.user_id }),
+          }
+        );
+        const gemJson = await gemRes.json();
 
-        // Initialize Tavily with API key
-        const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-
-        // Call the search method
-        const response = await tvly.search(query, {});
-
-        if (!response.results || response.results.length === 0) {
-          console.log(`No results for user ${userInfo.user_id}`);
-          continue;
-        }
-
-        // Format current date for event identification
-        const formattedDate = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
-        const currentMonth = currentDate.toLocaleString("default", {
-          month: "long",
-        });
-
-        // Always create a new entry for each event update
-        // This ensures we have separate entries even if multiple updates happen in the same month
-        const { data: storedData, error: insertError } = await supabase
-          .from("events")
-          .insert([
-            {
-              user_id: userInfo.user_id,
-              event_month: currentMonth,
-              event_json: response.results,
-              created_at: currentDate.toISOString(),
-              updated_at: currentDate.toISOString(),
-            },
-          ]);
-
-        if (insertError) {
-          console.error(
-            `Error storing events for user ${userInfo.user_id}:`,
-            insertError
+        // 2) Skip if Gemini failed or returned zero events
+        if (!gemJson.success || gemJson.events_found === 0) {
+          console.log(
+            `No results for user ${userInfo.user_id}:`,
+            gemJson.error || "0 events"
           );
           continue;
         }
 
-        // Send email notification
-        await sendEmailNotification(userInfo.clerk_id, userInfo.parent_email);
+        // 3) (Optional) replicate your date/month logic
+        const formattedDate = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD
+        const currentMonth = currentDate.toLocaleString("default", {
+          month: "long",
+        });
 
+        // 4) Send email notification exactly as before
+        await sendEmailNotification(
+          userInfo.clerk_id,
+          userInfo.parent_email
+        );
+
+        // 5) Push a matching result object
         results.push({
           user_id: userInfo.user_id,
           status: "success",
-          events_count: response.results.length,
+          events_count: gemJson.events_found,
         });
 
         console.log(
@@ -158,6 +148,7 @@ export async function GET(request: Request) {
         });
       }
     }
+
 
     return NextResponse.json({
       success: true,
