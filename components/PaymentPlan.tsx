@@ -114,9 +114,9 @@ export default function PaymentPlan({
   ];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-2 sm:p-4">
-      <div className="relative bg-white rounded-lg p-3 sm:p-6 md:p-8 shadow-xl w-full max-w-3xl overflow-y-auto max-h-[95vh]">
-        <h2 className="text-base sm:text-xl md:text-2xl text-black font-bold mb-2 sm:mb-4 text-center">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 p-2 sm:p-4">
+      <div className="relative bg-white rounded-3xl p-3 sm:p-6 md:p-8 shadow-xl w-full max-w-3xl overflow-y-auto max-h-[95vh]">
+        <h2 className="text-base sm:text-xl md:text-2xl text-black font-thin mb-2 sm:mb-4 text-center">
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
@@ -126,8 +126,8 @@ export default function PaymentPlan({
           </p>
         )}
 
-        <div className="w-full border- overflow-hidden">
-          <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-4">
+        {/* <div className="w-full border- overflow-hidden">
+          <div className="flex flex-row justify-around space-x-1 sm:space-x-2 md:space-x-3">
             {plans.map((plan) => (
               <button
                 key={plan.name}
@@ -140,40 +140,84 @@ export default function PaymentPlan({
                   )
                 }
                 disabled={loading}
-                className="flex flex-col text-black items-center relative w-[100px] sm:w-[150px] md:w-[220px] h-[220px] sm:h-[250px] md:h-[400px] rounded-lg sm:rounded-[20px] overflow-hidden shadow-md sm:shadow-[12px_12px_0px_rgba(0,0,0,0.1)] bg-white cursor-pointer transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                className="flex flex-col text-black items-center mt-4 relative w-[80px] sm:w-[120px] md:w-[180px] h-[180px] sm:h-[200px] md:h-[320px] rounded-lg sm:rounded-[16px] overflow-hidden shadow-md border bg-white cursor-pointer transition-transform hover:bg-amber-50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                {plan.name === "Quarterly" && (
-                  <span className="absolute top-0 left-4 md:left-16 bg-[#FF6500] text-white text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded">
-                    Recommended
-                  </span>
-                )}
                 <img
                   src={plan.imageUrl}
                   alt={`${plan.name} Plan Illustration`}
-                  className="w-full h-[100%] object-cover"
+                  className=" object-cover p-4 sm:p-6 md:p-8"
                 />
-                <div className="w-full h-[40%] p-1 sm:p-2 md:p-4 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-xs sm:text-sm md:text-lg font-semibold mb-0.5 sm:mb-1">
+                <div className="w-full h-[40%] p-1 sm:p-2 md:p-3 flex flex-col items-center justify-center text-center">
+                  <h3 className="text-[10px] sm:text-xs md:text-base font-semibold mb-0.5 sm:mb-1">
                     {plan.name} Plan
                   </h3>
                   {plan.perMonth ? (
                     <>
-                      <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
+                      <p className="text-[10px] sm:text-sm md:text-base font-bold text-[#FF6500]">
                         {plan.totalPrice}
                       </p>
-                      <p className="text-[8px] sm:text-xs md:text-sm text-gray-600">
+                      <p className="text-[7px] sm:text-xs md:text-sm text-gray-600">
                         (per month: {plan.perMonth})
                       </p>
                     </>
                   ) : (
-                    <p className="text-xs sm:text-base md:text-lg font-bold text-[#FF6500]">
+                    <p className="text-[10px] sm:text-sm md:text-base font-bold text-[#FF6500]">
                       {plan.totalPrice}
                     </p>
                   )}
-                  <p className="text-[8px] sm:text-xs md:text-sm text-gray-600 mt-0.5 sm:mt-1 md:mt-2">
+                  <p className="text-[7px] sm:text-xs md:text-sm text-gray-600 mt-0.5 sm:mt-1 md:mt-2">
                     Access all features for {plan.duration}
                   </p>
                 </div>
+              </button>
+            ))}
+          </div>
+        </div> */}
+
+        <div className="w-full">
+          <div className="flex flex-row justify-center gap-4 sm:gap-6 md:gap-8">
+            {plans.map((plan) => (
+              <button
+                key={plan.name}
+                onClick={() =>
+                  handlePayment(
+                    plan.name.toLowerCase() as
+                      | "monthly"
+                      | "quarterly"
+                      | "yearly"
+                  )
+                }
+                disabled={loading}
+                className="group relative w-[140px] sm:w-[180px] md:w-[220px] h-[140px] sm:h-[180px] md:h-[220px] rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+              >
+                <div className="flex flex-col items-center justify-center h-full p-4 sm:p-6">
+                  <img
+                    src={plan.imageUrl}
+                    alt={`${plan.name} Plan Illustration`}
+                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-cover mb-2 sm:mb-3"
+                  />
+
+                  <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
+                    {plan.name}
+                  </h3>
+
+                  <div className="text-center">
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-[#FF6500] mb-1">
+                      {plan.totalPrice}
+                    </p>
+                    {plan.perMonth && (
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        {plan.perMonth}/mo
+                      </p>
+                    )}
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-gray-400 mt-2 sm:mt-3 text-center leading-tight">
+                    {plan.duration} access
+                  </p>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
               </button>
             ))}
           </div>

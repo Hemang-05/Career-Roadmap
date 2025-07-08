@@ -47,7 +47,7 @@ export function RoadmapFlipWords({
 
   return (
     <div className={className}>
-      <div className="text-3xl md:text-4xl lg:text-5xl mx-auto font-semibold text-black flex flex-col sm:flex-row flex-wrap justify-center items-center">
+      <div className="text-3xl mt-8 md:text-4xl lg:text-5xl mx-auto font-semibold text-black flex flex-col sm:flex-row flex-wrap justify-center items-center">
         {/* Text stacks vertically on mobile, horizontal on larger screens */}
         <span className="sm:mr-2 text-center mb-1 sm:mb-0">{beforeText}</span>
 

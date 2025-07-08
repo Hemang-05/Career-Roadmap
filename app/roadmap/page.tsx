@@ -8,13 +8,13 @@ import { useSyncUser } from "@/app/hooks/sync-user";
 import PaymentPlan from "@/components/PaymentPlan";
 import FloatingNavbar from "@/components/Navbar";
 import ProgressBar from "@/components/ProgressBar";
-// Import your updated utility functions
 import { calculateTaskCountProgress } from "@/utils/calcTaskCountProgress";
 import { calculateWeightProgress } from "@/utils/calcWeightProgress";
 import { AnimatedTooltip } from "@/components/ui/AnimatedTooltip";
 import { isYearComplete } from "@/components/RoadmapDisplay";
 import USDPaymentPlan from "@/components/USDPaymentPlan";
 import RoadmapDisplay from "@/components/RoadmapDisplay";
+import { cn } from "@/utils/utils";
 
 // --- RoadmapPage Component ---
 export default function RoadmapPage() {
@@ -27,10 +27,8 @@ export default function RoadmapPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPaymentPlan, setShowPaymentPlan] = useState(false);
 
-  // State for weighted progress (for potential use or analytics page context)
   const [weightedOverallProgress, setWeightedOverallProgress] =
     useState<number>(0);
-  // State for count-based percentage progress (for the main roadmap page progress bar)
   const [taskCountPercentageProgress, setTaskCountPercentageProgress] =
     useState<number>(0);
 
@@ -81,11 +79,10 @@ export default function RoadmapPage() {
       }
     }
   }
+
   const handleTaskUpdate = useCallback((updatedRoadmapData: any) => {
     setParsedRoadmap(updatedRoadmapData);
-    // Update weighted progress
     setWeightedOverallProgress(calculateWeightProgress(updatedRoadmapData));
-    // Update count-based percentage progress using the percentage from your updated function
     setTaskCountPercentageProgress(
       calculateTaskCountProgress(updatedRoadmapData).percentage
     );
@@ -94,13 +91,14 @@ export default function RoadmapPage() {
   const fetchRoadmap = useCallback(async () => {
     setLoading(true);
     setErrorMessage(null);
-    setShowPaymentPlan(false);
+    // Do NOT set setShowPaymentPlan(false) here, as it might cause a flicker
+    // if the subscription is determined to be invalid immediately after.
 
     try {
       if (user) {
         const { data: userRecord, error: userError } = await supabase
           .from("users")
-          .select("id, subscription_status, subscription_end") // ← added subscription_end
+          .select("id, subscription_status, subscription_end")
           .eq("clerk_id", user.id)
           .single();
 
@@ -135,23 +133,24 @@ export default function RoadmapPage() {
 
         setUserCountryCode(careerData.residing_country || null);
 
-        // ← New: parse the stored end date
         const currentDate = new Date();
         const subscriptionEndDate = subscription_end
           ? new Date(subscription_end)
           : null;
 
-        // ← UPDATED: now we treat expired or never‑paid as invalid
         if (
           subscription_status !== true ||
           !subscriptionEndDate ||
           subscriptionEndDate < currentDate
         ) {
           console.log("Subscription invalid or expired.");
-          setShowPaymentPlan(true);
+          setShowPaymentPlan(true); // <-- This is where the state is set to true
           setLoading(false);
-          return;
+          return; // <-- IMPORTANT: Exit immediately to prevent further roadmap processing
         }
+
+        // If subscription is valid, proceed with roadmap parsing and display
+        setShowPaymentPlan(false); // Ensure modal is hidden if subscription becomes valid
 
         if (!careerData.roadmap) {
           console.log("No roadmap data found for user:", userId);
@@ -225,140 +224,6 @@ export default function RoadmapPage() {
     }
   }, [user, openYearIndices.length]);
 
-  // const fetchRoadmap = useCallback(async () => {
-  //   setLoading(true);
-  //   setErrorMessage(null);
-  //   setShowPaymentPlan(false);
-
-  //   try {
-  //     if (user) {
-  //       const { data: userRecord, error: userError } = await supabase
-  //         .from("users")
-  //         .select("id, subscription_status") //add .select("id, subscription_status, subscription_end")
-  //         .eq("clerk_id", user.id)
-  //         .single();
-
-  //       if (userError || !userRecord) {
-  //         console.error("Supabase user fetch error:", userError);
-  //         setErrorMessage("User record not found or failed to fetch.");
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       const {
-  //         subscription_status,
-  //         subscription_end,
-  //         id: userId,
-  //       } = userRecord;
-
-  //       const { data: careerData, error: careerError } = await supabase
-  //         .from("career_info")
-  //         .select("roadmap, user_id, desired_career, residing_country")
-  //         .eq("user_id", userId)
-  //         .single();
-
-  //       if (careerError || !careerData) {
-  //         console.error("Supabase career_info fetch error:", careerError);
-  //         setErrorMessage(
-  //           "Error fetching roadmap details: " +
-  //             (careerError?.message || "Not found")
-  //         );
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       setUserCountryCode(careerData.residing_country || null);
-
-  //       const currentDate = new Date();
-  //       const subscriptionEndDate = subscription_end
-  //         ? new Date(subscription_end)
-  //         : null;
-
-  //       if (subscription_status !== true) {
-  //         //(!subscription_status || !subscriptionEndDate || subscriptionEndDate < currentDate)
-  //         console.log("Subscription invalid or expired.");
-  //         setShowPaymentPlan(true);
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       if (!careerData.roadmap) {
-  //         console.log("No roadmap data found for user:", userId);
-  //         setErrorMessage(
-  //           "No roadmap found. Please generate your roadmap first from the dashboard."
-  //         );
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       setDesiredCareer(careerData.desired_career || "Your Goal");
-
-  //       try {
-  //         const roadmapString =
-  //           typeof careerData.roadmap === "string"
-  //             ? careerData.roadmap
-  //             : JSON.stringify(careerData.roadmap);
-
-  //         const cleanedRoadmap = cleanJSONString(roadmapString);
-  //         const parsed = JSON.parse(cleanedRoadmap);
-
-  //         parsed.user_id = userId;
-
-  //         if (
-  //           !parsed ||
-  //           typeof parsed !== "object" ||
-  //           !Array.isArray(parsed.yearly_roadmap)
-  //         ) {
-  //           console.error("Invalid roadmap structure after parsing:", parsed);
-  //           throw new Error(
-  //             "Invalid roadmap structure. Try regenerating from dashboard."
-  //           );
-  //         }
-
-  //         setParsedRoadmap(parsed);
-  //         // Set initial weighted progress
-  //         setWeightedOverallProgress(calculateWeightProgress(parsed));
-  //         // Set initial count-based percentage progress using your updated function
-  //         setTaskCountPercentageProgress(
-  //           calculateTaskCountProgress(parsed).percentage
-  //         );
-
-  //         if (
-  //           parsed.yearly_roadmap.length > 0 &&
-  //           openYearIndices.length === 0
-  //         ) {
-  //           setOpenYearIndices([0]);
-  //         }
-  //       } catch (parseError: any) {
-  //         console.error("Detailed JSON Parsing/Cleaning Error:", parseError);
-  //         console.error(
-  //           "Original Roadmap Data (first 2000 chars):",
-  //           String(careerData.roadmap).substring(0, 2000)
-  //         );
-  //         setErrorMessage(
-  //           `Failed to process roadmap data. Please try regenerating your roadmap from the dashboard. (Error: ${
-  //             parseError.message || "Unknown parse error"
-  //           })`
-  //         );
-  //       }
-  //     } else {
-  //       setErrorMessage("User data not available.");
-  //     }
-  //   } catch (err: any) {
-  //     console.error("Unexpected Error in fetchRoadmap:", err);
-  //     setErrorMessage(
-  //       `An unexpected error occurred: ${
-  //         err.message || "Please try again later."
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [user, openYearIndices.length]);
-
-  /**
-   * 1) Batch-fetch fresh video info for tasks that already have a `video` object
-   */
   const toggleYear = useCallback((index: number) => {
     setOpenYearIndices((prev) => {
       const isOpening = !prev.includes(index);
@@ -368,41 +233,6 @@ export default function RoadmapPage() {
       return next;
     });
   }, []);
-
-  const refreshFutureRoadmap = async () => {
-    if (!parsedRoadmap?.user_id) {
-      console.error("Cannot refresh roadmap, user_id not available.");
-      setErrorMessage("User information is missing, cannot refresh.");
-      return;
-    }
-    setUpdating(true);
-    try {
-      const res = await fetch("/api/update-user-roadmap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: parsedRoadmap.user_id }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res
-          .json()
-          .catch(() => ({ message: "Failed to parse error response" }));
-        throw new Error(
-          `Failed to refresh roadmap: ${res.status} ${res.statusText}. ${
-            errorData.message || ""
-          }`
-        );
-      }
-      await fetchRoadmap();
-    } catch (err: any) {
-      console.error("Error refreshing future roadmap:", err);
-      setErrorMessage(
-        `Error refreshing roadmap: ${err.message || "Unknown error"}`
-      );
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const fetchSimilarUsers = useCallback(async () => {
     if (!user) return;
@@ -444,10 +274,9 @@ export default function RoadmapPage() {
     if (isLoaded && !isSignedIn) {
       router.push("/");
     } else if (isLoaded && isSignedIn && user) {
-      // These fetch calls are memoized with useCallback,
-      // so they will only re-run if their own dependencies change (e.g., `user`).
-      // Additional checks prevent re-fetching if data is already present.
-      if (!parsedRoadmap) {
+      // Only fetch roadmap if it hasn't been fetched AND we're not already showing the payment plan
+      if (!parsedRoadmap && !showPaymentPlan) {
+        // IMPORTANT CHANGE HERE
         fetchRoadmap();
       }
       if (similarUsers.length === 0) {
@@ -465,6 +294,7 @@ export default function RoadmapPage() {
     fetchSimilarUsers,
     parsedRoadmap,
     similarUsers.length,
+    showPaymentPlan, // IMPORTANT: Add showPaymentPlan to dependencies
   ]);
 
   // --- Render Logic ---
@@ -513,143 +343,132 @@ export default function RoadmapPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fcf7] md:bg-[#fafff9] flex flex-col pt-20 md:pt-24">
-      <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-16 2xl:px-48 mt-8 md:mt-12 flex-grow">
-        {/* TEST BUTTON - Added at the top for API testing  */}
-        {/* {parsedRoadmap && (
-          <div className="mb-6 flex justify-center">
-            <button
-              onClick={refreshFutureRoadmap}
-              disabled={updating}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all flex items-center justify-center"
-            >
-              {updating ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Testing AI Update...
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Test API: Update Roadmap with AI
-                </>
-              )}
-            </button>
-          </div>
-        )} */}
-
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl text-black font-bold mb-8 md:mb-12 lg:mb-16 text-center sm:text-left">
-          Your <span className="text-[#FF6500]">Career</span> Roadmap
-        </h1>
-
-        {updating && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl flex items-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-6 w-6 text-orange-500"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <p className="text-lg text-black font-semibold">
-                Updating roadmap with AI...
-              </p>
-            </div>
-          </div>
+    <div className="relative min-h-screen bg-white md:bg-white flex flex-col pt-20 md:pt-24">
+      <div
+        className={cn(
+          "absolute inset-0",
+          "[background-size:30px_30px]",
+          "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]"
         )}
+      />
 
-        {parsedRoadmap && (
-          <>
-            <div className="mb-8 md:mb-10">
-              <h2 className="text-lg md:text-xl mb-3 md:mb-4 text-black font-semibold">
-                Overall Task Completion
-              </h2>
-              {/* Use the count-based percentage progress for this bar on the roadmap page */}
-              <ProgressBar progress={taskCountPercentageProgress} />
-            </div>
+      {/* Radial gradient overlay for faded look */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
 
-            {/* For your analytics page, you would use `weightedOverallProgress`. 
-              Example of how you might display it if needed on this page:
-            */}
-            {/* <div className="mb-8 md:mb-10">
-              <h2 className="text-lg md:text-xl mb-3 md:mb-4 text-black font-semibold">Likelihood to Achieve Goal (Weighted)</h2>
-              <ProgressBar progress={weightedOverallProgress} />
-            </div> 
-            */}
+      {/* Your content */}
+      <div className="relative z-10">
+        <FloatingNavbar navLinks={dashboardLinks} />
 
-            <div className="mb-10 md:mb-12 mt-8 md:mt-16">
-              <h2 className="text-lg md:text-xl mb-4 text-black font-semibold">
-                Peers on Your Path
-              </h2>
-              <div className="flex flex-wrap justify-center sm:justify-start">
-                {similarUsers.length > 0 && img_.length > 0 ? (
-                  <AnimatedTooltip
-                    items={similarUsers.map((u, index) => ({
-                      id: u?.id ?? index,
-                      name: u?.name ?? "N/A",
-                      designation: u?.designation ?? "Unknown Role",
-                      image: img_[index % img_.length].image,
-                    }))}
-                  />
-                ) : (
-                  <p className="text-black text-sm md:text-base">
-                    Looking for peers with a similar path...
-                  </p>
-                )}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-16 2xl:px-48 mt-8 md:mt-12 flex-grow">
+          {/* The updating overlay remains in its current fixed position */}
+          {updating && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl flex items-center">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-6 w-6 text-orange-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <p className="text-lg text-black font-semibold">
+                  Updating roadmap with AI...
+                </p>
               </div>
             </div>
+          )}
 
-            <div className="text-center mb-8 md:mb-12">
-              <span className="font-extrabold text-[#FF6500] text-2xl md:text-3xl">
-                {desiredCareer}
-              </span>
+          {/* Main content wrapper for title, peers, and progress bar */}
+          {parsedRoadmap && (
+            <>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 md:mb-8 lg:mb-8 px-0 md:px-4 lg:px-8 xl:px-12">
+                {/* Your Career Roadmap Title - Takes up available space (flex-grow) */}
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl text-black font-bold text-center sm:text-left mb-4 sm:mb-0 sm:mr-4 flex-grow">
+                  Your <span className="text-[#FF6500]">Career</span> Roadmap
+                </h1>
+
+                {/* Peers on Your Path - Aligned to the right on larger screens */}
+                <div className="flex-shrink-0 text-center sm:text-right">
+                  {" "}
+                  {/* Added flex-shrink-0 */}
+                  <h2 className="text-lg md:text-xl mb-4 text-black font-extralight">
+                    Peers on Your Path
+                  </h2>
+                  <div className="flex flex-wrap justify-center sm:justify-end">
+                    {" "}
+                    {/* Changed sm:justify-start to sm:justify-end */}
+                    {similarUsers.length > 0 && img_.length > 0 ? (
+                      <AnimatedTooltip
+                        items={similarUsers.map((u, index) => ({
+                          id: u?.id ?? index,
+                          name: u?.name ?? "N/A",
+                          designation: u?.designation ?? "Unknown Role",
+                          image: img_[index % img_.length].image,
+                        }))}
+                      />
+                    ) : (
+                      <p className="text-black text-sm md:text-base">
+                        Looking for peers with a similar path...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar - Always below the above row */}
+              <div className="mb-8 md:mb-12 px-0 md:px-6 lg:px-10 xl:px-16">
+                <h2 className="text-lg md:text-xl mb-3 md:mb-4 text-black font-thin">
+                  Overall Task Completion
+                </h2>
+                <ProgressBar progress={taskCountPercentageProgress} />
+              </div>
+
+              {/* Desired Career - Positioned below the progress bar or wherever you prefer */}
+              <div className="text-center mb-8 md:mb-12">
+                <span className="font-extrabold text-[#FF6500] text-2xl md:text-3xl">
+                  {desiredCareer}
+                </span>
+              </div>
+            </>
+          )}
+
+          {parsedRoadmap ? (
+            <div className="p-0 md:p-4 lg:p-8 xl:p-12">
+              <RoadmapDisplay
+                roadmapData={parsedRoadmap}
+                onTaskUpdate={handleTaskUpdate}
+                openYearIndices={openYearIndices}
+                toggleYear={toggleYear}
+              />
             </div>
-          </>
-        )}
-
-        {parsedRoadmap ? (
-          <div className="p-0 md:p-4 lg:p-8 xl:p-12">
-            <RoadmapDisplay
-              roadmapData={parsedRoadmap}
-              onTaskUpdate={handleTaskUpdate}
-              openYearIndices={openYearIndices}
-              toggleYear={toggleYear}
-            />
-          </div>
-        ) : !loading && errorMessage ? (
-          <div className="bg-white p-4 md:p-6 rounded-md shadow-md text-center">
-            <p className="text-red-600 font-semibold">{errorMessage}</p>
-            {(errorMessage.includes("generate") ||
-              errorMessage.includes("regenerating")) && (
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Go to Dashboard
-              </button>
-            )}
-          </div>
-        ) : null}
+          ) : !loading && errorMessage ? (
+            <div className="bg-white p-4 md:p-6 rounded-md shadow-md text-center">
+              <p className="text-red-600 font-semibold">{errorMessage}</p>
+              {(errorMessage.includes("generate") ||
+                errorMessage.includes("regenerating")) && (
+                <button
+                  onClick={() => router.push("/dashboard")}
+                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Go to Dashboard
+                </button>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
