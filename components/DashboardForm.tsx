@@ -1,14 +1,12 @@
-// components/DashboardForm.tsx
-"use client";
+'use client';
+
 import React from "react";
 import Select, { GroupBase, StylesConfig } from "react-select";
 import countryList from "react-select-country-list";
 import DifficultySelector from "@/components/DifficultySelector";
+import { Info } from 'lucide-react';
 
-export type OptionType = {
-  label: string;
-  value: string;
-};
+export type OptionType = { label: string; value: string };
 
 interface DashboardFormProps {
   onSubmit: (e: React.FormEvent) => void;
@@ -72,137 +70,410 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
   setDifficulty,
 }) => {
   const countryOptions = countryList().getData() as OptionType[];
-
+  
   const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
     control: (base, state) => ({
       ...base,
-      borderColor: state.isFocused ? "#FF6500" : base.borderColor,
-      boxShadow: state.isFocused ? "0 0 0 1px #FF6500" : base.boxShadow,
-      borderRadius: "1rem",
-      "&:hover": {
-        borderColor: state.isFocused ? "#FF6500" : base.borderColor,
+      borderColor: state.isFocused ? "#fdc6a1" : "#fed7aa",
+      boxShadow: state.isFocused ? "0 0 0 2px rgba(254, 215, 170, 0.5)" : "none",
+      borderRadius: "12px",
+      backgroundColor: "#fff7ed", // bg-orange-50
+      color: "#374151", // text-gray-700
+      minHeight: "56px", // p-4 equivalent
+      borderWidth: "2px",
+      fontWeight: "200", // font-extralight
+      padding: "4px 12px",
+      transition: "all 0.3s ease",
+      "&:hover": { 
+        borderColor: state.isFocused ? "#fdc6a1" : "#fed7aa",
+        boxShadow: state.isFocused ? "0 0 0 2px rgba(254, 215, 170, 0.5)" : "none"
       },
+      outline: "none",
+    }),
+    menuList: (base) => ({
+      ...base,
+      // Custom scrollbar styles
+      '&::-webkit-scrollbar': {
+        width: '8px',
+      },
+      '&::-webkit-scrollbar-track': {
+        background: '#ffedd5', // orange-100
+        borderRadius: '10px',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        background: '#fed7aa', // orange-200
+        borderRadius: '10px',
+        border: '2px solid #fff7ed', // orange-50
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        background: '#fdc6a1', // focus orange color
+      },
+      // For Firefox
+      scrollbarWidth: 'thin',
+      scrollbarColor: '#fed7aa #ffedd5',
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af", // placeholder-gray-400
+      fontWeight: "200", // font-extralight
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "#374151", // text-gray-700
+      fontWeight: "200", // font-extralight
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? "#fdc6a1" : state.isFocused ? "#ffedd5" : "#fff7ed", // orange-50 background
+      color: state.isSelected ? "#374151" : "#374151", // text-gray-700
+      fontWeight: "200", // font-extralight
+      padding: "12px 16px",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#fdc6a1" : "#ffedd5", // orange-100 on hover
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "#fff7ed", // bg-orange-50
+      border: "2px solid #fed7aa", // border-orange-200
+      borderRadius: "12px",
+      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      zIndex: 9999,
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
   };
 
+  const isBrowser = typeof window !== 'undefined';
+
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <div className="flex justify-center items-center mb-16 mt-16">
-        <div className={`transition-opacity duration-300 mr-4 ${careerOption === "known" ? "opacity-100" : "opacity-0"}`}>
-          <img src="https://res.cloudinary.com/ditn9req1/image/upload/v1744969912/happy_dd79nt.png" alt="Known career" className="w-36 h-36 object-contain"/>
-        </div>
-        <div className="relative w-48 h-24">
-          <input id="known" type="radio" value="known" checked={careerOption === "known"} onChange={() => setCareerOption("known")} className="opacity-0 absolute top-0 left-0 h-full w-full m-0 cursor-pointer peer" required/>
-          <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
-            <label htmlFor="known" className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300">I know what career I want</label>
-          </div>
-        </div>
-        <div className="relative w-48 h-24 ml-4">
-          <input id="unknown" type="radio" value="unknown" checked={careerOption === "unknown"} onChange={() => setCareerOption("unknown")} className="opacity-0 absolute top-0 left-0 h-full w-full m-0 cursor-pointer peer" required/>
-          <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
-            <label htmlFor="unknown" className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300">I'm not sure what to do</label>
-          </div>
-        </div>
-        <div className={`transition-opacity duration-300 ml-0 ${careerOption === "unknown" ? "opacity-100" : "opacity-0"}`}>
-          <img src="https://res.cloudinary.com/ditn9req1/image/upload/v1744969896/sad_mzj5qf.png" alt="Exploring careers" className="w-36 h-36 object-contain"/>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        {careerOption === "known" && (
-          <div className="p-2 rounded-lg">
-            <h3 className="text-xl text-black font-bold mb-3">Great! You know your career path</h3>
-            <p className="text-[#FF6500]">We'll help you achieve your specific career goals with a focused approach.</p>
-          </div>
-        )}
-        {careerOption === "unknown" && (
-          <div className="p-2 rounded-lg">
-            <h3 className="text-xl text-black font-bold mb-3">Let's explore your options</h3>
-            <p className="text-[#FF6500]">We'll help you discover potential career paths based on your interests and skills.</p>
-          </div>
-        )}
-      </div>
-
-      <p className="text-black font-semibold">Please answer the following common questions:</p>
-      
-      <div className="space-y-12">
-        <div>
-          <label className="block text-gray-800 mb-4">Residing Country:</label>
-          <Select<OptionType, false, GroupBase<OptionType>> options={countryOptions} value={residingCountry} onChange={setResidingCountry} placeholder="Select your country..." required styles={customStyles} className="text-black mb-16 focus:outline-none focus:ring-0 cursor-pointer"/>
-        </div>
-        <div>
-          <label className="block text-gray-800 mb-4">Spending Capacity: <label className="font-style: italic text-sm text-gray-400">(How much can you spend on your education to pursue this career?)</label></label>
-          <input type="number" value={spendingCapacity} onChange={(e) => setSpendingCapacity(e.target.value)} placeholder="eg. 500000" className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]" required/>
-        </div>
-        <div>
-          <label className="block text-gray-800 mb-4">I am a college student:</label>
-          <div className="flex space-x-8 mb-16 mt-2">
-            <label className="text-black mr-8"><input type="radio" name="collegeStudent" value="yes" checked={isCollegeStudent === true} onChange={() => setIsCollegeStudent(true)} required className="appearance-none h-4 w-4 border border-gray-400 rounded-full checked:bg-[#FF6500] checked:border-[#FF6500] focus:outline-none cursor-pointer mr-4"/>Yes</label>
-            <label className="text-black"><input type="radio" name="collegeStudent" value="no" checked={isCollegeStudent === false} onChange={() => setIsCollegeStudent(false)} required className="appearance-none h-4 w-4 border border-gray-400 rounded-full checked:bg-[#FF6500] checked:border-[#FF6500] focus:outline-none cursor-pointer mr-4"/>No</label>
-          </div>
-        </div>
-        <div>
-          <label className="block text-gray-800 mb-4">Which class/standard do you study in?</label>
-          <input type="text" value={currentClass} onChange={(e) => setCurrentClass(e.target.value)} placeholder="e.g., 10th, 12th, or college year (If in college, also mention the course opted.)" className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]" required/>
-        </div>
-        <div>
-          <label className="block text-gray-800 mb-4">Share email id of someone you want to be accountable to. <label className="font-style: italic text-sm text-gray-400">(Parent, Guardian, Teacher or Friend)</label></label>
-          <input type="text" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="e.g., parentemail@gmail.com" className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]" required/>
-        </div>
-        <div>
-            <label className="block text-gray-800 mb-4">Are you willing to move abroad for study/work?</label>
-            <div className={`relative w-36 h-10 rounded-full cursor-pointer mb-16 transition-all duration-200 ease-in-out ${willingToMoveAbroad ? "bg-green-500" : "bg-red-500"}`} onClick={() => setWillingToMoveAbroad(!willingToMoveAbroad)}>
-                <span className={`absolute left-0 w-16 h-10 leading-10 text-center font-semibold ${willingToMoveAbroad ? "text-white" : "text-red-500"}`}>Yes</span>
-                <span className={`absolute right-0 w-16 h-10 leading-10 text-center font-semibold ${!willingToMoveAbroad ? "text-white" : "text-green-500"}`}>No</span>
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white font-bold text-lg">{willingToMoveAbroad ? "✓" : "✕"}</span>
-            </div>
-            {willingToMoveAbroad && (
-                <div className="mt-4">
-                    <label className="block text-gray-800 mb-4">Please choose an option:</label>
-                    <div className="flex space-x-6 mt-2">
-                        <label className="text-black"><input type="radio" name="moveAbroad" value="yes" checked={moveAbroad === "yes"} onChange={() => setMoveAbroad("yes")} className="appearance-none h-4 w-4 border border-gray-400 rounded-full checked:bg-[#FF6500] checked:border-[#FF6500] focus:outline-none cursor-pointer mr-4" required/>I'll select my preferred country</label>
-                        <label className="text-black"><input type="radio" name="moveAbroad" value="suggest" checked={moveAbroad === "suggest"} onChange={() => setMoveAbroad("suggest")} className="appearance-none h-4 w-4 border border-gray-400 rounded-full checked:bg-[#FF6500] checked:border-[#FF6500] focus:outline-none cursor-pointer mr-4" required/>Suggest best for me</label>
-                    </div>
-                    {moveAbroad === "yes" && (
-                        <div className="mt-4">
-                            <label className="block text-gray-800 mt-16 mb-2">Preferred Country Abroad:</label>
-                            <Select<OptionType, false, GroupBase<OptionType>> options={countryOptions} value={preferredAbroadCountry} onChange={setPreferredAbroadCountry} placeholder="Select a country..." required className="text-black" styles={customStyles}/>
-                        </div>
-                    )}
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-16 xl:px-24">
+      <form onSubmit={onSubmit} className="max-w-7xl mx-auto space-y-6">
+        {/* Column Layout for Independent Card Movement */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Column */}
+          <div className="flex-1 space-y-6">
+            {/* Card 1: Career Option + Interest Paragraph */}
+            <div className="bg-white rounded-3xl shadow-lg backdrop-blur p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[400px] flex flex-col">
+              <p className="text-gray-800 mb-6 text-xl">What best describes you?</p>
+              <div className="flex flex-col mt-8 gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setCareerOption('known')}
+                  className={`py-4 px-6 rounded-xl border-2 transition-all duration-300 font-thin text-lg ${
+                    careerOption === 'known'
+                      ? 'bg-[#FF6500] text-white border-[#FF6500] shadow-lg transform scale-105'
+                      : 'bg-orange-50 text-gray-700 border-orange-200 hover:bg-orange-100 hover:border-orange-300'
+                  }`}
+                >I know what career I want</button>
+                <button
+                  type="button"
+                  onClick={() => setCareerOption('unknown')}
+                  className={`py-4 px-6 rounded-xl border-2 transition-all duration-300 font-thin text-lg ${
+                    careerOption === 'unknown'
+                      ? 'bg-[#FF6500] text-white border-[#FF6500] shadow-lg transform scale-105'
+                      : 'bg-orange-50 text-gray-700 border-orange-200 hover:bg-orange-100 hover:border-orange-300'
+                  }`}
+                >I'm not sure what to do</button>
+              </div>
+              
+              {careerOption === 'unknown' && (
+                <div className="border-t-2 border-orange-200 pt-6 flex-1">
+                  <label className="text-gray-800 font-thin mb-3 block text-lg">Tell us what you like doing</label>
+                  <textarea
+                    value={interestParagraph}
+                    onChange={e => setInterestParagraph(e.target.value)}
+                    placeholder="Write about your interests, hobbies, things you enjoy..."
+                    rows={4}
+                    minLength={300}
+                    maxLength={1200}
+                    required
+                    className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none outline-none"
+                  />
+                  <p className="mt-3 text-sm font-extralight text-gray-600">
+                    300 &lt;{' '}
+                    <span className={interestParagraph.length >= 300 && interestParagraph.length <= 1200 ? 'text-green-600 font-extralight' : 'text-red-600 font-thin'}>
+                      {interestParagraph.length}
+                    </span>{' '}
+                    &lt; 1200 characters
+                  </p>
                 </div>
+              )}
+            </div>
+
+            {/* Card 3: Spending Capacity + Accountability Email */}
+            <div className="bg-white rounded-3xl shadow-lg backdrop-blur p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[400px] flex flex-col">
+              <div className="mb-12">
+              <div className="flex items-center mb-3">
+                <label className="text-gray-800 mb-3 block text-xl">Spending Capacity</label>
+                <div className="relative ml-4 mb-3 group">
+                  <Info 
+                    size={16} 
+                    className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
+                  />
+                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  Enter you education budget, or how much you can spend on your career.
+                  </div>
+                </div>
+                </div>
+                <input
+                  type="number"
+                  value={spendingCapacity}
+                  onChange={e => setSpendingCapacity(e.target.value)}
+                  placeholder="e.g. 500000"
+                  required
+                  className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none"
+                />
+              </div>
+
+              <div className="border-t-2 border-orange-200 pt-6">
+              <div className="flex items-center mb-3">
+              <label className="text-gray-800 mb-3 block text-xl">Accountability Email</label>
+              <div className="relative ml-4 mb-3 group">
+                  <Info 
+                    size={16} 
+                    className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
+                  />
+                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  Enter email of someone who can be accountable for you. Guardian, Friend, Teacher or Sibling.
+                  </div>
+                </div>
+              </div>
+                <input
+                  type="email"
+                  value={parentEmail}
+                  onChange={e => setParentEmail(e.target.value)}
+                  placeholder="e.g. parent@example.com"
+                  required
+                  className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="flex-1 space-y-6">
+            {/* Card 2: Residing Country + Move Abroad */}
+            <div className="bg-white rounded-3xl shadow-lg backdrop-blur p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[400px] flex flex-col">
+              <div className="mb-8 ">
+                <label className="text-gray-800 mb-8 block text-xl">Residing Country</label>
+                <Select
+                  options={countryOptions}
+                  value={residingCountry}
+                  onChange={setResidingCountry}
+                  placeholder="Select your country..."
+                  required
+                  styles={customStyles}
+                  menuPortalTarget={isBrowser ? document.body : undefined}
+                  menuPosition="fixed"
+                />
+              </div>
+
+              <div className="border-t-2 border-orange-200 mt-2">
+                <label className="text-gray-800 mt-8 mb-4 block text-xl">Move Abroad?</label>
+                <div className="flex mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setWillingToMoveAbroad(true)}
+                    className={`px-6 py-3 rounded-l-xl transition-all duration-300 font-semibold text-lg border-2 ${
+                      willingToMoveAbroad ? 'bg-[#FF6500] text-white shadow-lg' : 'bg-grey-100 text-gray-700 border-grey-200  hover:bg-orange-100'
+                    }`}
+                  >Yes</button>
+                  <button
+                    type="button"
+                    onClick={() => setWillingToMoveAbroad(false)}
+                    className={`px-6 py-3 rounded-r-xl transition-all duration-300 font-semibold text-lg border-2 border-l-0 ${
+                      willingToMoveAbroad === false ? 'bg-[#FF6500] text-white shadow-lg' : 'bg-grey-100 text-gray-700 border-grey-200  hover:bg-orange-100'
+                    }`}
+                  >No</button>
+                </div>
+                {willingToMoveAbroad && (
+                  <div className="space-y-4">
+                    <label className="text-gray-800 mb-3 block text-lg">Abroad Preference</label>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                      <label className="flex items-center text-gray-700 font-light">
+                        <input 
+                          type="radio" 
+                          name="moveAbroad" 
+                          value="yes" 
+                          checked={moveAbroad === 'yes'} 
+                          onChange={() => setMoveAbroad('yes')} 
+                          className="peer sr-only"
+                          required 
+                        />
+                        {/* This is our custom-styled radio button circle */}
+                        <span className="w-5 h-5 mr-3 border-2 border-gray-400 rounded-full flex items-center justify-center transition-colors
+                                        peer-checked:border-[#FF6500] peer-checked:bg-[#FF6500]">
+                        </span>
+                        I'll select
+                      </label>
+                      <label className="flex items-center text-gray-700 font-light">
+                        <input 
+                          type="radio" 
+                          name="moveAbroad" 
+                          value="suggest" 
+                          checked={moveAbroad === 'suggest'} 
+                          onChange={() => setMoveAbroad('suggest')} 
+                          className="peer sr-only" 
+                          required 
+                        />
+                        {/* This is our custom-styled radio button circle */}
+                        <span className="w-5 h-5 mr-3 border-2 border-gray-400 rounded-full flex items-center justify-center transition-colors
+                                        peer-checked:border-[#FF6500] peer-checked:bg-[#FF6500]">
+                        </span>
+                        Suggest
+                      </label>
+                    </div>
+                    {moveAbroad === 'yes' && (
+                      <Select
+                        options={countryOptions}
+                        value={preferredAbroadCountry}
+                        onChange={setPreferredAbroadCountry}
+                        placeholder="Select preferred country"
+                        required
+                        styles={customStyles}
+                        menuPortalTarget={isBrowser ? document.body : undefined}
+                        menuPosition="fixed"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Card 4: College Student + Current Class */}
+            <div className="bg-white rounded-3xl shadow-lg backdrop-blur p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[400px] flex flex-col">
+              <div className="mb-4 pt-1">
+                <label className="text-gray-800 mb-6 block text-xl">Are you a college student?</label>
+                <div className="flex">
+                  <button
+                    type="button"
+                    onClick={() => setIsCollegeStudent(true)}
+                    className={`px-6 py-3 rounded-l-xl transition-all duration-300 font-semibold text-lg border-2 ${
+                      isCollegeStudent ? 'bg-[#FF6500] text-white shadow-lg' : 'bg-grey-100 text-gray-700 border-grey-200  hover:bg-orange-100'
+                    }`}
+                  >Yes</button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCollegeStudent(false)}
+                    className={`px-6 py-3 rounded-r-xl transition-all duration-300 font-semibold text-lg border-2 border-l-0 ${
+                      isCollegeStudent === false ? 'bg-[#FF6500] text-white shadow-lg' : 'bg-grey-100 text-gray-700 border-grey-200  hover:bg-orange-100'
+                    }`}
+                  >No</button>
+                </div>
+              </div>
+
+              <div className="border-t-2 border-orange-200 mt-8 pt-6 flex-1">
+              <div className="flex items-center mb-3">
+              <label className="text-gray-800 mb-3 block text-xl">Class/College Year & Course</label>
+              <div className="relative ml-4 mb-3 group">
+                  <Info 
+                    size={16} 
+                    className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
+                  />
+                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  Enter your current class if in school, specify stream if in 11th and 12th.<br></br>
+                  If in college enter current year and course pursuing.
+                  </div>
+                </div>
+              </div>
+                <input
+                  type="text"
+                  value={currentClass}
+                  onChange={e => setCurrentClass(e.target.value)}
+                  placeholder="e.g. 12th Science/Arts, 1st year B.Tech"
+                  required
+                  className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Desired Career + Previous Experience (Only if careerOption is 'known') */}
+        {careerOption === 'known' && (
+          <div className="bg-white rounded-3xl shadow-lg backdrop-blur p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+              <div className="flex items-center mb-3">
+                <label className="text-gray-800  mb-3 block text-xl">Desired Career</label>
+                <div className="relative ml-4 mb-3 group">
+                  <Info 
+                    size={16} 
+                    className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
+                  />
+                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  Enter the Career you want to pursue.
+                  </div>
+                </div>
+
+                </div>
+                <input
+                  type="text"
+                  value={desiredCareer}
+                  onChange={e => setDesiredCareer(e.target.value)}
+                  placeholder="e.g. Astronaut, Software Engineer"
+                  required
+                  className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none outline-none"
+                />
+              </div>
+              
+              <div>
+              <div className="flex items-center mb-3">
+                <label className="text-gray-800  mb-3 block text-xl">Previous Experience</label>
+                <div className="relative ml-4 mb-3 group">
+                  <Info 
+                    size={16} 
+                    className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
+                  />
+                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  Enter anything you have learnt or achieved related to you desired career.
+                  </div>
+                </div>
+
+                </div>
+                <input
+                  type="text"
+                  value={previousExperience}
+                  onChange={e => setPreviousExperience(e.target.value)}
+                  placeholder="Describe your experience..."
+                  required
+                  className="w-full border-2 border-orange-200 rounded-xl p-4 focus:border-[#fdc6a1] focus:outline-none focus:ring-2 focus:ring-orange-100 bg-orange-50 text-gray-700 placeholder-gray-400 transition-all duration-300 font-extralight resize-none outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Difficulty Selector */}
+        <div className="x">
+          <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-center pt-6">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-[#FF6500] to-[#FF8500] text-white py-4 px-12 rounded-3xl  hover:from-[#FF5500] hover:to-[#FF7500] hover:border-orange-400 transition-all duration-300 shadow-xl hover:shadow-2xl font-light text-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              'Submit Form'
             )}
+          </button>
         </div>
-      </div>
-
-      {careerOption === "known" ? (
-        <div className="space-y-12">
-          <div>
-            <label className="block text-gray-800 mb-4 mt-8">What career do you want to pursue?</label>
-            <input type="text" value={desiredCareer} onChange={(e) => setDesiredCareer(e.target.value)} placeholder="e.g., Astronaut" className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-16 focus:outline-none focus:ring-0 focus:border-[#FF6500]" required/>
-          </div>
-          <div>
-            <label className="block text-gray-800 mb-4">Previous experience or work done in this career (e.g., a home project):</label>
-            <input type="text" value={previousExperience} onChange={(e) => setPreviousExperience(e.target.value)} placeholder="Describe your experience..." className="mt-2 block w-full text-black border border-gray-300 p-2 rounded-[1rem] mb-20 focus:outline-none focus:ring-0 focus:border-[#FF6500]" required/>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div>
-            <label className="block text-gray-800 mt-16">Tell us what you like doing the most:</label>
-            <textarea value={interestParagraph} onChange={(e) => setInterestParagraph(e.target.value)} placeholder="Write about your interests, hobbies, or activities you enjoy (e.g., 'I love solving puzzles, building things with my hands, and helping my friends with their problems...')" className="mt-2 block w-full px-2 py-4 text-black border border-gray-300 rounded-[1rem] focus:outline-none focus:ring-0 focus:border-[#FF6500]" rows={4} minLength={300} maxLength={1200} required/>
-            <p className="text-sm text-gray-500 mt-2 mb-20">300 &lt; <span className={interestParagraph.length >= 300 && interestParagraph.length <= 1200 ? "text-green-600" : "text-red-600"}>{interestParagraph.length}</span> &lt; 1200</p>
-          </div>
-        </div>
-      )}
-
-      <DifficultySelector difficulty={difficulty} setDifficulty={setDifficulty} />
-
-      <div className="flex justify-center w-full">
-        <button type="submit" disabled={isSubmitting} className="bg-white text-black py-5 px-12 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-orange-400 mt-8">
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

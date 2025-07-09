@@ -21,7 +21,7 @@ const DifficultyCard = ({
   return (
     // Base: Full width with a max-width for small screens
     // md and up: Use a fixed width (e.g., w-96, adjust as needed, w-128 was quite large)
-    <div className="relative w-full max-w-md md:w-96 h-auto">
+    <div className="relative w-full max-w-md  md:w-96 h-auto">
       <input
         id={difficulty}
         type="radio"
@@ -32,10 +32,11 @@ const DifficultyCard = ({
         required
       />
       {/* Apply transitions and peer styles as before */}
-      <div className="flex flex-col items-center justify-center w-full h-full border-2 border-black rounded-md p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105">
+     
+      <div className="flex flex-col items-center justify-center w-full h-full  rounded-3xl  p-4 bg-white transition-all duration-300 ease-in-out peer-checked:bg-orange-400 peer-checked:border-orange-400 peer-checked:scale-105 shadow-lg">
         <label
           htmlFor={difficulty}
-          className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300 mb-4 cursor-pointer" // Added cursor-pointer here too
+          className="text-center text-sm font-semibold uppercase tracking-wider text-black peer-checked:text-white transition-colors duration-300 mt-2 mb-4 cursor-pointer" // Added cursor-pointer here too
         >
           {title} Difficulty
         </label>
@@ -95,8 +96,8 @@ export default function DifficultySelector({
 
 
   return (
-    <div className="mt-16 px-4"> {/* Added some horizontal padding */}
-      <label className="block text-gray-800 mb-4 text-center md:text-left"> {/* Center text on small screens */}
+    <div className="mt-4 px-4"> {/* Added some horizontal padding */}
+      <label className="block text-gray-800 mb-4 text-center text-xl md:text-left"> {/* Center text on small screens */}
         Choose Your Learning Difficulty
       </label>
       {/*

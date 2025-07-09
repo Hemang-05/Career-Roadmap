@@ -306,6 +306,9 @@ export default function Dashboard() {
       console.error(err);
       setGenerating(false);
     }
+    if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
+      setShowCollegeForm(true);
+    }
   };
 
   // College form submit
@@ -356,16 +359,23 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div 
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed flex flex-col"
+      style={{
+        backgroundImage:
+          "url('https://cdn.rareblocks.xyz/collection/clarity/images/hero/1/background-pattern.png')",
+        
+    }}
+    >
       <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-36">
+      <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-20">
         <h1 className="text-3xl text-black font-bold mb-6">
           Welcome, <span className="text-[#FF6500]">{user?.firstName}</span>
         </h1>
         {hasRoadmap ? (
           <RoadmapNotification />
         ) : (
-          <div className="mb-6 p-3 bg-orange-50 text-orange-700 rounded-md">
+          <div className="mb-6 p-3 bg-orange-50 text-orange-600 rounded-3xl">
             <p>
               Fill in the fields below to get your personalized career roadmap.
             </p>
@@ -458,7 +468,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* FIXED: College form appears during generation (above the loader) */}
       <CollegeForm
         show={showCollegeForm}
         onSubmit={handleCollegeFormSubmit}
