@@ -359,14 +359,31 @@ export default function Dashboard() {
   ];
 
   return (
-    <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed flex flex-col"
-      style={{
-        backgroundImage:
-          "url('https://cdn.rareblocks.xyz/collection/clarity/images/hero/1/background-pattern.png')",
-        
-    }}
-    >
+    // <div 
+    //     className="w-full overflow-x-hidden min-h-screen bg-cover bg-center bg-local md:bg-fixed flex flex-col"
+    //     style={{
+    //       backgroundImage:
+    //         "url('https://cdn.rareblocks.xyz/collection/clarity/images/hero/1/background-pattern.png')",
+    // }}
+    // >
+      <div
+        className="relative w-full overflow-x-hidden min-h-screen flex flex-col"
+      >
+      {/* —————— Grid Background Pattern —————— */}
+      <div
+        className="absolute inset-0 -z-50"
+        style={{
+          backgroundSize: '30px 30px',
+          backgroundImage:
+            'linear-gradient(to right, #e4e4e7 1px, transparent 1px),' +
+            'linear-gradient(to bottom, #e4e4e7 1px, transparent 1px)',
+        }}
+      />
+
+      {/* —————— Optional Radial Overlay (faded center) —————— */}
+      <div className="pointer-events-none absolute inset-0 -z-50 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_10%,black)]" />
+  
+
       <FloatingNavbar navLinks={dashboardLinks} />
       <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-20">
         <h1 className="text-3xl text-black font-bold mb-6">

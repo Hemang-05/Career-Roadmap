@@ -274,7 +274,7 @@ export default function EventsPage() {
         </div> */}
 
         {/* Fancy Month Dropdown */}
-        <div className="mb-8 px-40 relative" id="month-dropdown">
+        <div className="mb-8 px-4 md:px-40 relative" id="month-dropdown">
           <label className="block text-gray-700 mb-2 font-medium">
             Select Month:
           </label>
@@ -282,7 +282,7 @@ export default function EventsPage() {
             className="relative cursor-pointer"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <div className="flex items-center justify-between p-3 w-1/3 bg-white border border-gray-300 rounded-2xl shadow-sm hover:border-[#FF6500] transition-all duration-200">
+            <div className="flex items-center justify-between p-3 w-full md:w-1/3 bg-white border border-gray-300 rounded-2xl shadow-sm hover:border-[#FF6500] transition-all duration-200">
               <span className="text-gray-800 px-4">
                 {selectedMonth || "-- Select Month --"}
               </span>
@@ -305,7 +305,7 @@ export default function EventsPage() {
             </div>
 
             {isDropdownOpen && (
-              <div className="absolute mt-1 w-1/3 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 max-h-60 overflow-auto py-1 transform transition-all duration-200 ease-in-out origin-top">
+              <div className="absolute mt-1 w-full md:w-1/3 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 max-h-60 overflow-auto py-1 transform transition-all duration-200 ease-in-out origin-top">
                 <div className="py-1 px-4 text-xs text-gray-500 border-b border-gray-100">
                   Select a month
                 </div>
