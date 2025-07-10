@@ -213,7 +213,7 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
                     size={16} 
                     className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
                   />
-                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   Enter you education budget, or how much you can spend on your career.
                   </div>
                 </div>
@@ -236,7 +236,7 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
                     size={16} 
                     className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
                   />
-                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   Enter email of someone who can be accountable for you. Guardian, Friend, Teacher or Sibling.
                   </div>
                 </div>
@@ -373,7 +373,7 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
                     size={16} 
                     className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
                   />
-                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   Enter your current class if in school, specify stream if in 11th and 12th.<br></br>
                   If in college enter current year and course pursuing.
                   </div>
@@ -404,7 +404,7 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
                     size={16} 
                     className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
                   />
-                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   Enter the Career you want to pursue.
                   </div>
                 </div>
@@ -428,7 +428,7 @@ const DashboardForm: React.FC<DashboardFormProps> = ({
                     size={16} 
                     className="text-gray-400 hover:text-orange-200 cursor-pointer transition-colors duration-100"
                   />
-                  <div className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs rounded-sm w-48 p-2 z-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                   Enter anything you have learnt or achieved related to you desired career.
                   </div>
                 </div>
