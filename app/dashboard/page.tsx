@@ -35,7 +35,7 @@ export default function Dashboard() {
 
   // User & subscription
   const [dbUserId, setDbUserId] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("");
 
   // Career & roadmap
