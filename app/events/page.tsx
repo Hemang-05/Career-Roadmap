@@ -221,13 +221,6 @@ export default function EventsPage() {
     };
   }, []);
 
-  // Function to handle opt-in button click (previously check-in)
-  const handleOptIn = () => {
-    if (selectedEvent?.url) {
-      window.open(selectedEvent.url, "_blank", "noopener,noreferrer");
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Floating Navbar */}
@@ -279,10 +272,11 @@ export default function EventsPage() {
             Select Month:
           </label>
           <div
-            className="relative cursor-pointer"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="relative"
           >
-            <div className="flex items-center justify-between p-3 w-full md:w-1/3 bg-white border border-gray-300 rounded-2xl shadow-sm hover:border-[#FF6500] transition-all duration-200">
+            <div className="flex items-center justify-between p-3 w-full md:w-1/3 bg-white border border-gray-300 rounded-2xl shadow-sm hover:border-[#FF6500] transition-all duration-200 cursor-pointer"
+                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
               <span className="text-gray-800 px-4">
                 {selectedMonth || "-- Select Month --"}
               </span>
@@ -413,7 +407,9 @@ export default function EventsPage() {
                       <button
                         onClick={() => {
                           setSelectedEvent(event);
-                          handleOptIn();
+                          if (event?.url) {
+                            window.open(event.url, "_blank", "noopener,noreferrer");
+                          }
                         }}
                         className="mt-4 px-6 py-2 bg-[#5cef99] font-semibold text-[#5d536f] rounded-full hover:bg-[#65a142] transition-colors self-center"
                       >
