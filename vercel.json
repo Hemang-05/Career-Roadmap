@@ -10,8 +10,7 @@
     }
   ],
   "functions": {
-    "app\api\cron-events\route.ts": { // Or api/events-api-gemini/route.ts if that's the actual file path
-      "maxDuration": 600 // 10 minutes
-    }
+    "app\api\cron-events\route.ts": { 
+      "maxDuration": 600 
   }
 }
