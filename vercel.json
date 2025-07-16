@@ -10,7 +10,7 @@
     }
   ],
   "functions": {
-    "app\api\cron-events\route.ts": { 
+    "app/api/cron-events/route.ts": { 
       "maxDuration": 600 
   }
 }
