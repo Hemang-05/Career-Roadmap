@@ -136,7 +136,7 @@ export async function POST(request: Request) {
       contents: [{ parts: [{ text: promptText }] }],
       generationConfig: { temperature: 0.5, topP: 0.9, maxOutputTokens: 32768 },
     };
-    const apiKey = process.env.GEMINI_API_KEY_EVENTS!;
+    const apiKey = process.env.GEMINI_API_KEY_EVENTS;
     const apiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
       {
