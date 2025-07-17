@@ -373,7 +373,7 @@
 
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import pLimit from "p-limit";
+import Bottleneck from "bottleneck";
 
 // Define the expected shape of the view row
 type StaleSubscriber = {
@@ -390,6 +390,9 @@ export const config = {
   background: true,
 };
 
+// Number of users to process per run
+const BATCH_SIZE = 40;
+
 export async function GET(request: Request) {
   console.log("Starting user-specific event processing cron job (background)");
 
@@ -400,7 +403,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Fetch only users who need updates via a dedicated view
+    // Fetch stale subscribers via view
     const { data, error: fetchError } = await supabase
       .from("stale_subscribers")
       .select("user_id, clerk_id, desired_career, parent_email");
@@ -410,71 +413,77 @@ export async function GET(request: Request) {
     }
     const subscribers = (data as StaleSubscriber[]) || [];
 
-    console.log(`Found ${subscribers.length} users needing updates`);
+    // Slice off only a batch for this run
+    const toProcess = subscribers.slice(0, BATCH_SIZE);
+    console.log(`Processing ${toProcess.length}/${subscribers.length} users this run`);
 
-    // Throttle concurrency to 10 parallel jobs
-    const limit = pLimit(10);
-    const jobs = subscribers.map((userInfo: StaleSubscriber) =>
-      limit(async () => {
-        try {
-          // 1) Call the Gemini-powered endpoint
-          const gemRes = await fetch(
-            `${process.env.API_BASE_URL}/api/events-api-gemini`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: userInfo.user_id }),
-            }
-          );
-          const gemJson = await gemRes.json();
+    // Rate limiter: 10 calls per minute, one at a time
+    const limiter = new Bottleneck({
+      reservoir: 10,
+      reservoirRefreshAmount: 10,
+      reservoirRefreshInterval: 60_000,
+      maxConcurrent: 1,
+    });
 
-          if (!gemJson.success || gemJson.events_found === 0) {
-            console.log(
-              `No results for user ${userInfo.user_id}:`,
-              gemJson.error || "0 events"
-            );
-            return { user_id: userInfo.user_id, status: "skipped", events_count: 0 };
-          }
-
-          // 2) Send email notification
-          await sendEmailNotification(
-            userInfo.clerk_id,
-            userInfo.parent_email
-          );
-
-          console.log(
-            `Successfully processed events for user ${userInfo.user_id}`
-          );
-          return {
-            user_id: userInfo.user_id,
-            status: "success",
-            events_count: gemJson.events_found,
-          };
-        } catch (err: any) {
-          console.error(`Error processing user ${userInfo.user_id}:`, err);
-          return {
-            user_id: userInfo.user_id,
-            status: "error",
-            error: err.message || String(err),
-          };
-        }
-      })
+    // Schedule each user through the limiter
+    const jobs = toProcess.map((userInfo) =>
+      limiter.schedule(() => processUser(userInfo))
     );
 
-    // Await all parallel jobs
+    // Await batch completion
     const results = await Promise.all(jobs);
 
-    return NextResponse.json({
-      success: true,
-      processed: subscribers.length,
-      results,
-    });
+    return NextResponse.json({ success: true, processed: toProcess.length, results });
   } catch (error: any) {
     console.error("Cron job error:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
       { status: 500 }
     );
+  }
+}
+
+// Per-user processing, always insert an events row (even if empty)
+async function processUser(userInfo: StaleSubscriber) {
+  try {
+    // 1) Call the Gemini-powered endpoint
+    const gemRes = await fetch(
+      `${process.env.API_BASE_URL}/api/events-api-gemini`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userInfo.user_id }),
+      }
+    );
+    const gemJson = await gemRes.json();
+
+    // Build default empty events if needed
+    let eventsCount = 0;
+    if (!gemJson.success || gemJson.events_found === 0) {
+      console.log(`No results for user ${userInfo.user_id}`);
+    } else {
+      eventsCount = gemJson.events_found;
+    }
+
+    // 2) Insert placeholder or real events to mark processed
+    const eventMonth = new Date().toLocaleString("default", { month: "long" });
+    await supabase.from("events").insert({
+      user_id: userInfo.user_id,
+      event_month: eventMonth,
+      event_json: gemJson.success ? gemJson.inserted[0].event_json : [],
+      updated_at: new Date().toISOString(),
+    });
+
+    // 3) Send notification if real events
+    if (eventsCount > 0) {
+      await sendEmailNotification(userInfo.clerk_id, userInfo.parent_email);
+      console.log(`Events sent for user ${userInfo.user_id}`);
+    }
+
+    return { user_id: userInfo.user_id, status: "success", events_count: eventsCount };
+  } catch (err: any) {
+    console.error(`Error processing user ${userInfo.user_id}:`, err);
+    return { user_id: userInfo.user_id, status: "error", error: err.message };
   }
 }
 
