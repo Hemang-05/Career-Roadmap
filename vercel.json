@@ -13,7 +13,7 @@
     "app/api/cron-events/route.ts": { 
       "maxDuration": 900
     },
-    "app/api/cron-roadmap-update/route.ts": { 
+    "app/api/cron-roadmap-update/route.ts": {
       "maxDuration": 900
     }
   }
