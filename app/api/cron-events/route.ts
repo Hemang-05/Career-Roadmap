@@ -19,7 +19,7 @@ export const config = {
 };
 
 // Number of users to process per run
-const BATCH_SIZE = 40;
+const BATCH_SIZE = 12;
 
 export async function GET(request: Request) {
   console.log("Starting user-specific event processing cron job (background)");
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
 // Per-user processing, always insert an events row (even if empty)
 async function processUser(userInfo: StaleSubscriber) {
   try {
-    // 1) Call the Gemini-powered endpoint
+    // 1) Call the Gemini-powered endpoint (this handles all DB operations)
     const gemRes = await fetch(
       `${process.env.API_BASE_URL}/api/events-api-gemini`,
       {
@@ -85,32 +85,23 @@ async function processUser(userInfo: StaleSubscriber) {
     );
     const gemJson = await gemRes.json();
 
-    // Build default empty events if needed
+    // Determine events count
     let eventsCount = 0;
     if (!gemJson.success || gemJson.events_found === 0) {
-      console.log(`No results for user ${userInfo.user_id}`);
+      console.log(`No results for user`);
     } else {
       eventsCount = gemJson.events_found;
     }
 
-    // 2) Insert placeholder or real events to mark processed
-    const eventMonth = new Date().toLocaleString("default", { month: "long" });
-    await supabase.from("events").insert({
-      user_id: userInfo.user_id,
-      event_month: eventMonth,
-      event_json: gemJson.success ? gemJson.inserted[0].event_json : [],
-      updated_at: new Date().toISOString(),
-    });
-
-    // 3) Send notification if real events
+    // 2) Send notification if real events were found
     if (eventsCount > 0) {
       await sendEmailNotification(userInfo.clerk_id, userInfo.parent_email);
-      console.log(`Events sent for user ${userInfo.user_id}`);
+      console.log(`Events sent for user`);
     }
 
     return { user_id: userInfo.user_id, status: "success", events_count: eventsCount };
   } catch (err: any) {
-    console.error(`Error processing user ${userInfo.user_id}:`, err);
+    console.error(`Error processing user :`, err);
     return { user_id: userInfo.user_id, status: "error", error: err.message };
   }
 }
@@ -308,3 +299,5 @@ async function sendEmailNotification(
     throw err;
   }
 }
+
+
