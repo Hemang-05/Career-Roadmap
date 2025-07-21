@@ -139,7 +139,7 @@ export async function POST(request: Request) {
         .update({
           subscription_status: true,
           subscription_end: expires_on,
-          subsciption_plan: plan,
+          subscription_plan: plan,
           subscription_start: new Date().toISOString().split("T")[0],
         })
         .eq("email", email);
