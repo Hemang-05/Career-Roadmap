@@ -62,7 +62,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+    publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+    appearance={{
+      variables: {
+        colorPrimary: "#FF6500",
+      },
+      elements: {
+        // Targets the little “Sign in” or “Create account” link at the bottom
+        pageLink: {
+          display: "inline-block",
+          margin: "1rem auto 0",
+          padding: "0.5rem 1rem",
+          backgroundColor: "#ffffff",
+          color: "#FF6500",
+          border: "2px solid #FF6500",
+          borderRadius: "9999px",     // pill shape
+          textDecoration: "none",
+          fontWeight: "600",
+          cursor: "pointer",
+        },
+        // Hide the default link label so we can inject our own text if needed
+        pageLink__label: {
+          display: "none",
+        },
+      },
+    }}
+    >
       <html lang="en">
         <head>
           {/* Google Analytics Script */}

@@ -33,7 +33,6 @@
 // app/page.tsx (or pages/index.tsx)
 "use client";
 import Navbar from "../components/Navbar";
-
 import FeaturesSection from "../components/FeaturesSection";
 import FAQSection from "../components/FAQSection";
 import TestimonialsSection from "../components/TestimonialsSection";
