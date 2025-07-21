@@ -6,67 +6,67 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
-import AuthModal from "./AuthModal"; // Import your custom modal
+import AuthModal from "./AuthModal";
 
 export default function Hero() {
   const { user, isSignedIn, isLoaded } = useUser();
   const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
-  // State to control your custom modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   useEffect(() => {
-    // This effect runs when the component loads to check user status
-    if (isSignedIn && isLoaded) {
+    const checkUserAndRedirect = async () => {
+      if (!isLoaded) return;
+      
       setLoading(true);
-      // Logic to check if the signed-in user already has a roadmap
-      async function checkUserRoadmap() {
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+      
+      if (isSignedIn && user) {
+        // Check if user has roadmap
         const { data: userData } = await supabase
           .from("users")
           .select("id")
           .eq("clerk_id", user.id)
           .single();
 
+        let roadmapExists = false;
         if (userData) {
           const { data: careerData } = await supabase
             .from("career_info")
             .select("roadmap")
             .eq("user_id", userData.id)
             .maybeSingle();
-          const roadmapExists = !!(
-            careerData &&
-            careerData.roadmap &&
+          
+          roadmapExists = !!(
+            careerData?.roadmap && 
             Object.keys(careerData.roadmap).length > 0
           );
-          setHasRoadmap(roadmapExists);
         }
+        
+        setHasRoadmap(roadmapExists);
+        setLoading(false);
+        
+        // Redirect signed-in users immediately
+        router.replace(roadmapExists ? "/roadmap" : "/dashboard");
+      } else {
         setLoading(false);
       }
-      checkUserRoadmap();
-    } else if (isLoaded) {
-      setLoading(false);
-    }
-  }, [isLoaded, isSignedIn, user]);
+    };
+
+    checkUserAndRedirect();
+  }, [isLoaded, isSignedIn, user, router]);
 
   const handleStartNow = () => {
     if (isSignedIn) {
-      // If signed in, navigate them to the correct page
+      // User will be redirected by useEffect, but as fallback:
       router.push(hasRoadmap ? "/roadmap" : "/dashboard");
     } else {
-      // If not signed in, open your custom modal
       setIsModalOpen(true);
     }
   };
 
   return (
     <>
-      {/* Conditionally render your modal. It will appear when isModalOpen is true. */}
       {isModalOpen && (
         <AuthModal
           onClose={() => setIsModalOpen(false)}
@@ -122,12 +122,11 @@ export default function Hero() {
 
             <div className="xl:col-span-1 relative group">
               <img
-                className="w-full mx-auto rounded-2xl "
+                className="w-full mx-auto rounded-2xl"
                 src="hero1.png"
                 alt="Career Roadmap"
               />
 
-              {/* Events Hover Card */}
               <div className="absolute -bottom-4 -right-4 lg:-bottom-12 lg:-right-8 z-10 animate-float">
                 <div className="bg-white rounded-2xl p-3 lg:p-6 shadow-2xl border border-gray-100 backdrop-blur-sm min-w-[180px] max-w-[180px] lg:min-w-[280px] lg:max-w-xs">
                   <h3 className="text-base lg:text-xl font-bold text-gray-900 mb-2 lg:mb-3">
