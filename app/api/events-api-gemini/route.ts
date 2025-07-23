@@ -193,111 +193,81 @@ export async function POST(request: Request) {
     const validEvents = await filterValidEvents(events);
 
     // 8) Handle database operations based on whether events were found
-    const eventMonth = new Date().toLocaleString("default", { month: "long" });
-    const currentTimestamp = new Date().toISOString();
+const eventMonth = new Date().toLocaleString("default", { month: "long" });
+const currentTimestamp = new Date().toISOString();
+
+if (validEvents.length === 0) {
+  // No events found - don't touch the database at all, just return
+  return NextResponse.json({ 
+    success: true, 
+    events_found: 0, 
+    message: "No new events found, previous records remain unchanged" 
+  });
+} else {
+  // Events found - insert or update with actual events
+  const { data: existingRecord, error: checkErr } = await supabase
+    .from("events")
+    .select("id, event_json") // ← Added event_json to fetch existing events
+    .eq("user_id", user_id)
+    .eq("event_month", eventMonth)
+    .single();
+
+  if (checkErr && checkErr.code !== 'PGRST116') {
+    throw checkErr;
+  }
+
+  if (existingRecord) {
+    // Update existing record - APPEND new events with priority
+    const existingEvents = existingRecord.event_json || [];
     
-    if (validEvents.length === 0) {
-      // No events found - check if user already has a record for this month
-      const { data: existingRecord, error: checkErr } = await supabase
-        .from("events")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("event_month", eventMonth)
-        .single();
-
-      if (checkErr && checkErr.code !== 'PGRST116') { // PGRST116 is "not found" error
-        throw checkErr;
-      }
-
-      if (existingRecord) {
-        // Update existing record's timestamp only
-        const { error: updateErr } = await supabase
-          .from("events")
-          .update({ updated_at: currentTimestamp })
-          .eq("id", existingRecord.id);
-        
-        if (updateErr) throw updateErr;
-        
-        return NextResponse.json({ 
-          success: true, 
-          events_found: 0, 
-          message: "No events found, updated timestamp for existing record" 
-        });
-      } else {
-        // Insert new record with empty events array
-        const { data: inserted, error: insertErr } = await supabase
-          .from("events")
-          .insert({
-            user_id,
-            event_month: eventMonth,
-            event_json: [],
-            updated_at: currentTimestamp,
-          })
-          .select();
-        
-        if (insertErr) throw insertErr;
-        
-        return NextResponse.json({ 
-          success: true, 
-          events_found: 0, 
-          inserted,
-          message: "No events found, created new record with empty events" 
-        });
-      }
-    } else {
-      // Events found - insert or update with actual events
-      const { data: existingRecord, error: checkErr } = await supabase
-        .from("events")
-        .select("id")
-        .eq("user_id", user_id)
-        .eq("event_month", eventMonth)
-        .single();
-
-      if (checkErr && checkErr.code !== 'PGRST116') {
-        throw checkErr;
-      }
-
-      if (existingRecord) {
-        // Update existing record with new events
-        const { data: updated, error: updateErr } = await supabase
-          .from("events")
-          .update({
-            event_json: validEvents,
-            updated_at: currentTimestamp,
-          })
-          .eq("id", existingRecord.id)
-          .select();
-        
-        if (updateErr) throw updateErr;
-        
-        return NextResponse.json({ 
-          success: true, 
-          events_found: validEvents.length, 
-          inserted: updated,
-          message: "Events found, updated existing record" 
-        });
-      } else {
-        // Insert new record with events
-        const { data: inserted, error: insertErr } = await supabase
-          .from("events")
-          .insert({
-            user_id,
-            event_month: eventMonth,
-            event_json: validEvents,
-            updated_at: currentTimestamp,
-          })
-          .select();
-        
-        if (insertErr) throw insertErr;
-        
-        return NextResponse.json({ 
-          success: true, 
-          events_found: validEvents.length, 
-          inserted,
-          message: "Events found, created new record" 
-        });
-      }
-    }
+    // Remove duplicates based on URL (new events take priority)
+    const existingUrls = new Set(existingEvents.map((e: any) => e.url));
+    const uniqueNewEvents = validEvents.filter(event => !existingUrls.has(event.url));
+    
+    // Prepend new events (new events first, then existing events)
+    const mergedEvents = [...uniqueNewEvents, ...existingEvents];
+    
+    const { data: updated, error: updateErr } = await supabase
+      .from("events")
+      .update({
+        event_json: mergedEvents, // ← Merged array with new events first
+        updated_at: currentTimestamp,
+      })
+      .eq("id", existingRecord.id)
+      .select();
+    
+    if (updateErr) throw updateErr;
+    
+    return NextResponse.json({ 
+      success: true, 
+      events_found: uniqueNewEvents.length, // Only count truly new events
+      total_events: mergedEvents.length,
+      inserted: updated,
+      message: `${uniqueNewEvents.length} new events appended to existing ${existingEvents.length} events` 
+    });
+  } else {
+    // Insert new record with events (first time for this month)
+    const { data: inserted, error: insertErr } = await supabase
+      .from("events")
+      .insert({
+        user_id,
+        event_month: eventMonth,
+        event_json: validEvents,
+        updated_at: currentTimestamp,
+      })
+      .select();
+    
+    if (insertErr) throw insertErr;
+    
+    return NextResponse.json({ 
+      success: true, 
+      events_found: validEvents.length, 
+      total_events: validEvents.length,
+      inserted,
+      message: "Events found, created new record" 
+    });
+  }
+}
   } catch (err: any) {
     console.error("events-api-gemini error:", err);
     return NextResponse.json({ success: false, error: err.message || String(err) }, { status: 500 });

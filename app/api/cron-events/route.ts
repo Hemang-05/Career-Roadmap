@@ -11,15 +11,14 @@ type StaleSubscriber = {
   parent_email: string | null;
 };
 
-// Enable background execution up to 15 minutes
 export const config = {
   runtime: "nodejs",
-  maxDuration: 900,
+  maxDuration: 800,
   background: true,
 };
 
 // Number of users to process per run
-const BATCH_SIZE = 12;
+const BATCH_SIZE = 10;
 
 export async function GET(request: Request) {
   console.log("Starting user-specific event processing cron job (background)");
@@ -88,18 +87,24 @@ async function processUser(userInfo: StaleSubscriber) {
     // Determine events count
     let eventsCount = 0;
     if (!gemJson.success || gemJson.events_found === 0) {
-      console.log(`No results for user`);
+      console.log(`No new events for user `);
     } else {
-      eventsCount = gemJson.events_found;
+      eventsCount = gemJson.events_found; // This now represents NEW events only
+      console.log(`Found ${eventsCount} new events for user  (Total: ${gemJson.total_events || eventsCount})`);
     }
 
-    // 2) Send notification if real events were found
+    // 2) Send notification if real NEW events were found
     if (eventsCount > 0) {
       await sendEmailNotification(userInfo.clerk_id, userInfo.parent_email);
-      console.log(`Events sent for user`);
+      console.log(`Email notification sent for user`);
     }
 
-    return { user_id: userInfo.user_id, status: "success", events_count: eventsCount };
+    return { 
+      user_id: userInfo.user_id, 
+      status: "success", 
+      new_events_count: eventsCount,
+      total_events_count: gemJson.total_events || eventsCount
+    };
   } catch (err: any) {
     console.error(`Error processing user :`, err);
     return { user_id: userInfo.user_id, status: "error", error: err.message };

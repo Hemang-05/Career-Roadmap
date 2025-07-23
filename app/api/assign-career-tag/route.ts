@@ -1,3 +1,5 @@
+// app\api\assign-career-tag\route.ts
+
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
@@ -20,44 +22,62 @@ For a desired career "${desired_career}", determine the most appropriate career 
 Return only the category name without numbering or explanation.
 `;
 
-  const apiKey = process.env.OPENROUTER_API_KEY_TAG;
+  const apiKey = process.env.GEMINI_API_KEY_TAG;
+  if (!apiKey) {
+      return "Not Assigned";
+  }
+  
+  const modelName = "gemini-2.0-flash-lite"; // Using a stable and current model
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
   try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.0-flash-exp:free",
-          messages: [{ role: "user", content: prompt }],
-          top_p: 1,
-          temperature: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0,
-          repetition_penalty: 1,
-          top_k: 0,
-        }),
-      }
-    );
+    const apiResponse = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }],
+        }],
+        // Configuration for a more deterministic, classification-style response
+        generationConfig: {
+          temperature: 0.2,
+          topK: 1,
+          topP: 1,
+          maxOutputTokens: 50, 
+        }
+      }),
+    });
 
-    const data = await response.json();
-    console.log("AI response for career tag:", data);
+    if (!apiResponse.ok) {
+        const errorBody = await apiResponse.text();
+        console.error(`Error from Gemini API: ${apiResponse.status}`, errorBody);
+        return "Not Assigned";
+    }
 
-    if (!data.choices || data.choices.length === 0) {
-      console.warn(
-        'No choices returned from AI API, defaulting to "Not Assigned"'
-      );
+    const data = await apiResponse.json();
+
+    // Safely parse the response according to the Gemini REST API structure
+    const tag = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+    if (!tag) {
+      console.warn('No valid text returned from Gemini API, defaulting to "Not Assigned"');
       return "Not Assigned";
     }
 
-    const tag = data.choices[0].message.content.trim();
     console.log(`Generated tag for desired career "${desired_career}":`, tag);
-    return tag || "Not Assigned";
+    
+    // Validate that the AI returned one of the expected categories
+    const validCategories = [
+      "Medical/Healthcare", "Entertainment & Media", "Engineering & Technology",
+      "Business & Finance", "Law & Public Service", "Education & Research",
+      "Arts & Design", "Science & Environment", "Sports & Fitness",
+      "Culinary & Hospitality", "Others"
+    ];
+
+    return validCategories.includes(tag) ? tag : "Not Assigned";
+
   } catch (error) {
-    console.error("Error calling AI API for career tag:", error);
+    console.error("Error during fetch call to Gemini API:", error);
     return "Not Assigned";
   }
 }
@@ -66,7 +86,7 @@ export async function POST(request: Request) {
   try {
     // Parse incoming JSON payload.
     const { clerk_id, desired_career } = await request.json();
-    console.log("Received payload:", { clerk_id, desired_career });
+    console.log("Received payload:", { desired_career });
     if (!clerk_id || !desired_career) {
       return NextResponse.json(
         { error: "Missing clerk_id or desired_career" },
@@ -74,10 +94,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Query the users table by clerk_id to get the user_id (UUID)
+    // STEP 1: Query the users table by clerk_id to get the user_id (UUID) and OLD career_tag
     const { data: userRecord, error: userError } = await supabase
       .from("users")
-      .select("id, clerk_id")
+      .select("id, clerk_id, career_tag") // <-- IMPORTANT: Select the old career_tag
       .eq("clerk_id", clerk_id)
       .single();
 
@@ -90,11 +110,48 @@ export async function POST(request: Request) {
     }
 
     const user_id = userRecord.id;
-    console.log("Found user record:", userRecord, "User UUID:", user_id);
+    const oldTag = userRecord.career_tag; // <-- Store the user's old tag
+    
 
     // Generate the career tag for the desired career
     const assignedTag = await generateCareerTag(desired_career);
     console.log(`Determined tag for "${desired_career}": ${assignedTag}`);
+
+    // STEP 2 (NEW): Clean up the user's ID from the OLD tag record if it has changed
+    if (oldTag && oldTag !== assignedTag) {
+      console.log(`Career changed from "${oldTag}" to "${assignedTag}". Cleaning up old record.`);
+      
+      // Handle cleanup for both "Not Assigned" and specific career tags
+      if (oldTag === "Not Assigned") {
+        console.log(`User was previously "Not Assigned", now moving to "${assignedTag}". No cleanup needed from career_tag table.`);
+      } else {
+        // Find the old career tag record for specific career tags
+        const { data: oldTagRecord, error: oldTagError } = await supabase
+          .from("career_tag")
+          .select("user_ids")
+          .eq("career_tag", oldTag)
+          .single();
+        
+        if (oldTagRecord && !oldTagError) {
+          // Filter out the current user's ID
+          const updatedUserIds = oldTagRecord.user_ids.filter((id: string) => id !== user_id);
+          
+          // Update the old record with the filtered array
+          const { error: updateOldTagError } = await supabase
+            .from("career_tag")
+            .update({ user_ids: updatedUserIds, updated_at: new Date().toISOString() })
+            .eq("career_tag", oldTag);
+
+          if (updateOldTagError) {
+            console.error("Error updating old career tag record:", updateOldTagError);
+          } else {
+            console.log(`Successfully removed from old tag "${oldTag}"`);
+          }
+        } else if (oldTagError) {
+          console.error("Error fetching old career tag record:", oldTagError);
+        }
+      }
+    }
 
     // If the tag is "Not Assigned", skip domain grouping to avoid mixing with other domains
     if (assignedTag === "Not Assigned") {
@@ -138,7 +195,7 @@ export async function POST(request: Request) {
 
     if (existingTagRecord) {
       console.log(
-        `Tag "${assignedTag}" found. Record ID: ${existingTagRecord.id}`
+        `Tag "${assignedTag}" found.`
       );
 
       const currentDesiredCareers: string[] =
@@ -165,11 +222,10 @@ export async function POST(request: Request) {
           .eq("id", existingTagRecord.id);
 
         if (updateTagError)
-          console.error("Error updating career_tag record:", updateTagError);
+          console.error("Error updating career_tag record:");
         else
           console.log(
             `Updated career_tag "${assignedTag}" with new data:`,
-            updatedData
           );
       } else {
         console.log(

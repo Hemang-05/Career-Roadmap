@@ -139,6 +139,55 @@ export const EVENT_SITES_BY_TYPE: Record<string, string[]> = {
       "decathlon.in/careers",
       "the-aiff.com/employment",
     ],
+    webinar: [
+      "zoom.us/events",
+      "meetup.com/topics",
+      "eventbrite.com",
+      "brighttalk.com", 
+      "gotowebinar.com",
+      "webex.com/webinars",
+      "coursera.org/browse/computer-science",
+      "edx.org/learn",
+      "udemy.com/courses/business",
+    ],
+    forum: [
+      "reddit.com",
+      "stackoverflow.com",
+      "quora.com",
+      "discourse.org", 
+      "github.com/discussions",
+      "dev.to",
+      "hackernews.ycombinator.com",
+      "producthunt.com",
+    ],
+    
+    fest: [
+      "knowafest.com/explore/events",
+      "ifp.world",
+      "collegedunia.com/events",
+      "festpav.com",
+      "eventshigh.com",
+    ],
+    audition: [
+      "backstage.com/casting",
+      "castnow.in",
+      "filmicompany.com",
+      "haveaudition.com",
+    ],
+    
+    festival: [
+      "filmfreeway.com/festivals",
+      "withoutabox.com", 
+      "festagent.com",
+      "knowafest.com/explore/events",
+    ],
+    
+    networking: [
+      "meetup.com",
+      "eventbrite.com/d/online/networking",
+      "linkedin.com/events",
+      "shapr.co",
+    ],
     default: [
       "hackathon.com",
       "devpost.com",
