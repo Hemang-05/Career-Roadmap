@@ -58,7 +58,7 @@ Then output **only** the JSON array of objects with keys:
   • location (City, Country, or "Online")
   • description
   • image url (image of the corresponding event)
-Return exactly the JSON—no extra text.`;
+  Return exactly the JSON array - no other text, no markdown, no code blocks.`;
 }
 
 // HEAD‑check helper (unchanged)
@@ -150,6 +150,8 @@ export async function POST(request: Request) {
       throw new Error(`Gemini API error: ${errText}`);
     }
     const apiJson = await apiRes.json();
+    console.log('⮕ Full Gemini response:', JSON.stringify(apiJson, null, 2));
+
 
  
     // 6) Extract the raw JSON
