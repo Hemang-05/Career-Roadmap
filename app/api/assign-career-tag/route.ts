@@ -27,7 +27,7 @@ Return only the category name without numbering or explanation.
       return "Not Assigned";
   }
   
-  const modelName = "gemini-2.0-flash-lite"; // Using a stable and current model
+  const modelName = "gemini-2.5-flash-preview-05-20"; // Using a stable and current model
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   try {
