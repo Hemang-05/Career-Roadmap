@@ -149,9 +149,9 @@ export async function POST(request: Request) {
      if (error) {
         console.error('Supabase update error:', error);
       } else if (updatedRows.length === 0) {
-        console.warn(No matching user for email=${email});
+        console.warn(`No matching user for email=${email}`);
       } else {
-        console.log(Activated ${plan} for ${email}; rows updated: ${updatedRows.length});
+        console.log(`Activated ${plan} for ${email}; rows updated: ${updatedRows.length}`);
       }
     }
 
