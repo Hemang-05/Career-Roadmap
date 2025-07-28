@@ -167,7 +167,7 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
   };
 
   return (
-    <div className="flex flex-col w-full items-center h-screen max-w-4xl mx-auto overflow-hidden">
+    <div className="flex flex-col w-full pt-8 items-center h-screen max-w-4xl mx-auto overflow-hidden">
       {/* Chat Messages */}
       <div ref={chatContainerRef} className="flex-1 pt-6 sm:p-8 max-h-full pb-24 md:pb-96 top-0 mb-8 sm:mb-12 overflow-y-auto scrollbar-hidden space-y-4 sm:space-y-6">
         {messages
