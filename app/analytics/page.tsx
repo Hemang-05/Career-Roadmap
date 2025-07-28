@@ -1,4 +1,3 @@
-
 // app/analytics/page.tsx
 
 "use client";
@@ -12,6 +11,7 @@ import FloatingNavbar from "@/components/Navbar";
 import ProgressBar from "@/components/ProgressBar";
 import PaymentPlan from "@/components/PaymentPlan";
 import { calculateWeightProgress } from "@/utils/calcWeightProgress";
+import Footer from "@/components/Footer";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -63,7 +63,7 @@ export default function AnalyticsDashboard() {
 
   const dashboardLinks = [
     { href: "/roadmap", label: "Roadmap" },
-    { href: "/jobs", label: "Jobs" },
+
     { href: "/events", label: "Events" },
     { href: "/blog", label: "Blogs" },
   ];
@@ -100,11 +100,10 @@ export default function AnalyticsDashboard() {
         subscription_status === "inactive" ||
         subscriptionEndDate < currentDate
       ) {
-        setShowPaymentPlan(false);     
+        setShowPaymentPlan(false);
 
         // setLoading(false);
         // return;
-
       }
 
       // Fetch Career Info
@@ -198,19 +197,18 @@ export default function AnalyticsDashboard() {
     }
   }, [isLoaded, isSignedIn, user, router]);
 
-   // listen for any in‐page update and re‐fetch
- useEffect(() => {
-   function onAnalyticsUpdated() {
-     if (isLoaded && isSignedIn && user) {
-       fetchAnalytics();
-     }
-   }
-   window.addEventListener("analyticsUpdated", onAnalyticsUpdated);
-   return () => {
-     window.removeEventListener("analyticsUpdated", onAnalyticsUpdated);
-   };
- }, [isLoaded, isSignedIn, user, fetchAnalytics]);
-
+  // listen for any in‐page update and re‐fetch
+  useEffect(() => {
+    function onAnalyticsUpdated() {
+      if (isLoaded && isSignedIn && user) {
+        fetchAnalytics();
+      }
+    }
+    window.addEventListener("analyticsUpdated", onAnalyticsUpdated);
+    return () => {
+      window.removeEventListener("analyticsUpdated", onAnalyticsUpdated);
+    };
+  }, [isLoaded, isSignedIn, user, fetchAnalytics]);
 
   // Data for pie chart
   const pieChartData =
@@ -232,9 +230,9 @@ export default function AnalyticsDashboard() {
   // Loading state with minimalist design
   if (loading && !showPaymentPlan) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-slate-50">
+      <div className="flex justify-center items-center min-h-screen bg-white">
         <div className="p-4 space-y-2">
-          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-[#FF6500] animate-spin mx-auto"></div>
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-[#4fbdb7] animate-spin mx-auto"></div>
           <p className="text-slate-500 text-center mt-4">
             Loading analytics...
           </p>
@@ -258,13 +256,13 @@ export default function AnalyticsDashboard() {
 
   // Main Dashboard Content with modern, minimal design
   return (
-    <div className="min-h-screen bg-[#fafff9] flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
       <div className="container mx-auto mt-24 px-6 py-12 flex-grow max-w-6xl">
         <h1 className="text-3xl text-slate-800 font-bold mb-2">
           Performance Analysis
         </h1>
-        <p className="text-slate-500 mb-10">
+        <p className="text-slate-500 font-thin mb-10">
           Track your progress and key metrics at a glance
         </p>
 
@@ -281,7 +279,7 @@ export default function AnalyticsDashboard() {
         {/* Main Analytics Grid - Redesigned for cleaner look */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* Stat Card: Pace */}
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+          <div className="bg-white p-8 rounded-3xl  border border-slate-100 flex flex-col justify-between transition-all ">
             <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-6">
               Current Pace
             </h3>
@@ -297,25 +295,25 @@ export default function AnalyticsDashboard() {
           </div>
 
           {/* Stat Card: Difficulty */}
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+          <div className="bg-white p-8 rounded-3xl  border border-slate-100 flex flex-col justify-between transition-all ">
             <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-6">
               Selected Difficulty
             </h3>
             <div className="flex items-center justify-between">
-            <span className="text-xl font-semibold text-slate-800">
-              {difficulty
-                ? difficulty
-                    .split(" ")
-                    .map(w => w[0].toUpperCase() + w.slice(1).toLowerCase())
-                    .join(" ")
-                : "Not Set"}
-            </span>
-              <div className="h-8 w-8 rounded-full bg-[#FF6500] opacity-80"></div>
+              <span className="text-xl font-semibold text-slate-800">
+                {difficulty
+                  ? difficulty
+                      .split(" ")
+                      .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
+                      .join(" ")
+                  : "Not Set"}
+              </span>
+              <div className="h-8 w-8 rounded-full bg-[#715af1] opacity-80"></div>
             </div>
           </div>
 
           {/* Stat Card: Events Attended */}
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
+          <div className="bg-white p-8 rounded-3xl border border-slate-100 flex flex-col justify-between transition-all ">
             <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider mb-6">
               Events Attended
             </h3>
@@ -331,7 +329,7 @@ export default function AnalyticsDashboard() {
         {/* Progress Section - Redesigned with charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
           {/* Weighted Progress Card */}
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+          <div className="bg-white p-8 rounded-3xl  border border-slate-100">
             <h2 className="text-slate-800 text-lg font-semibold mb-6">
               Overall Weighted Progress
             </h2>
@@ -340,7 +338,7 @@ export default function AnalyticsDashboard() {
                 <span className="text-sm text-slate-500">
                   Based on task importance
                 </span>
-                <span className="text-xl font-bold text-[#FF6500]">
+                <span className="text-xl font-bold text-[#24676e]">
                   {weightProgress.toFixed(1)}%
                 </span>
               </div>
@@ -352,7 +350,7 @@ export default function AnalyticsDashboard() {
           {tasksCompleted !== null &&
             totalTasks !== null &&
             taskCompletionPercentage !== null && (
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+              <div className="bg-white p-8 rounded-3xl  border border-slate-100">
                 <h2 className="text-slate-800 text-lg font-semibold mb-6">
                   Task Completion
                 </h2>
@@ -422,12 +420,12 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Insights Card */}
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 mb-10">
+        <div className="bg-white p-8 rounded-3xl border border-slate-100 mb-10">
           <h2 className="text-slate-800 text-lg font-semibold mb-6">
             Performance Insights
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
+            <div className="bg-blue-50 rounded-3xl p-6 border border-slate-100">
               <h3 className="text-slate-700 font-medium mb-2">Pace Analysis</h3>
               <p className="text-slate-600 text-sm">
                 {pace === "On Track"
@@ -439,7 +437,7 @@ export default function AnalyticsDashboard() {
                   : "Start completing tasks to establish your pace."}
               </p>
             </div>
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
+            <div className="bg-green-50 rounded-3xl p-6 border border-slate-100">
               <h3 className="text-slate-700 font-medium mb-2">
                 Upcoming Milestones
               </h3>
@@ -456,13 +454,14 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Footer with subtle info */}
-      <div className="py-6 bg-white border-t border-slate-100">
+      <div className="py-6 bg-white ">
         <div className="container mx-auto px-6 max-w-6xl">
           <p className="text-slate-400 text-xs text-center">
             Analytics data updated as of {new Date().toLocaleDateString()}
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

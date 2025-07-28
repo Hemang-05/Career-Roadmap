@@ -102,7 +102,8 @@ export default function RoadmapDisplay({
         return (
           <section
             key={yearItem.year || yearIndex} // Use a stable key
-            className="p-4 md:p-6 lg:p-8 rounded-[1.5rem] md:rounded-[2rem] mb-10 md:mb-16 lg:mb-20 bg-white shadow-[0_0_15px_rgba(0,0,0,0.08)] md:shadow-[0_0_25px_rgba(0,0,0,0.1)]"
+            className="p-4 md:p-6 lg:p-8 rounded-[2rem] md:rounded-[3rem] mb-10 md:mb-16 lg:mb-20 bg-white  shadow-[0_0_15px_rgba(147,51,234,0.12)] md:shadow-[0_0_25px_rgba(147,51,234,0.18)]
+"
           >
             <header
               className="flex justify-between items-center cursor-pointer mb-4 md:mb-6 lg:mb-8"
@@ -111,13 +112,13 @@ export default function RoadmapDisplay({
               <h2 className="text-xl md:text-2xl font-bold text-gray-800">
                 {yearItem.year || `Year ${yearIndex + 1}`}{" "}
                 {!unlocked && (
-                  <span className="text-red-500 text-sm md:text-base">
+                  <span className="text-red-700 text-sm md:text-base">
                     (Locked)
                   </span>
                 )}
               </h2>
               {unlocked && (
-                <button className="text-[#FF6500] flex items-center transition-all duration-300 hover:opacity-80">
+                <button className="text-[#48b98d] flex items-center transition-all duration-300 hover:opacity-80">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -155,7 +156,7 @@ export default function RoadmapDisplay({
                   key={phaseItem.phase_name || pIdx}
                   className="mx-0 md:mx-2 lg:mx-4 border-t py-4 md:py-6 lg:py-8"
                 >
-                  <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 lg:mb-8 text-[#FF6500]">
+                  <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6 lg:mb-8 text-[#39a894]">
                     {phaseItem.phase_name || `Phase ${pIdx + 1}`}
                   </h3>
 
@@ -390,7 +391,7 @@ export default function RoadmapDisplay({
                           key={phaseIndex}
                           className="mb-4 md:mb-6 border-t pt-3 md:pt-4"
                         >
-                          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-[#FF6500]">
+                          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-[#97518c]">
                             {phase.phase_name}
                           </h3>
                           {(phase.milestones || []).map(

@@ -26,7 +26,7 @@ const Loader = () => {
 
   return (
     // This outer div uses Tailwind for centering the content vertically and horizontally
-    <div className="flex flex-col items-center justify-center min-h-screen bg-orange-200 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
       {/* The CSS spinner */}
       <span className="loader"></span>
 
