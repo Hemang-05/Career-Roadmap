@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import React from "react";
 import "./globals.css";
-import Footer from "@/components/Footer";
 import Script from "next/script";
 import Analysis from "@/utils/analytics";
 import { Analytics } from "@vercel/analytics/next";
@@ -63,31 +62,33 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
-    publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
-    appearance={{
-      variables: {
-        colorPrimary: "#FF6500",
-      },
-      elements: {
-        // Targets the little “Sign in” or “Create account” link at the bottom
-        pageLink: {
-          display: "inline-block",
-          margin: "1rem auto 0",
-          padding: "0.5rem 1rem",
-          backgroundColor: "#ffffff",
-          color: "#FF6500",
-          border: "2px solid #FF6500",
-          borderRadius: "9999px",     // pill shape
-          textDecoration: "none",
-          fontWeight: "600",
-          cursor: "pointer",
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+      appearance={{
+        variables: {
+          colorPrimary: "#000000", // blue
+          colorBackground: "#ffffff",
+          colorShimmer: "#f8f8f8", // black
         },
-        // Hide the default link label so we can inject our own text if needed
-        pageLink__label: {
-          display: "none",
+        elements: {
+          // Targets the little “Sign in” or “Create account” link at the bottom
+          pageLink: {
+            display: "inline-block",
+            margin: "1rem auto 0",
+            padding: "0.5rem 1rem",
+            backgroundColor: "#f8f8f8",
+            color: "#000000",
+            border: "12px solid",
+            borderRadius: "9999px", // pill shape
+            textDecoration: "none",
+            fontWeight: "800",
+            cursor: "pointer",
+          },
+          // Hide the default link label so we can inject our own text if needed
+          pageLink__label: {
+            display: "none",
+          },
         },
-      },
-    }}
+      }}
     >
       <html lang="en">
         <head>
@@ -129,7 +130,6 @@ export default function RootLayout({
           {children}
           <FeedbackWidget />
           <Analytics />
-          <Footer />
         </body>
       </html>
     </ClerkProvider>
