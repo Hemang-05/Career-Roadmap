@@ -1140,15 +1140,12 @@ export default function EventsPage() {
                   />
                 </svg>
                 <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                  No Events Found for {selectedMonth}
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  No {desiredCareer ? `${desiredCareer} ` : ""}events found for{" "}
+                No {desiredCareer ? `${desiredCareer} ` : ""}events found for{" "}
                   {selectedMonth || "the selected month"}.
-                </p>
+                </h2>
                 <p className="text-sm text-gray-500">
                   Our AI is continuously scanning the internet for new
-                  opportunities. Select a different month or check back after 12
+                  opportunities. Select a different month or check back after 24
                   hours for updates.
                 </p>
               </div>

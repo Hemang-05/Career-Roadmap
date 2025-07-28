@@ -240,13 +240,13 @@ export default function Navbar({ navLinks }: NavbarProps) {
                 isSignedIn ? (
                   <Link
                     href={link.href}
-                    className="text-sm text-black hover:text-[#FF6500] font-medium"
+                    className="text-sm text-black hover:text-[#428388] font-medium"
                   >
                     {link.label}
                   </Link>
                 ) : (
                   <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
-                    <button className="text-sm text-black hover:text-[#FF6500] font-thin">
+                    <button className="text-sm text-black hover:text-[#428388] font-thin">
                       {link.label}
                     </button>
                   </SignInButton>
@@ -254,7 +254,7 @@ export default function Navbar({ navLinks }: NavbarProps) {
               ) : (
                 <Link
                   href={link.href}
-                  className="text-sm text-black hover:text-[#FF6500] font-thin"
+                  className="text-sm text-black hover:text-[#428388] font-thin"
                 >
                   {link.label}
                 </Link>

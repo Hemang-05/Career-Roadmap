@@ -13,6 +13,7 @@ import PaymentPlan from "@/components/PaymentPlan";
 import USDPaymentPlan from "@/components/USDPaymentPlan";
 import Loader from "@/components/Loader";
 import CollegeForm from "@/components/CollegeForm";
+import RoadmapNotification from "@/components/RoadmapNotification";
 
 // New Dashboard Components
 import AwareUnawareButton from "@/components/AwareUnawareButton";
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [showPaymentPlans, setShowPaymentPlans] = useState<boolean>(false);
   const [showUSDPaymentPlans, setShowUSDPaymentPlans] = useState<boolean>(false);
   const [showCollegeForm, setShowCollegeForm] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState<boolean>(false);
 
   // ============ USER & SUBSCRIPTION ============
   const [dbUserId, setDbUserId] = useState<string | null>(null);
@@ -184,7 +186,11 @@ export default function Dashboard() {
         if (cErr) throw cErr;
         if (!mounted) return;
 
-        setHasRoadmap(!!(c?.roadmap && Object.keys(c.roadmap).length));
+        const roadmapExists = !!(c?.roadmap && Object.keys(c.roadmap).length);
+        setHasRoadmap(roadmapExists);
+        if (roadmapExists) {
+          setShowNotification(true);
+        }
         setFormFilled(c?.form_filled ?? false);
 
         // ✅ SIMPLIFIED DATA LOADING
@@ -238,6 +244,12 @@ export default function Dashboard() {
     return () => { mounted = false; };
   }, [isLoaded, user?.id]);
 
+
+  const handleRewindToStart = () => {
+    setShowNotification(false);   // hide the “you already have a roadmap” modal
+    setCurrentComponent(0);       // send the user back to component 0
+    // Intentionally *do not* clear any of the form state
+  };
   // ============ ADDITIONAL EFFECTS ============
   useEffect(() => {
     if (!showCollegeForm) return;
@@ -386,14 +398,21 @@ export default function Dashboard() {
   ];
 
   if (!dataLoaded) {
-    return <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="text-gray-200 font-extralight">Loading</div>
-    </div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="p-4 space-y-2">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-[#4fbdb7] animate-spin mx-auto"></div>
+          <p className="text-slate-500 text-center mt-4">
+            Loading Dashboard...
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col bg-[#f8f8f8]">
-      <div
+    <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col bg-[#ffffff]">
+      {/* <div
         className="absolute inset-0 -z-50"
         style={{
           backgroundSize: '30px 30px',
@@ -401,11 +420,18 @@ export default function Dashboard() {
             'linear-gradient(to right, #e4e4e7 1px, transparent 1px),' +
             'linear-gradient(to bottom, #e4e4e7 1px, transparent 1px)',
         }}
-      />
+      /> */}
 
       <div className="pointer-events-none absolute inset-0 -z-50 bg-[#f8f8f8] [mask-image:radial-gradient(ellipse_at_center,transparent_10%,black)]" />
 
       <FloatingNavbar navLinks={dashboardLinks} />
+
+      {showNotification && (
+        <RoadmapNotification
+          onCreateNew={handleRewindToStart}
+          onViewExisting={() => router.push("/roadmap")}
+        />
+      )}
 
       <div className="flex-grow">
         {currentComponent === 0 && (

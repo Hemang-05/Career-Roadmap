@@ -231,7 +231,7 @@ return (
         />
       </div>
 
-      {/* Practical Experience Section  bg-slate-200/60 */} 
+      {/* Practical Experience Section */} 
       <div>
         <div className="flex items-center mb-6">
           <label className="text-gray-800 text-base">Practical Experience</label>
@@ -423,7 +423,7 @@ return (
               className={`py-2 rounded-3xl font-light text-xs ${
                 educationalStage === stage.toLowerCase()
                   ? 'bg-slate-200 text-gray-500'
-                  : 'bg-transparent border text-gray-300 text-xs'
+                  : 'bg-transparent border text-gray-400 text-xs'
               }`}
             >
               {stage}
@@ -446,8 +446,8 @@ return (
               className="w-full border rounded-xl p-2 focus:border-gray-300 focus:outline-none  bg-white text-gray-700 placeholder-gray-200 transition-all duration-300 text-sm font-extralight outline-none"
             />
             <div className="flex gap-2 mt-2">
-              <button type="button" onClick={() => setSchoolGrade('11th')} className="px-3 py-1 text-xs bg-transparent border text-gray-300  rounded-lg transition-colors">11th</button>
-              <button type="button" onClick={() => setSchoolGrade('12th')} className="px-3 py-1 text-xs bg-transparent border text-gray-300  rounded-lg transition-colors">12th</button>
+              <button type="button" onClick={() => setSchoolGrade('11th')} className="px-3 py-1 text-xs bg-transparent border text-gray-400  rounded-lg transition-colors">11th</button>
+              <button type="button" onClick={() => setSchoolGrade('12th')} className="px-3 py-1 text-xs bg-transparent border text-gray-400  rounded-lg transition-colors">12th</button>
             </div>
           </div>
 
@@ -489,7 +489,7 @@ return (
                   className={`py-2 rounded-3xl font-light text-xs ${
                     collegeYear === year.toLowerCase().replace(' ', '')
                       ? 'bg-slate-200 text-gray-500 '
-                      : 'bg-transparent border text-gray-300 text-xs '
+                      : 'bg-transparent border text-gray-400 text-xs '
                   }`}
                 >
                   {year}
@@ -628,7 +628,7 @@ return (
             className={`py-3 px-4 rounded-3xl font-light text-xs text-center ${
               preferredLearningStyle === style.value
                 ? 'bg-slate-200 text-slate-500'
-                : 'bg-transparent border text-gray-300 text-xs '
+                : 'bg-transparent border text-gray-400 text-xs '
             }`}
           >
             {style.label}
@@ -682,7 +682,7 @@ return (
             className={`px-4 py-2 rounded-3xl font-light text-xs text-left ${
               industryKnowledgeLevel === level.value
                 ? 'bg-slate-200 text-gray-500'
-                : 'bg-transparent border text-gray-300 text-xs'
+                : 'bg-transparent border text-gray-400 text-xs'
             }`}
           >
             <div className="font-light text-sm">{level.label}</div>
@@ -719,7 +719,7 @@ return (
             className={`py-3 px-4 rounded-3xl font-light text-xs ${
               preferredWorkEnvironment === environment.value
                 ? 'bg-slate-200 text-gray-500'
-                : 'bg-transparent border text-gray-300 text-xs'
+                : 'bg-transparent border text-gray-400 text-xs'
             }`}
           >
             {environment.label}
@@ -757,7 +757,7 @@ return (
             className={`px-4 p-2 rounded-3xl text-left ${
               culturalFamilyExpectations === expectation.value
                 ? 'bg-slate-200 text-gray-500'
-                : 'bg-transparent border text-gray-300'
+                : 'bg-transparent border text-gray-400'
             }`}
           >
             <div className="font-normal text-xs">{expectation.label}</div>
@@ -792,7 +792,7 @@ return (
             className={`px-4 p-2 rounded-3xl text-left text-xs ${
               mentorshipAndNetworkStatus === status.value
                 ? 'bg-slate-200 text-gray-500'
-                : 'bg-transparent border text-gray-300 text-xs'
+                : 'bg-transparent border text-gray-400 text-xs'
             }`}
           >
             <div className="font-normal">{status.label}</div>
@@ -842,7 +842,7 @@ return (
         className={`px-4 p-2 rounded-3xl text-left ${
           difficulty === diff.value
             ? 'bg-slate-200 text-gray-500'
-            : 'bg-transparent border text-gray-300 '
+            : 'bg-transparent border text-gray-400 '
         }`}
       >
         <div className="font-normal text-xs">{diff.label}</div>

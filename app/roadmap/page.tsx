@@ -851,14 +851,17 @@ export default function RoadmapPage() {
           />
           <meta name="robots" content="noindex, nofollow" />
         </Head>
-        <div
-          className="flex justify-center items-center min-h-screen text-black"
-          role="status"
-          aria-label="Loading roadmap"
-        >
+        
+        <div className="flex justify-center items-center min-h-screen bg-white" role="status"
+          aria-label="Loading roadmap">
+        <div className="p-4 space-y-2">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-[#4fbdb7] animate-spin mx-auto"></div>
           <span className="sr-only">Loading your career roadmap...</span>
-          Loading Roadmap...
+          <p className="text-slate-500 text-center mt-4">
+            Loading Roadmap...
+          </p>
         </div>
+      </div>
       </>
     );
   }
