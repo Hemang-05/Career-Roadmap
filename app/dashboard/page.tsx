@@ -1,3 +1,4 @@
+//app\dashboard\page.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
@@ -6,13 +7,19 @@ import { useSyncUser } from "@/app/hooks/sync-user";
 import countryList from "react-select-country-list";
 import { supabase } from "@/utils/supabase/supabaseClient";
 
+// Components
 import FloatingNavbar from "@/components/Navbar";
 import PaymentPlan from "@/components/PaymentPlan";
 import USDPaymentPlan from "@/components/USDPaymentPlan";
 import Loader from "@/components/Loader";
-import RoadmapNotification from "@/components/RoadmapNotification";
-import DashboardForm, { OptionType } from "@/components/DashboardForm";
 import CollegeForm from "@/components/CollegeForm";
+
+// New Dashboard Components
+import AwareUnawareButton from "@/components/AwareUnawareButton";
+import ChatbotComponent from "@/components/ChatbotComponent";
+import FormComponent from "@/components/FormComponent";
+
+import { OptionType } from "@/components/FormComponent";
 
 interface University {
   id: number;
@@ -24,53 +31,62 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, isSignedIn, isLoaded } = useUser();
 
-  // UI state
+  // ============ NAVIGATION STATE ============
+  const [currentComponent, setCurrentComponent] = useState<0 | 1 | 2>(0);
+  const [userPath, setUserPath] = useState<'aware' | 'confused' | null>(null);
+  const [chatbotComplete, setChatbotComplete] = useState<boolean>(false);
+  const [determinedCareer, setDeterminedCareer] = useState<string>("");
+
+  // ============ UI STATE ============
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [generating, setGenerating] = useState<boolean>(false);
   const [showGenerateModal, setShowGenerateModal] = useState<boolean>(false);
   const [showPaymentPlans, setShowPaymentPlans] = useState<boolean>(false);
-  const [showUSDPaymentPlans, setShowUSDPaymentPlans] =
-    useState<boolean>(false);
+  const [showUSDPaymentPlans, setShowUSDPaymentPlans] = useState<boolean>(false);
   const [showCollegeForm, setShowCollegeForm] = useState<boolean>(false);
 
-  // User & subscription
+  // ============ USER & SUBSCRIPTION ============
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("");
 
-  // Career & roadmap
+  // ============ CAREER & ROADMAP ============
   const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
   const [formFilled, setFormFilled] = useState<boolean>(false);
   const [apiDone, setApiDone] = useState<boolean>(false);
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
-  // Main form state
-  const [residingCountry, setResidingCountry] = useState<OptionType | null>(
-    null
-  );
+  // ============ ACTIVE FORM STATE (SIMPLIFIED) ============
+  const [residingCountry, setResidingCountry] = useState<OptionType | null>(null);
   const [spendingCapacity, setSpendingCapacity] = useState<string>("");
   const [parentEmail, setParentEmail] = useState<string>("");
-  const [currentClass, setCurrentClass] = useState<string>("");
-  const [isCollegeStudent, setIsCollegeStudent] = useState<boolean | null>(
-    null
-  );
-  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<
-    boolean | null
-  >(false);
+  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(false);
   const [moveAbroad, setMoveAbroad] = useState<"yes" | "suggest">("suggest");
-  const [preferredAbroadCountry, setPreferredAbroadCountry] =
-    useState<OptionType | null>(null);
-  const [difficulty, setDifficulty] = useState<
-    "easy" | "medium" | "hard" | null
-  >(null);
-  const [careerOption, setCareerOption] = useState<"known" | "unknown">(
-    "known"
-  );
+  const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
+  
+  // ✅ CAREER FIELD - Simple like other fields
   const [desiredCareer, setDesiredCareer] = useState<string>("");
-  const [previousExperience, setPreviousExperience] = useState<string>("");
-  const [interestParagraph, setInterestParagraph] = useState<string>("");
 
-  // College form data
+  // ============ NEW FORM STATE (16 FIELDS) ============
+  const [educationalStage, setEducationalStage] = useState<string>("");
+  const [schoolGrade, setSchoolGrade] = useState<string>("");
+  const [schoolStream, setSchoolStream] = useState<string>("");
+  const [collegeYear, setCollegeYear] = useState<string>("");
+  const [collegeDegree, setCollegeDegree] = useState<string>("");
+  const [practicalExperience, setPracticalExperience] = useState<string>("");
+  const [academicStrengths, setAcademicStrengths] = useState<string>("");
+  const [extracurricularActivities, setExtracurricularActivities] = useState<string>("");
+  const [industryKnowledgeLevel, setIndustryKnowledgeLevel] = useState<string>("");
+  const [preferredLearningStyle, setPreferredLearningStyle] = useState<string>("");
+  const [roleModelInfluences, setRoleModelInfluences] = useState<string>("");
+  const [culturalFamilyExpectations, setCulturalFamilyExpectations] = useState<string>("");
+  const [mentorshipAndNetworkStatus, setMentorshipAndNetworkStatus] = useState<string>("");
+  const [preferredLanguage, setPreferredLanguage] = useState<string>("");
+  const [preferredWorkEnvironment, setPreferredWorkEnvironment] = useState<string>("");
+  const [longTermAspirations, setLongTermAspirations] = useState<string>("");
+
+  // ============ COLLEGE FORM ============
   const [universities, setUniversities] = useState<University[]>([]);
   const [collegeFormData, setCollegeFormData] = useState({
     tuitionFees: "",
@@ -81,47 +97,76 @@ export default function Dashboard() {
     highestCTC: "",
     avgCTC: "",
   });
-  const [selectedUniversityId, setSelectedUniversityId] = useState<
-    number | null
-  >(null);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<number | null>(null);
   const [uniInputValue, setUniInputValue] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
-  // Redirect if not signed in
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) router.push("/");
-  }, [isSignedIn, isLoaded, router]);
-
-  // Helper for INR vs USD
-  const isSouthAsianCountry = (code: string) =>
-    ["IN", "PK", "BD"].includes(code);
-
-  // Get country option from code
+  // ============ HELPER FUNCTIONS ============
+  const isSouthAsianCountry = (code: string) => ["IN", "PK", "BD"].includes(code);
+  
   const getCountryOption = (countryCode: string): OptionType | null => {
     const countryOptions = countryList().getData() as OptionType[];
-    return (
-      countryOptions.find((option) => option.value === countryCode) || null
-    );
+    return countryOptions.find((option) => option.value === countryCode) || null;
   };
 
-  // Fetch user & career info with data persistence
+  // ============ NAVIGATION HANDLERS ============
+  const handleAwareClick = () => {
+    setUserPath('aware');
+    setCurrentComponent(2);
+  };
+
+  const handleConfusedClick = () => {
+    setUserPath('confused');
+    setCurrentComponent(1);
+  };
+
+  const handleChatbotComplete = (career: string) => {
+    setDeterminedCareer(career);
+    setDesiredCareer(career);
+    setChatbotComplete(true);
+    setCurrentComponent(2);
+  };
+
+  // ============ EDUCATIONAL STAGE CLEANUP ============
+  useEffect(() => {
+    if (educationalStage === 'school') {
+      setCollegeYear('');
+      setCollegeDegree('');
+    } else if (educationalStage === 'college') {
+      setSchoolGrade('');
+      setSchoolStream('');
+    } else if (educationalStage === 'self-taught' || educationalStage === 'working') {
+      setSchoolGrade('');
+      setSchoolStream('');
+      setCollegeYear('');
+      setCollegeDegree('');
+    }
+  }, [educationalStage]);
+
+  // ============ AUTH & DATA LOADING ============
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.push("/");
+  }, [isSignedIn, isLoaded]);
+
   useEffect(() => {
     if (!isLoaded || !user) return;
     let mounted = true;
+    
     (async () => {
       try {
         const { data: u, error: uErr } = await supabase
           .from("users")
-          .select(
-            "id, subscription_status, subscription_plan, subscription_end"
-          )
+          .select("id, subscription_status, subscription_plan, subscription_end")
           .eq("clerk_id", user.id)
           .single();
+          
         if (uErr || !u) throw uErr || new Error("User not found");
         if (!mounted) return;
+        
         setDbUserId(u.id);
         setSubscriptionStatus(u.subscription_status);
         setSubscriptionPlan(u.subscription_plan);
+        
         if (u.subscription_end && new Date(u.subscription_end) < new Date()) {
           await supabase
             .from("users")
@@ -135,58 +180,51 @@ export default function Dashboard() {
           .select("*")
           .eq("user_id", u.id)
           .maybeSingle();
+          
         if (cErr) throw cErr;
         if (!mounted) return;
 
         setHasRoadmap(!!(c?.roadmap && Object.keys(c.roadmap).length));
         setFormFilled(c?.form_filled ?? false);
 
-        // DATA PERSISTENCE: Load existing career info into form fields
+        // ✅ SIMPLIFIED DATA LOADING
         if (c) {
-          if (c.residing_country) {
-            setResidingCountry(getCountryOption(c.residing_country));
-          }
-          if (c.spending_capacity) {
-            setSpendingCapacity(c.spending_capacity.toString());
-          }
-          if (c.parent_email) {
-            setParentEmail(c.parent_email);
-          }
-          if (c.current_class) {
-            setCurrentClass(c.current_class);
-          }
-          if (c.college_student !== null) {
-            setIsCollegeStudent(c.college_student);
-          }
-          if (c.move_abroad !== null) {
-            setWillingToMoveAbroad(c.move_abroad);
-          }
+          if (c.residing_country) setResidingCountry(getCountryOption(c.residing_country));
+          if (c.spending_capacity) setSpendingCapacity(c.spending_capacity.toString());
+          if (c.parent_email) setParentEmail(c.parent_email);
+          if (c.move_abroad !== null) setWillingToMoveAbroad(c.move_abroad);
           if (c.preferred_abroad_country) {
             if (c.preferred_abroad_country === "Suggest") {
               setMoveAbroad("suggest");
             } else {
               setMoveAbroad("yes");
-              setPreferredAbroadCountry(
-                getCountryOption(c.preferred_abroad_country)
-              );
+              setPreferredAbroadCountry(getCountryOption(c.preferred_abroad_country));
             }
           }
-          if (c.difficulty) {
-            setDifficulty(c.difficulty);
-          }
-          if (c.desired_career) {
-            setDesiredCareer(c.desired_career);
-            // Determine if it's a known career or interest paragraph based on length
-            if (c.desired_career.length > 100) {
-              setCareerOption("unknown");
-              setInterestParagraph(c.desired_career);
-            } else {
-              setCareerOption("known");
-              setDesiredCareer(c.desired_career);
-            }
-          }
-          if (c.previous_experience) {
-            setPreviousExperience(c.previous_experience);
+          if (c.difficulty) setDifficulty(c.difficulty);
+          if (c.desired_career) setDesiredCareer(c.desired_career);
+
+          // NEW FIELDS
+          if (c.educational_stage) setEducationalStage(c.educational_stage);
+          if (c.school_grade) setSchoolGrade(c.school_grade);
+          if (c.school_stream) setSchoolStream(c.school_stream);
+          if (c.college_year) setCollegeYear(c.college_year);
+          if (c.college_degree) setCollegeDegree(c.college_degree);
+          if (c.practical_experience) setPracticalExperience(c.practical_experience);
+          if (c.academic_strengths) setAcademicStrengths(c.academic_strengths);
+          if (c.extracurricular_activities) setExtracurricularActivities(c.extracurricular_activities);
+          if (c.industry_knowledge_level) setIndustryKnowledgeLevel(c.industry_knowledge_level);
+          if (c.preferred_learning_style) setPreferredLearningStyle(c.preferred_learning_style);
+          if (c.role_model_influences) setRoleModelInfluences(c.role_model_influences);
+          if (c.cultural_family_expectations) setCulturalFamilyExpectations(c.cultural_family_expectations);
+          if (c.mentorship_and_network_status) setMentorshipAndNetworkStatus(c.mentorship_and_network_status);
+          if (c.preferred_language) setPreferredLanguage(c.preferred_language);
+          if (c.preferred_work_environment) setPreferredWorkEnvironment(c.preferred_work_environment);
+          if (c.long_term_aspirations) setLongTermAspirations(c.long_term_aspirations);
+
+          // If user has existing data, skip to form component
+          if (c.desired_career || c.residing_country || c.educational_stage) {
+            setCurrentComponent(2);
           }
         }
 
@@ -196,12 +234,11 @@ export default function Dashboard() {
         setDataLoaded(true);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [isLoaded, user]);
+    
+    return () => { mounted = false; };
+  }, [isLoaded, user?.id]);
 
-  // Load universities when showing college form
+  // ============ ADDITIONAL EFFECTS ============
   useEffect(() => {
     if (!showCollegeForm) return;
     supabase
@@ -213,15 +250,17 @@ export default function Dashboard() {
       .catch(console.error);
   }, [showCollegeForm]);
 
-  // Main form submit
+
+  // ============ SIMPLIFIED FORM HANDLER ============
   const handleMainFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     const payload: any = {
       clerk_id: user?.id,
+      desired_career: desiredCareer, // ✅ Direct field
       residing_country: residingCountry?.value,
       spending_capacity: spendingCapacity ? parseFloat(spendingCapacity) : null,
-      current_class: currentClass,
       move_abroad: willingToMoveAbroad,
       preferred_abroad_country:
         willingToMoveAbroad && moveAbroad === "yes"
@@ -230,11 +269,23 @@ export default function Dashboard() {
           ? "Suggest"
           : null,
       parent_email: parentEmail,
-      college_student: isCollegeStudent,
       difficulty,
-      desired_career:
-        careerOption === "known" ? desiredCareer : interestParagraph,
-      previous_experience: careerOption === "known" ? previousExperience : "",
+      educational_stage: educationalStage,
+      school_grade: schoolGrade,
+      school_stream: schoolStream,
+      college_year: collegeYear,
+      college_degree: collegeDegree,
+      practical_experience: practicalExperience,
+      academic_strengths: academicStrengths,
+      extracurricular_activities: extracurricularActivities,
+      industry_knowledge_level: industryKnowledgeLevel,
+      preferred_learning_style: preferredLearningStyle,
+      role_model_influences: roleModelInfluences,
+      cultural_family_expectations: culturalFamilyExpectations,
+      mentorship_and_network_status: mentorshipAndNetworkStatus,
+      preferred_language: preferredLanguage,
+      preferred_work_environment: preferredWorkEnvironment,
+      long_term_aspirations: longTermAspirations,
       roadmap: null,
     };
 
@@ -244,25 +295,17 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      // const result = await res.json();
-      // console.log("Career info saved:", result);
 
       if (!subscriptionStatus) {
-        // Check user's country to determine which payment plan to show
         if (residingCountry && isSouthAsianCountry(residingCountry.value)) {
-          // Show INR pricing for users from India, Pakistan, Bangladesh
           setShowPaymentPlans(true);
-          // setShowUSDPaymentPlans(false);
         } else {
-          // Show USD pricing for users from other countries
-          // setShowPaymentPlans(false);
           setShowUSDPaymentPlans(true);
         }
       } else {
         setShowGenerateModal(true);
       }
 
-      // Trigger career tag assignment in parallel (fire-and-forget).
       fetch("/api/assign-career-tag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -270,14 +313,8 @@ export default function Dashboard() {
           clerk_id: user?.id,
           desired_career: payload.desired_career,
         }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("Career tag assigned:", data);
-        })
-        .catch((error) => {
-          console.error("Error assigning career tag:", error);
-        });
+      }).catch(console.error);
+      
     } catch (error) {
       console.log("Error saving career info:", error);
     } finally {
@@ -285,13 +322,11 @@ export default function Dashboard() {
     }
   };
 
-  // Generate roadmap
   const handleGenerateRoadmap = async () => {
     setGenerating(true);
-
-    // FIXED: Show college form immediately when generation starts (if conditions are met)
-    if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
-      setShowCollegeForm(true);
+    
+    if (educationalStage === 'college' && !formFilled && residingCountry?.value === "IN") {
+      setShowCollegeForm(false);
     }
 
     try {
@@ -306,70 +341,58 @@ export default function Dashboard() {
       console.error(err);
       setGenerating(false);
     }
-    if (isCollegeStudent && !formFilled && residingCountry?.value === "IN") {
-      setShowCollegeForm(true);
-    }
   };
 
-  // College form submit
-  const handleCollegeFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dbUserId || !selectedUniversityId) return;
-    try {
-      await supabase.from("university_ratings").insert({
-        user_id: dbUserId,
-        university_id: selectedUniversityId,
-        tuition_fees: parseFloat(collegeFormData.tuitionFees) || null,
-        cultural_rating: collegeFormData.culturalRating || null,
-        infra_rating: collegeFormData.infraRating || null,
-        vibe_rating: collegeFormData.vibeRating || null,
-        companies_count: parseInt(collegeFormData.companiesCount) || null,
-        highestCTC: parseInt(collegeFormData.highestCTC) || null,
-        avgCTC: parseInt(collegeFormData.avgCTC) || null,
-      });
-      await supabase
-        .from("career_info")
-        .update({ form_filled: true })
-        .eq("user_id", dbUserId);
-      setFormFilled(true);
-      setShowCollegeForm(false);
+  // const handleCollegeFormSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!dbUserId || !selectedUniversityId) return;
+    
+  //   try {
+  //     await supabase.from("university_ratings").insert({
+  //       user_id: dbUserId,
+  //       university_id: selectedUniversityId,
+  //       tuition_fees: parseFloat(collegeFormData.tuitionFees) || null,
+  //       cultural_rating: collegeFormData.culturalRating || null,
+  //       infra_rating: collegeFormData.infraRating || null,
+  //       vibe_rating: collegeFormData.vibeRating || null,
+  //       companies_count: parseInt(collegeFormData.companiesCount) || null,
+  //       highestCTC: parseInt(collegeFormData.highestCTC) || null,
+  //       avgCTC: parseInt(collegeFormData.avgCTC) || null,
+  //     });
+      
+  //     await supabase
+  //       .from("career_info")
+  //       .update({ form_filled: true })
+  //       .eq("user_id", dbUserId);
+        
+  //     setFormFilled(true);
+  //     setShowCollegeForm(false);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
-      // No redirection logic needed here - the useEffect will handle it automatically
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Redirect after generation
   useEffect(() => {
-    if (
-      apiDone &&
-      (!isCollegeStudent ||
-        formFilled ||
-        (isCollegeStudent && residingCountry?.value !== "IN"))
-    ) {
+    if (apiDone) {
       setGenerating(false);
-      router.push("/roadmap");
+      router.push("/roadmap");   // add form_filled
     }
-  }, [apiDone, formFilled]);
+  }, [apiDone]);
+
 
   const dashboardLinks = [
     { href: "/roadmap", label: "Roadmap" },
     { href: "/blog", label: "Blogs" },
   ];
 
+  if (!dataLoaded) {
+    return <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-gray-200 font-extralight">Loading</div>
+    </div>;
+  }
+
   return (
-    // <div 
-    //     className="w-full overflow-x-hidden min-h-screen bg-cover bg-center bg-local md:bg-fixed flex flex-col"
-    //     style={{
-    //       backgroundImage:
-    //         "url('https://cdn.rareblocks.xyz/collection/clarity/images/hero/1/background-pattern.png')",
-    // }}
-    // >
-      <div
-        className="relative w-full overflow-x-hidden min-h-screen flex flex-col"
-      >
-      {/* —————— Grid Background Pattern —————— */}
+    <div className="relative w-full overflow-x-hidden min-h-screen flex flex-col bg-[#f8f8f8]">
       <div
         className="absolute inset-0 -z-50"
         style={{
@@ -380,54 +403,84 @@ export default function Dashboard() {
         }}
       />
 
-      {/* —————— Optional Radial Overlay (faded center) —————— */}
-      <div className="pointer-events-none absolute inset-0 -z-50 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_10%,black)]" />
-  
+      <div className="pointer-events-none absolute inset-0 -z-50 bg-[#f8f8f8] [mask-image:radial-gradient(ellipse_at_center,transparent_10%,black)]" />
 
       <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="container mx-auto my-20 px-4 lg:px-48 py-8 flex-grow mt-20">
-        <h1 className="text-3xl text-black font-bold mb-6">
-          Welcome, <span className="text-[#FF6500]">{user?.firstName}</span>
-        </h1>
-        {hasRoadmap ? (
-          <RoadmapNotification />
-        ) : (
-          <div className="mb-6 p-3 bg-orange-50 text-orange-600 rounded-3xl">
-            <p>
-              Fill in the fields below to get your personalized career roadmap.
-            </p>
-          </div>
+
+      <div className="flex-grow">
+        {currentComponent === 0 && (
+          <AwareUnawareButton
+            user={user}
+            onAwareClick={handleAwareClick}
+            onConfusedClick={handleConfusedClick}
+          />
         )}
-        <DashboardForm
-          onSubmit={handleMainFormSubmit}
-          isSubmitting={isSubmitting}
-          careerOption={careerOption}
-          setCareerOption={setCareerOption}
-          residingCountry={residingCountry}
-          setResidingCountry={setResidingCountry}
-          spendingCapacity={spendingCapacity}
-          setSpendingCapacity={setSpendingCapacity}
-          isCollegeStudent={isCollegeStudent}
-          setIsCollegeStudent={setIsCollegeStudent}
-          currentClass={currentClass}
-          setCurrentClass={setCurrentClass}
-          parentEmail={parentEmail}
-          setParentEmail={setParentEmail}
-          willingToMoveAbroad={willingToMoveAbroad}
-          setWillingToMoveAbroad={setWillingToMoveAbroad}
-          moveAbroad={moveAbroad}
-          setMoveAbroad={setMoveAbroad}
-          preferredAbroadCountry={preferredAbroadCountry}
-          setPreferredAbroadCountry={setPreferredAbroadCountry}
-          desiredCareer={desiredCareer}
-          setDesiredCareer={setDesiredCareer}
-          previousExperience={previousExperience}
-          setPreviousExperience={setPreviousExperience}
-          interestParagraph={interestParagraph}
-          setInterestParagraph={setInterestParagraph}
-          difficulty={difficulty}
-          setDifficulty={setDifficulty}
-        />
+
+        {currentComponent === 1 && (
+          <ChatbotComponent
+            user={user}
+            onComplete={handleChatbotComplete}
+          />
+        )}
+
+        {currentComponent === 2 && (
+          <FormComponent
+            user={user}
+            hasRoadmap={hasRoadmap}
+            onSubmit={handleMainFormSubmit}
+            isSubmitting={isSubmitting}
+            determinedCareer={determinedCareer}
+            userPath={userPath}
+            residingCountry={residingCountry}
+            setResidingCountry={setResidingCountry}
+            spendingCapacity={spendingCapacity}
+            setSpendingCapacity={setSpendingCapacity}
+            parentEmail={parentEmail}
+            setParentEmail={setParentEmail}
+            willingToMoveAbroad={willingToMoveAbroad}
+            setWillingToMoveAbroad={setWillingToMoveAbroad}
+            moveAbroad={moveAbroad}
+            setMoveAbroad={setMoveAbroad}
+            preferredAbroadCountry={preferredAbroadCountry}
+            setPreferredAbroadCountry={setPreferredAbroadCountry}
+            desiredCareer={desiredCareer}
+            setDesiredCareer={setDesiredCareer}
+            difficulty={difficulty}
+            setDifficulty={setDifficulty}
+            educationalStage={educationalStage}
+            setEducationalStage={setEducationalStage}
+            schoolGrade={schoolGrade}
+            setSchoolGrade={setSchoolGrade}
+            schoolStream={schoolStream}
+            setSchoolStream={setSchoolStream}
+            collegeYear={collegeYear}
+            setCollegeYear={setCollegeYear}
+            collegeDegree={collegeDegree}
+            setCollegeDegree={setCollegeDegree}
+            practicalExperience={practicalExperience}
+            setPracticalExperience={setPracticalExperience}
+            academicStrengths={academicStrengths}
+            setAcademicStrengths={setAcademicStrengths}
+            extracurricularActivities={extracurricularActivities}
+            setExtracurricularActivities={setExtracurricularActivities}
+            industryKnowledgeLevel={industryKnowledgeLevel}
+            setIndustryKnowledgeLevel={setIndustryKnowledgeLevel}
+            preferredLearningStyle={preferredLearningStyle}
+            setPreferredLearningStyle={setPreferredLearningStyle}
+            roleModelInfluences={roleModelInfluences}
+            setRoleModelInfluences={setRoleModelInfluences}
+            culturalFamilyExpectations={culturalFamilyExpectations}
+            setCulturalFamilyExpectations={setCulturalFamilyExpectations}
+            mentorshipAndNetworkStatus={mentorshipAndNetworkStatus}
+            setMentorshipAndNetworkStatus={setMentorshipAndNetworkStatus}
+            preferredLanguage={preferredLanguage}
+            setPreferredLanguage={setPreferredLanguage}
+            preferredWorkEnvironment={preferredWorkEnvironment}
+            setPreferredWorkEnvironment={setPreferredWorkEnvironment}
+            longTermAspirations={longTermAspirations}
+            setLongTermAspirations={setLongTermAspirations}
+          />
+        )}
       </div>
 
       {showPaymentPlans && user && (
@@ -458,25 +511,26 @@ export default function Dashboard() {
         />
       )}
 
+
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-12 rounded-xl shadow-lg">
-            <h2 className="text-2xl text-black font-bold mb-4">
-              Generate <span className="text-[#FF6500]">Career</span> Roadmap
+          <div className="bg-white p-8 rounded-3xl shadow-lg">
+            <h2 className="text-2xl text-black font-normal">
+              Generate Career Roadmap
             </h2>
-            <p className="mb-4 text-gray-700">
+            <p className="mb-4 text-gray-700 text-sm">
               Would you like to generate your career roadmap now?
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setShowGenerateModal(false)}
-                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-red-500"
+                className="bg-white text-gray-600 p-2 rounded-3xl border border-gray-400 hover:bg-slate-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleGenerateRoadmap}
-                className="bg-white text-black py-5 px-8 rounded-full border-2 border-black hover:bg-green-400"
+                className="bg-white text-gray-600 p-2 rounded-3xl border border-gray-400 hover:bg-slate-200"
               >
                 Generate
               </button>
@@ -485,7 +539,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <CollegeForm
+
+      {/* <CollegeForm
         show={showCollegeForm}
         onSubmit={handleCollegeFormSubmit}
         universities={universities}
@@ -496,9 +551,8 @@ export default function Dashboard() {
         isSuggestionsOpen={showSuggestions}
         setIsSuggestionsOpen={setShowSuggestions}
         setSelectedUniversityId={setSelectedUniversityId}
-      />
+      /> */}
 
-      {/* FIXED: Loader appears behind college form when both are active */}
       {generating && (
         <div className="fixed inset-0 justify-center items-center z-50">
           <Loader />

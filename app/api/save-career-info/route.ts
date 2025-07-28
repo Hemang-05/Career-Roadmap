@@ -7,18 +7,31 @@ export async function POST(request: Request) {
     // Parse the JSON payload
     const {
       clerk_id,
-      desired_career,            // For known branch: desired career; for unknown: paragraph response
-      residing_country,          // string
-      spending_capacity,         // string (to be parsed as number)
-      current_class,             // string
-      move_abroad,               // boolean
-      preferred_abroad_country,  // string (nullable)
-      previous_experience,       // string (nullable)
-      parent_email,               // string; (nullable)
-      form_filled,               // boolean indicating if form is filled
-      college_student,             //bool
-      difficulty,                   //text 
-      roadmap                    //null
+      desired_career,
+      residing_country,
+      spending_capacity,
+      move_abroad,
+      preferred_abroad_country,
+      parent_email,
+      difficulty,
+      // NEW FIELDS
+      educational_stage,
+      school_grade,
+      school_stream,
+      college_year,
+      college_degree,
+      practical_experience,
+      academic_strengths,
+      extracurricular_activities,
+      industry_knowledge_level,
+      preferred_learning_style,
+      role_model_influences,
+      cultural_family_expectations,
+      mentorship_and_network_status,
+      preferred_language,
+      preferred_work_environment,
+      long_term_aspirations,
+      roadmap
     } = await request.json();
 
     // Validate required fields
@@ -39,26 +52,38 @@ export async function POST(request: Request) {
 
     const user_id = userRecord.id;
 
-    // Build the object to upsert.
+    // Build the object to upsert (UPDATED FOR NEW FIELDS)
     const upsertObj = {
       user_id,
-      desired_career, // from the client; same value goes to career_tag
+      desired_career,
       residing_country: residing_country || null,
       spending_capacity: spending_capacity ? parseFloat(spending_capacity) : null,
-      current_class: current_class || null,
       move_abroad: typeof move_abroad === 'boolean' ? move_abroad : false,
       preferred_abroad_country: preferred_abroad_country || null,
-      previous_experience: previous_experience || null,
-      parent_email:parent_email || null,
-      updated_at: new Date().toISOString(),
-      college_student: typeof college_student === 'boolean' ? college_student : false,
-      form_filled: typeof form_filled === 'boolean' ? form_filled : false,
+      parent_email: parent_email || null,
       difficulty: difficulty || null,
+      updated_at: new Date().toISOString(),
+      // NEW FIELDS
+      educational_stage: educational_stage || null,
+      school_grade: school_grade || null,
+      school_stream: school_stream || null,
+      college_year: college_year || null,
+      college_degree: college_degree || null,
+      practical_experience: practical_experience || null,
+      academic_strengths: academic_strengths || null,
+      extracurricular_activities: extracurricular_activities || null,
+      industry_knowledge_level: industry_knowledge_level || null,
+      preferred_learning_style: preferred_learning_style || null,
+      role_model_influences: role_model_influences || null,
+      cultural_family_expectations: cultural_family_expectations || null,
+      mentorship_and_network_status: mentorship_and_network_status || null,
+      preferred_language: preferred_language || null,
+      preferred_work_environment: preferred_work_environment || null,
+      long_term_aspirations: long_term_aspirations || null,
       roadmap: null
     };
 
-    // Upsert the career_info record into Supabase.
-    // This will insert a new record or update the existing record based on the unique constraint on user_id.
+    // Upsert the career_info record into Supabase
     const { data, error } = await supabase
       .from('career_info')
       .upsert(upsertObj, { onConflict: 'user_id' });

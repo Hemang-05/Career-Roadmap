@@ -44,6 +44,19 @@ body {
   scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
+.scrollbar-hidden {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hidden::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+.glassmorphism-card {
+  @apply relative p-4 sm:rounded-[4rem] rounded-3xl sm:px-10 sm:py-8 backdrop-blur-xl border border-blue-100/40 w-full max-w-md min-h-[250px];
+  background: linear-gradient(135deg, rgba(255, 254, 254, 0.4) 0%, rgba(245, 249, 255, 0.6) 50%, rgba(235, 238, 243) 100%);
+}
+
 /* Loader.css */
 .loader {
   width: 100px;

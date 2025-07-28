@@ -177,7 +177,28 @@ export async function POST(request: Request) {
     const { data: careerInfo, error: careerInfoError } = await supabase
       .from("career_info")
       .select(
-        `desired_career, residing_country, spending_capacity, current_class, move_abroad, preferred_abroad_country, previous_experience, difficulty, college_student`
+        `desired_career,
+        residing_country,
+        spending_capacity,
+        move_abroad,
+        preferred_abroad_country,
+        educational_stage,
+        school_grade,
+        school_stream,
+        college_year,
+        college_degree,
+        practical_experience,
+        academic_strengths,
+        extracurricular_activities,
+        industry_knowledge_level,
+        preferred_learning_style,
+        role_model_influences,
+        cultural_family_expectations,
+        mentorship_and_network_status,
+        preferred_language,
+        preferred_work_environment,
+        long_term_aspirations,
+        difficulty`
       )
       .eq("user_id", user_id)
       .single();
@@ -189,12 +210,25 @@ export async function POST(request: Request) {
       desired_career,
       residing_country,
       spending_capacity,
-      current_class,
       move_abroad,
       preferred_abroad_country,
-      previous_experience,
+      educational_stage,
+      school_grade,
+      school_stream,
+      college_year,
+      college_degree,
+      practical_experience,
+      academic_strengths,
+      extracurricular_activities,
+      industry_knowledge_level,
+      preferred_learning_style,
+      role_model_influences,
+      cultural_family_expectations,
+      mentorship_and_network_status,
+      preferred_language,
+      preferred_work_environment,
+      long_term_aspirations,
       difficulty,
-      college_student,
     } = careerInfo;
 
     if (!desired_career) {
@@ -207,36 +241,37 @@ const current_day = now.getDate();
 const current_month = now.toLocaleString("default", { month: "long" });
 const current_year = now.getFullYear();
 
-    let basePrompt = `Generate a year-by-year roadmap in JSON format for a student aiming to pursue a career as a "${desired_career}". The student is currently in "${current_class}" in "${residing_country}", with a spending capacity of "${spending_capacity}", currency of "${residing_country}" . The student ${
-      move_abroad
-        ? `plans to move abroad to ${preferred_abroad_country}`
-        : "does not plan to move abroad"
-    }. The student has "${previous_experience}" in the field.
+let basePrompt = `Generate a highly personalized, year-by-year roadmap in JSON format for a student aiming to pursue a career as "${desired_career}". The student is currently at the educational stage "${educational_stage}"` 
++ (educational_stage === 'school'
+  ? ` (Grade: ${school_grade}, Stream: ${school_stream})`
+  : ` (Year: ${college_year}, Degree: ${college_degree})`
+) + ` in "${residing_country}" with a spending capacity of "${spending_capacity}". The student` 
++ (move_abroad
+  ? ` plans to move abroad to ${preferred_abroad_country}`
+  : ` does not plan to move abroad`
+) + ` and has practical experience: "${practical_experience}".
+
+Include the following personal dimensions to tailor the roadmap:
+- Academic strengths: ${academic_strengths}
+- Extracurricular activities: ${extracurricular_activities}
+- Industry knowledge level: ${industry_knowledge_level}
+- Preferred learning style: ${preferred_learning_style}
+- Role model influences: ${role_model_influences}
+- Cultural/family expectations: ${cultural_family_expectations}
+- Mentorship and network status: ${mentorship_and_network_status}
+- Preferred language: ${preferred_language}
+- Preferred work environment: ${preferred_work_environment}
+- Long-term aspirations: ${long_term_aspirations}
 
 The roadmap should:
-- Cover the years from "${current_class}" until the end of secondary education (typically 12th grade or equivalent in "${residing_country}")${
-      college_student
-        ? ` or if college student in ${current_class}, then until graduation year`
-        : ""
-    }, divided into four 3-month phases per year.
-- Include milestones relevant to "${desired_career}", taking into account the educational system and career pathways of "${residing_country}".
-- Provide each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks that include weights (indicating importance) and a completion status (initially set to false). Provide explanation or description of that task in at least 2 to 3 lines.
+- Cover each year (from current stage to completion) divided into four 3-month phases.
+- Adjust task difficulty and count per phase based on "${difficulty}" (easy=3-4 tasks, medium=4-6, hard=6-8).
+- Align with local educational requirements of "${residing_country}".
+- Suggest free or paid resources per spending capacity.
+- Embed only working YouTube tutorial URLs (or fallback to a video_channel link).
+- Provide platforms, importance_explanation, and maintain the exact JSON schema without extra text or markdown.
 
-Tailor the tasks to the student's specific situation:
-- Residing Country: Incorporate relevant exams, qualifications, or educational requirements specific to "${residing_country}".
-- Spending Capacity: Adjust task recommendations based on "${spending_capacity}" (e.g., suggest free online resources if low, or paid courses/bootcamps if high).
-- Move Abroad: If the student plans to move to "${preferred_abroad_country}", include tasks such as language learning, cultural adaptation, visa preparation, or understanding the education system of that country.
-- Previous Experience: Use "${previous_experience}" to adjust the starting point—skip beginner tasks or include more advanced ones if the student has prior knowledge.
-
-Also, structure the roadmap year-wise. For example:
-- If the student is in India and currently in 9th grade, generate a roadmap until 12th grade (4 years). For students in other countries, generate the roadmap until the end of school (before college).
-- If the student is in college, generate the roadmap until graduation.
-- Within each year, divide the roadmap into four 3-month phases.
-- The roadmap should be sequential, with later years building upon the achievements of previous years.
-- Give detailed explanation about the task in at least 3 to 4 lines. 
-- Use the current day and month ("${current_day} ${current_month} ${current_year}") as the starting point for planning the phases.
-- Include *working* YouTube watch-URLs only. Each URL must point to a public video that you have verified can be embedded. If you can’t find an embeddable video for a task, leave "video" blank and provide a "video_channel" fallback. Provide when needed.
-- Add relevant platforms, websites or free courses.
+Use the date "${current_day} ${current_month} ${current_year}" as the starting reference.
  
 The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
 
@@ -291,35 +326,35 @@ The response must be strictly in JSON format without any additional text, markdo
 `;
 
     // Difficulty replacement
-    let prompt: string;
-    switch (difficulty) {
-      case "easy":
-        prompt = basePrompt.replace(
-          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
-          "each milestone with 3-4 actionable tasks"
-        );
-        break;
-      case "medium":
-        prompt = basePrompt.replace(
-          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
-          "each milestone with 4-6 actionable tasks"
-        );
-        break;
-      case "hard":
-        prompt = basePrompt.replace(
-          "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
-          "each milestone with 6-8 actionable tasks"
-        );
-        break;
-      default:
-        return NextResponse.json(
-          { error: "Invalid difficulty level" },
-          { status: 400 }
-        );
-    }
+    // let prompt: string;
+    // switch (difficulty) {
+    //   case "easy":
+    //     prompt = basePrompt.replace(
+    //       "divide into four 3-month phases",
+    //       "divide into four 3-month phases with 3-4 actionable tasks per milestone."
+    //     );
+    //     break;
+    //   case "medium":
+    //     prompt = basePrompt.replace(
+    //       "divide into four 3-month phases",
+    //       "divide into four 3-month phases with 4-6 actionable tasks per milestone."
+    //     );
+    //     break;
+    //   case "hard":
+    //     prompt = basePrompt.replace(
+    //       "each milestone with DIFFICULTY_SPECIFIC_TASK_COUNT actionable tasks",
+    //       "divide into four 3-month phases with 6-8 actionable tasks per milestone."
+    //     );
+    //     break;
+    //   default:
+    //     return NextResponse.json(
+    //       { error: "Invalid difficulty level" },
+    //       { status: 400 }
+    //     );
+    // }
 
     // Generate roadmap
-    const raw = await generateRoadmap(prompt);
+    const raw = await generateRoadmap(basePrompt);
       // 1) grab braces
       const text = raw.trim();
       const first = text.indexOf("{");
