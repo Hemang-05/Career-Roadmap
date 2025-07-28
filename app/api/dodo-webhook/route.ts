@@ -96,6 +96,8 @@
 
 // app/api/dodo-webhook/route.ts
 
+export const runtime = 'nodejs';
+
 import { Webhook } from "standardwebhooks";
 import { headers } from "next/headers";
 import { dodopayments } from "@/utils/dodopayment";
@@ -105,12 +107,13 @@ import { Subscript } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const webhook = new Webhook(process.env.NEXT_PUBLIC_DODO_WEBHOOK_KEY!);
 
 export async function POST(request: Request) {
+  console.log("🧾 METHOD:", request.method);
   const headersList = await headers();
   const rawBody = await request.text();
 
@@ -127,14 +130,14 @@ export async function POST(request: Request) {
     // Handle one-time payment success
     if (payload.type === "payment.succeeded") {
       const data = payload.data;
-      const email = data.customer.email;
+      const {email} = data.customer.email;
       const plan = data.metadata?.plan as "monthly" | "quarterly" | "yearly";
       const durations = { monthly: 1, quarterly: 3, yearly: 12 };
       const months = durations[plan] || 0;
       const expires_on = dayjs().add(months, "month").toISOString();
 
       // Update user in Supabase
-      await supabase
+      const { data: updatedRows, error } = await supabase
         .from("users")
         .update({
           subscription_status: true,
@@ -144,7 +147,13 @@ export async function POST(request: Request) {
         })
         .eq("email", email);
 
-      console.log(`Activated ${plan} for ${email}, expires on ${expires_on}`);
+     if (error) {
+        console.error('Supabase update error:', error);
+      } else if (updatedRows.length === 0) {
+        console.warn(`No matching user for email=${email}`);
+      } else {
+        console.log(`Activated ${plan} for ${email}; rows updated: ${updatedRows.length}`);
+      }
     }
 
     return new Response(JSON.stringify({ message: "OK" }), { status: 200 });
