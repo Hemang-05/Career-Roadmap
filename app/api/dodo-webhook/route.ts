@@ -96,8 +96,6 @@
 
 // app/api/dodo-webhook/route.ts
 
-// export const runtime = 'nodejs';
-
 // import { Webhook } from "standardwebhooks";
 // import { headers } from "next/headers";
 // import { dodopayments } from "@/utils/dodopayment";
@@ -134,7 +132,7 @@
 //     // Handle one-time payment success
 //     if (payload.type === "payment.succeeded") {
 //       const data = payload.data;
-//       const {email} = data.customer.email;
+//       const { email } = data.customer.email;
 //       const plan = data.metadata?.plan as "monthly" | "quarterly" | "yearly";
 //       const durations = { monthly: 1, quarterly: 3, yearly: 12 };
 //       const months = durations[plan] || 0;
@@ -151,12 +149,14 @@
 //         })
 //         .eq("email", email);
 
-//      if (error) {
-//         console.error('Supabase update error:', error);
+//       if (error) {
+//         console.error("Supabase update error:", error);
 //       } else if (updatedRows.length === 0) {
 //         console.warn(`No matching user for email=${email}`);
 //       } else {
-//         console.log(`Activated ${plan} for ${email}; rows updated: ${updatedRows.length}`);
+//         console.log(
+//           `Activated ${plan} for ${email}; rows updated: ${updatedRows.length}`
+//         );
 //       }
 //     }
 
@@ -170,18 +170,147 @@
 //   }
 // }
 
+// // app/api/dodo-webhook/route.ts
 
+// import { Webhook } from "standardwebhooks";
+// import { headers } from "next/headers";
+// import { createClient } from "@supabase/supabase-js";
+// import dayjs from "dayjs";
+
+// const supabase = createClient(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.SUPABASE_SERVICE_ROLE_KEY!
+// );
+
+// const webhook = new Webhook(process.env.NEXT_PUBLIC_DODO_WEBHOOK_KEY!);
+
+// export async function POST(request: Request) {
+//   const headersList = await headers();
+//   const rawBody = await request.text();
+//   const webhookTs = headersList.get("webhook-timestamp") || "";
+//   const webhookId = headersList.get("webhook-id") || "no-id";
+
+//   try {
+//     // 1. Verify quickly
+//     await webhook.verify(rawBody, {
+//       "webhook-id": webhookId,
+//       "webhook-signature": headersList.get("webhook-signature") || "",
+//       "webhook-timestamp": webhookTs,
+//     });
+
+//     // 2. Parse payload
+//     const payload = JSON.parse(rawBody);
+
+//     // 3. Log and start background processing without waiting
+//     console.log(
+//       `[${webhookId}] Queued for background processing at ${new
+// Date().toISOString()}`
+//     );
+//     processWebhook(payload, webhookTs, webhookId).catch((err) =>
+//       console.error(`[${webhookId}] Background error:`, err)
+//     );
+
+//     // 4. Immediate response (prevents 15s timeout)
+//     return new Response(JSON.stringify({ message: "Received" }), {
+// status: 200 });
+//   } catch (error: any) {
+//     console.error(`[${webhookId}] Webhook verification error:`, error);
+//     return new Response(
+//       JSON.stringify({ error: "Webhook verification failed", details:
+// error.message }),
+//       { status: 400 }
+//     );
+//   }
+// }
+
+// async function processWebhook(payload: any, webhookTs: string,
+// webhookId: string) {
+//   const startTime = Date.now();
+//   console.log(`[${webhookId}] Background processing started`);
+
+//   const data = payload.data;
+//   const email = data.customer?.email;
+//   if (!email) {
+//     console.warn(`[${webhookId}] No email found, skipping`);
+//     return;
+//   }
+
+//   // Guard against stale webhook
+//   const { data: userRow } = await supabase
+//     .from("users")
+//     .select("last_webhook_at")
+//     .eq("email", email)
+//     .single();
+
+//   if (userRow?.last_webhook_at && new Date(webhookTs) <= new
+// Date(userRow.last_webhook_at)) {
+//     console.log(`[${webhookId}] Stale webhook ignored for ${email}`);
+//     return;
+//   }
+
+//   if (
+//     data.payload_type === "Payment" &&
+//     payload.type === "payment.succeeded" &&
+//     !data.subscription_id
+//   ) {
+//     const plan = (data.metadata?.plan as "monthly" | "quarterly" |
+// "yearly") || "monthly";
+//     const durations = { monthly: 1, quarterly: 3, yearly: 12 };
+//     const months = durations[plan] || 0;
+//     const expiresOn = dayjs().add(months, "month").toISOString();
+
+//     await supabase
+//       .from("users")
+//       .update({
+//         subscription_status: true,
+//         subscription_end: expiresOn,
+//         subscription_plan: plan,
+//         subscription_start: dayjs().toISOString(),
+//         last_webhook_at: webhookTs,
+//       })
+//       .eq("email", email);
+
+//     console.log(`[${webhookId}] Activated ${plan} plan for ${email}`);
+//   } else if (data.payload_type === "Subscription") {
+//     const status = data.status;
+//     const plan = (data.metadata?.plan as string) || "unknown";
+//     const periodEnd = data.current_period_end;
+
+//     const updates: Record<string, any> = {
+//       subscription_plan: plan,
+//       last_webhook_at: webhookTs,
+//     };
+
+//     if (status === "active") {
+//       updates.subscription_status = true;
+//       updates.subscription_start = dayjs().toISOString();
+//       updates.subscription_end = periodEnd;
+//     } else {
+//       updates.subscription_status = false;
+//     }
+
+//     await supabase.from("users").update(updates).eq("email", email);
+
+//     console.log(`[${webhookId}] Subscription update for ${email} -> ${status}`);
+//   }
+
+//   const elapsed = (Date.now() - startTime) / 1000;
+//   console.log(`[${webhookId}] Background processing finished in
+// ${elapsed.toFixed(2)}s`);
+// }
 
 // app/api/dodo-webhook/route.ts
 
 import { Webhook } from "standardwebhooks";
 import { headers } from "next/headers";
+import { dodopayments } from "@/utils/dodopayment";
 import { createClient } from "@supabase/supabase-js";
 import dayjs from "dayjs";
+import { Subscript } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const webhook = new Webhook(process.env.NEXT_PUBLIC_DODO_WEBHOOK_KEY!);
@@ -189,114 +318,46 @@ const webhook = new Webhook(process.env.NEXT_PUBLIC_DODO_WEBHOOK_KEY!);
 export async function POST(request: Request) {
   const headersList = await headers();
   const rawBody = await request.text();
-  const webhookTs = headersList.get("webhook-timestamp") || "";
-  const webhookId = headersList.get("webhook-id") || "no-id";
 
   try {
-    // 1. Verify quickly
+    // Verify signature
     await webhook.verify(rawBody, {
-      "webhook-id": webhookId,
+      "webhook-id": headersList.get("webhook-id") || "",
       "webhook-signature": headersList.get("webhook-signature") || "",
-      "webhook-timestamp": webhookTs,
+      "webhook-timestamp": headersList.get("webhook-timestamp") || "",
     });
 
-    // 2. Parse payload
     const payload = JSON.parse(rawBody);
 
-    // 3. Log and start background processing without waiting
-    console.log(
-      `[${webhookId}] Queued for background processing at ${new
-Date().toISOString()}`
-    );
-    processWebhook(payload, webhookTs, webhookId).catch((err) =>
-      console.error(`[${webhookId}] Background error:`, err)
-    );
+    // Handle one-time payment success
+    if (payload.type === "payment.succeeded") {
+      const data = payload.data;
+      const email = data.customer.email;
+      const plan = data.metadata?.plan as "monthly" | "quarterly" | "yearly";
+      const durations = { monthly: 1, quarterly: 3, yearly: 12 };
+      const months = durations[plan] || 0;
+      const expires_on = dayjs().add(months, "month").toISOString();
 
-    // 4. Immediate response (prevents 15s timeout)
-    return new Response(JSON.stringify({ message: "Received" }), {
-status: 200 });
-  } catch (error: any) {
-    console.error(`[${webhookId}] Webhook verification error:`, error);
+      // Update user in Supabase
+      await supabase
+        .from("users")
+        .update({
+          subscription_status: true,
+          subscription_end: expires_on,
+          subscription_plan: plan,
+          subscription_start: new Date().toISOString().split("T")[0],
+        })
+        .eq("email", email);
+
+      console.log(`Activated ${plan} for ${email}, expires on ${expires_on}`);
+    }
+
+    return new Response(JSON.stringify({ message: "OK" }), { status: 200 });
+  } catch (err) {
+    console.error("Webhook error:", err);
     return new Response(
-      JSON.stringify({ error: "Webhook verification failed", details:
-error.message }),
+      JSON.stringify({ message: "Webhook verification failed" }),
       { status: 400 }
     );
   }
-}
-
-async function processWebhook(payload: any, webhookTs: string,
-webhookId: string) {
-  const startTime = Date.now();
-  console.log(`[${webhookId}] Background processing started`);
-
-  const data = payload.data;
-  const email = data.customer?.email;
-  if (!email) {
-    console.warn(`[${webhookId}] No email found, skipping`);
-    return;
-  }
-
-  // Guard against stale webhook
-  const { data: userRow } = await supabase
-    .from("users")
-    .select("last_webhook_at")
-    .eq("email", email)
-    .single();
-
-  if (userRow?.last_webhook_at && new Date(webhookTs) <= new
-Date(userRow.last_webhook_at)) {
-    console.log(`[${webhookId}] Stale webhook ignored for ${email}`);
-    return;
-  }
-
-  if (
-    data.payload_type === "Payment" &&
-    payload.type === "payment.succeeded" &&
-    !data.subscription_id
-  ) {
-    const plan = (data.metadata?.plan as "monthly" | "quarterly" |
-"yearly") || "monthly";
-    const durations = { monthly: 1, quarterly: 3, yearly: 12 };
-    const months = durations[plan] || 0;
-    const expiresOn = dayjs().add(months, "month").toISOString();
-
-    await supabase
-      .from("users")
-      .update({
-        subscription_status: true,
-        subscription_end: expiresOn,
-        subscription_plan: plan,
-        subscription_start: dayjs().toISOString(),
-        last_webhook_at: webhookTs,
-      })
-      .eq("email", email);
-
-    console.log(`[${webhookId}] Activated ${plan} plan for ${email}`);
-  } else if (data.payload_type === "Subscription") {
-    const status = data.status;
-    const plan = (data.metadata?.plan as string) || "unknown";
-    const periodEnd = data.current_period_end;
-
-    const updates: Record<string, any> = {
-      subscription_plan: plan,
-      last_webhook_at: webhookTs,
-    };
-
-    if (status === "active") {
-      updates.subscription_status = true;
-      updates.subscription_start = dayjs().toISOString();
-      updates.subscription_end = periodEnd;
-    } else {
-      updates.subscription_status = false;
-    }
-
-    await supabase.from("users").update(updates).eq("email", email);
-
-    console.log(`[${webhookId}] Subscription update for ${email} -> ${status}`);
-  }
-
-  const elapsed = (Date.now() - startTime) / 1000;
-  console.log(`[${webhookId}] Background processing finished in
-${elapsed.toFixed(2)}s`);
 }
