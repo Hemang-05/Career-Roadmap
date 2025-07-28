@@ -2,10 +2,9 @@
 
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { SignInButton, useUser } from "@clerk/nextjs";
-import { AnimatedTooltip } from "@/components/ui/AnimatedTooltip";
+
+import { SignUpButton, useUser } from "@clerk/nextjs";
+
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -16,17 +15,14 @@ export default function HeroSection() {
   const [stateReady, setStateReady] = useState<boolean>(false);
   const router = useRouter();
 
-  // Track if the user state just changed (e.g., just signed in)
   const [userJustSignedIn, setUserJustSignedIn] = useState<boolean>(false);
 
-  // Track when user signs in
   useEffect(() => {
     if (isLoaded && isSignedIn && user) {
       setUserJustSignedIn(true);
     }
   }, [isLoaded, isSignedIn, user]);
 
-  // Check if the signed-in user already has a roadmap
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -44,7 +40,6 @@ export default function HeroSection() {
       try {
         console.log("Checking roadmap for user:", user.id);
 
-        // Step 1: Get the internal user_id from users table using clerk_id
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("id")
@@ -61,7 +56,6 @@ export default function HeroSection() {
 
         console.log("Found internal user_id:", userData.id);
 
-        // Step 2: Use the internal user_id to check if a roadmap exists
         const { data: careerData, error: careerError } = await supabase
           .from("career_info")
           .select("roadmap")
@@ -95,7 +89,6 @@ export default function HeroSection() {
     checkUserRoadmap();
   }, [isLoaded, user]);
 
-  // Auto-redirect effect once state is ready (no delay, just immediate redirection)
   useEffect(() => {
     if (userJustSignedIn && stateReady && !loading) {
       console.log("User just signed in and state is ready. Redirecting now...");
@@ -105,7 +98,6 @@ export default function HeroSection() {
     }
   }, [userJustSignedIn, stateReady, loading, hasRoadmap, router]);
 
-  // Handle the navigation when the button is clicked manually
   const handleStartNow = () => {
     if (isSignedIn) {
       const destination = hasRoadmap ? "/roadmap" : "/dashboard";
@@ -114,39 +106,6 @@ export default function HeroSection() {
     }
   };
 
-  // Sample data for enrolled users
-  const enrolledUsers = [
-    {
-      id: 1,
-      name: "Alice",
-      designation: "Student",
-      image:
-        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966691/kid1_xkapd9.jpg",
-    },
-    {
-      id: 2,
-      name: "Bob",
-      designation: "Student",
-      image:
-        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966689/kid2_imcmyf.jpg",
-    },
-    {
-      id: 3,
-      name: "Carol",
-      designation: "Student",
-      image:
-        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966693/kid3_ajkhfl.jpg",
-    },
-    {
-      id: 4,
-      name: "Jake",
-      designation: "Student",
-      image:
-        "https://res.cloudinary.com/ditn9req1/image/upload/v1744966690/kid4_n62q2f.jpg",
-    },
-  ];
-
-  // Debug info for development
   useEffect(() => {
     console.log("hasRoadmap state updated to:", hasRoadmap);
   }, [hasRoadmap]);
@@ -154,73 +113,105 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="container  mx-auto flex flex-col md:flex-row items-center justify-center px-44 py-12 relative overflow-hidden"
+      className="relative min-h-[80vh] flex items-center justify-center overflow-hidden mx-[5%] rounded-[4rem]"
+      style={{
+        backgroundImage:
+          "url('https://res.cloudinary.com/ditn9req1/image/upload/v1753625003/17_irdmsq.jpg')", // Replace with your image
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
-      {/* Text content */}
-      <div className="md:w-1/2 mb-10  md:mb-0 md:pr-8 text-center md:text-left z-10">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-8">
-          <div>Your Journey.</div>
-          <div className="md:text-5xl">
-            Our <span className="text-[#FF6500] text-7xl">Roadmap</span>.
-          </div>
-        </h1>
-        <p className="text-xl text-gray-600 mb-20">
-          AI-driven roadmaps, real-time updates, exclusive opportunities, and
-          personalized guidance—your complete career partner, all in one place.
-        </p>
-        {/* Button Section */}
-        <div className="flex flex-col md:flex-row md:space-x-12 items-center justify-center md:justify-start mt-8">
-          <div className="relative inline-block">
-            {isSignedIn ? (
-              <button
-                onClick={handleStartNow}
-                className="bg-white text-black py-5 px-12 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-orange-400 mb-2"
-                disabled={loading || !stateReady}
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin h-5 w-5 text-black mr-2"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-6 md:px-12 lg:px-24 text-center">
+        <div className="max-w-5xl mx-auto">
+          {/* Main Headline - Reduced from text-4xl/6xl/7xl to text-3xl/5xl/6xl */}
+          <h1 className="text-2xl md:text-3xl lg:text-5xl font-medium text-white leading-tight mb-4">
+            AI for your dream career
+            <br />
+            <span className="text-white">Your big money, your Roadmap.</span>
+          </h1>
+
+          {/* Subheading - Reduced from text-lg/xl/2xl to text-base/lg/xl */}
+          <p className="text-base md:text-lg lg:text-xl text-white/90 mb-8 max-w-3xl mx-auto font-light ">
+            Careeroadmap’s AI crafts a personalized path to your dream job
+          </p>
+
+          {/* CTA Button */}
+          <div className="flex justify-center">
+            <div className="relative inline-block">
+              {isSignedIn ? (
+                <button
+                  onClick={handleStartNow}
+                  className="bg-black hover:bg-white text-white hover:text-black font-semibold py-4 px-8 md:py-5 md:px-12 rounded-full text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  disabled={loading || !stateReady}
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-black mr-3"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        ></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      Start your journey
+                      <svg
+                        className="ml-2 w-5 h-5"
+                        fill="none"
                         stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      ></path>
-                    </svg>
-                    Loading...
-                  </span>
-                ) : (
-                  `Start Now`
-                )}
-              </button>
-            ) : (
-              <SignInButton mode="modal">
-                <button className="bg-white text-black py-5 px-12 rounded-full border-2 border-black hover:border-transparent transition-all duration-500 hover:bg-orange-400 mb-2">
-                  Start Now
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </span>
+                  )}
                 </button>
-              </SignInButton>
-            )}
-            {/* <div className="flex flex-col items-center mt-4 pointer-events-none">
-              <AnimatedTooltip items={enrolledUsers} />
-            </div> */}
+              ) : (
+                <SignUpButton mode="modal">
+                  <button className="bg-black hover:bg-white text-white hover:text-black font-semibold py-4 px-8 md:py-5 md:px-12 rounded-full text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    <span className="flex items-center">
+                      Start your journey
+                      <svg
+                        className="ml-2 w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                </SignUpButton>
+              )}
+            </div>
           </div>
         </div>
-        {/* <p className="text-gray-500 text-sm mt-2">
-          1278+ joined for achieving their goal
-        </p> */}
       </div>
-
-      {/* 3D Career Illustrations Section */}
     </section>
   );
 }

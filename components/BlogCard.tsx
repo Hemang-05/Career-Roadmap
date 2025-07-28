@@ -69,7 +69,7 @@ export default function BlogCard({ blog }: Props) {
 
   return (
     <Link href={`/blog/${blog.slug}`} className="block group" prefetch={false}>
-      <div className="bg-[#ffdac7] rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-[#ffffff] rounded-3xl overflow-hidden border hover:shadow-md transition-shadow duration-300">
         {blog.cover_image_url && (
           <img
             src={blog.cover_image_url}
@@ -78,14 +78,14 @@ export default function BlogCard({ blog }: Props) {
           />
         )}
         <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-2 text-zinc-800 group-hover:text-orange-600 transition-colors">
+          <h2 className="text-xl font-semibold mb-2 text-zinc-800 group-hover:text-[#4aaf88] transition-colors">
             {blog.title}
           </h2>
           <p className="text-gray-500 text-xs mb-4">
             {format(new Date(blog.created_at), "MMM dd, yyyy")}
             {blog.author ? ` · ${blog.author}` : ""}
           </p>
-          <p className="text-gray-700 text-sm">{excerpt}</p>
+          <p className="text-gray-700 text-sm font-thin">{excerpt}</p>
         </div>
       </div>
     </Link>
