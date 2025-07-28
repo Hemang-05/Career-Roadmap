@@ -112,6 +112,10 @@ const supabase = createClient(
 
 const webhook = new Webhook(process.env.NEXT_PUBLIC_DODO_WEBHOOK_KEY!);
 
+export async function GET() {
+  return new Response("OK from GET", { status: 200 });
+}
+
 export async function POST(request: Request) {
   console.log("🧾 METHOD:", request.method);
   const headersList = await headers();
