@@ -11,9 +11,9 @@ interface Feature {
 const features: Feature[] = [
   {
     id: "ai-roadmap",
-    title: "A Career GPS That Updates in Real Time - Like, Literally for You",
+    title: "A Career GPS That Updates in Real Time",
     description:
-      "Get yourself a roadmap that evolves, updates with you, and guides you step-by-step through your career journey. Our AI-powered roadmap adapts to current and future job market trends, ensuring you always have the most relevant and personalised path to success, and that makes you ready for your dream job.",
+      "Get yourself a roadmap that evolves, updates with you, and guides you step-by-step through your career journey. Roadmap adapts to current and future job market trends, ensuring the most relevant and personalised path to success that makes you ready for your dream job.",
     imageUrl:
       "https://res.cloudinary.com/ditn9req1/image/upload/v1753624999/fr_b5sqgz.png",
   },
