@@ -11,7 +11,7 @@ interface Feature {
 const features: Feature[] = [
   {
     id: "ai-roadmap",
-    title: "Your Ultimate AI Career Roadmap",
+    title: "A Career GPS That Updates in Real Time - Like, Literally for You",
     description:
       "Get yourself a roadmap that evolves, updates with you, and guides you step-by-step through your career journey. Our AI-powered roadmap adapts to current and future job market trends, ensuring you always have the most relevant and personalised path to success, and that makes you ready for your dream job.",
     imageUrl:
