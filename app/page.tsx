@@ -177,15 +177,15 @@ export default function LandingPage() {
               <FeaturesSection />
             </section>
 
-            {/* How We Work Section */}
-            <section aria-label="How our platform works" id="how-it-works">
-              <HowWeWork />
-            </section>
-
             {/* Breadcrumbs/Navigation */}
             <nav aria-label="Advantages about our platform">
               <Crumbs />
             </nav>
+
+            {/* How We Work Section */}
+            <section aria-label="How our platform works" id="how-it-works">
+              <HowWeWork />
+            </section>
 
             {/* Pricing Plans */}
             <section aria-label="Pricing plans" id="pricing">
