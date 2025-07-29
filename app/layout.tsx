@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     title: "Career Roadmap",
     description:
       "A personalized career roadmap ai platform for students—get step-by-step guidance, study resources, and event updates to reach your dream profession with ease.",
-    url: "www.careeroadmap.com",
+    url: "https://careeroadmap.com",
     siteName: "Career Roadmap",
     images: [
       {
-        url: "www.careeroadmap.com/og-image.png",
+        url: "https://careeroadmap.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Career Roadmap Preview",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "www.careeroadmap.com",
+    canonical: "https://careeroadmap.com",
   },
 };
 
