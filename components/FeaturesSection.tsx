@@ -13,7 +13,7 @@ const features: Feature[] = [
     id: "ai-roadmap",
     title: "Your Ultimate AI Career Roadmap",
     description:
-      "Experience a detailed, real-time career roadmap powered by AI. Choose your difficulty easy, medium, or hard to tailor your journey. Our universal insights surpass traditional counselors, ensuring you're never alone on your path to success.",
+      "Get yourself a roadmap that evolves, updates with you, and guides you step-by-step through your career journey. Our AI-powered roadmap adapts to current and future job market trends, ensuring you always have the most relevant and personalised path to success, and that makes you ready for your dream job.",
     imageUrl:
       "https://res.cloudinary.com/ditn9req1/image/upload/v1753624999/fr_b5sqgz.png",
   },
