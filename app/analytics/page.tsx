@@ -259,7 +259,18 @@ export default function AnalyticsDashboard() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <FloatingNavbar navLinks={dashboardLinks} />
-      <div className="container mx-auto mt-24 px-6 py-12 flex-grow max-w-6xl">
+      <div className="container mx-auto mt-8 px-6 py-12 flex-grow max-w-6xl">
+
+        {/* Discount generator section */}
+        {user?.primaryEmailAddress?.emailAddress && (
+          <div className=" mb-8 p-8 rounded-3xl border border-green-100">
+            <h2 className="text-xl font-semibold text-slate-800 mb-4">
+              Your Referral Discount
+            </h2>
+            <DiscountGenerator email={user.primaryEmailAddress.emailAddress} />
+          </div>
+        )}
+
         <h1 className="text-3xl text-slate-800 font-bold mb-2">
           Performance Analysis
         </h1>
@@ -453,15 +464,7 @@ export default function AnalyticsDashboard() {
           </div>
         </div>
 
-        {/* Discount generator section */}
-        {user?.primaryEmailAddress?.emailAddress && (
-          <div className="mt-12 p-8 rounded-3xl border border-green-100">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4">
-              Your Referral Discount
-            </h2>
-            <DiscountGenerator email={user.primaryEmailAddress.emailAddress} />
-          </div>
-        )}
+        
       </div>
 
       {/* Footer with subtle info */}
