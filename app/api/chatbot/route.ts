@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     5. Upon their choice and explicit confirmation, output exactly:
        
        Great choice! [Career] seems perfect for you based on our conversation.
-       Then add a *VERY* brief luxury‑and‑benefits blurb (high‑end salary, growth prospects, demand) in one sentence. 
+       Then add a brief luxury‑and‑benefits blurb (provide the high end salary amount to impress users, growth prospects and potentials workings, demand in future) in one-two sentence. 
        
        FINAL_CAREER: [Chosen Career]
        
