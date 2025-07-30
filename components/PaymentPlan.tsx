@@ -228,6 +228,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 import PlanCard from "./ui/PlanCard";
+import DiscountCard from '@/components/ui/discountCard';
 
 interface PaymentPlanProps {
   clerk_id: string;
@@ -350,8 +351,8 @@ export default function PaymentPlan({
 
   return (
     <div className="fixed inset-0 flex items-start sm:items-center justify-center bg-black bg-opacity-30 z-50">
-      <div className="relative bg-white h-full sm:h-auto sm:rounded-[4rem] p-3 sm:p-4 md:p-6 shadow-xl w-full sm:max-w-4xl overflow-y-auto sm:max-h-[90vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <h2 className="text-sm sm:text-lg md:text-xl text-black font-thin m-3 sm:m-4 text-center">
+      <div className="relative bg-white h-full p-3 sm:p-4 md:p-6 shadow-xl w-full sm:max-w-full overflow-y-auto sm:max-h-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <h2 className="text-sm sm:text-base md:text-xl text-black font-thin m-3 sm:m-2 text-center">
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
@@ -360,7 +361,46 @@ export default function PaymentPlan({
             {error}
           </p>
         )}
+       
+        {/* Get 80% Refund */}
+        <DiscountCard className="mb-4 mt-4 mx-auto" />
 
+        {/* Coupon + Check button */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-3 px-2">
+          <input
+            type="text"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value);
+              setIsValid(null);
+              setErrorMsg(null);
+            }}
+            placeholder="Enter discount code"
+            className="w-full sm:w-auto border border-gray-300 m-2 p-2 text-green-800 rounded-xl text-sm max-w-xs focus:outline-none focus:ring-1"
+          />
+          <button
+            onClick={handleValidate}
+            disabled={isValidating}
+            className="w-1/2 sm:w-auto px-4 py-2 rounded-xl text-green-600 bg-gray-100 hover:bg-gray-200 transition text-sm font-medium min-w-[80px]"
+          >
+            {isValidating ? (
+              <FaSpinner className="w-4 h-4 animate-spin mx-auto" />
+            ) : isValid === true ? (
+              <FaCheck className="w-4 h-4 text-green-600 mx-auto" />
+            ) : isValid === false ? (
+              <FaTimes className="w-4 h-4 text-red-600 mx-auto" />
+            ) : (
+              "Apply"
+            )}
+          </button>
+        </div>
+        {errorMsg && (
+          <p className="text-red-600 text-xs sm:text-sm text-center mt-2">
+            {errorMsg}
+          </p>
+        )}
+
+        {/* price cards */}
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 max-w-4xl mx-auto">
             {plans.map((plan) => (
@@ -396,42 +436,7 @@ export default function PaymentPlan({
           </div>
         </div>
 
-        {/* Coupon + Check button */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4 px-2">
-          <input
-            type="text"
-            value={discountCode}
-            onChange={(e) => {
-              setDiscountCode(e.target.value);
-              setIsValid(null);
-              setErrorMsg(null);
-            }}
-            placeholder="Enter discount code"
-            className="w-full sm:w-auto border border-gray-300 m-2 p-2 text-green-800 rounded-xl text-sm max-w-xs focus:outline-none focus:ring-1"
-          />
-          <button
-            onClick={handleValidate}
-            disabled={isValidating}
-            className="w-1/2 sm:w-auto px-4 py-2 rounded-xl text-green-600 bg-gray-100 hover:bg-gray-200 transition text-sm font-medium min-w-[80px]"
-          >
-            {isValidating ? (
-              <FaSpinner className="w-4 h-4 animate-spin mx-auto" />
-            ) : isValid === true ? (
-              <FaCheck className="w-4 h-4 text-green-600 mx-auto" />
-            ) : isValid === false ? (
-              <FaTimes className="w-4 h-4 text-red-600 mx-auto" />
-            ) : (
-              "Apply"
-            )}
-          </button>
-        </div>
-        {errorMsg && (
-          <p className="text-red-600 text-xs sm:text-sm text-center mt-2">
-            {errorMsg}
-          </p>
-        )}
-
-        <div className="mt-4 text-center pb-4 sm:pb-0">
+        <div className="mt-3 text-center pb-4 sm:pb-0">
           <button
             onClick={() => (onClose ? onClose() : router.push("/dashboard"))}
             className="text-gray-500 hover:text-red-600 text-xs sm:text-sm transition-colors"

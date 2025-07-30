@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa";
 import PlanCard from "./ui/PlanCard";
+import DiscountCard from '@/components/ui/discountCard';
 
 interface USDPaymentPlanProps {
   clerk_id: string;
-  onSuccess?: (plan: "monthly" | "quarterly" | "yearly") => void;
+  onSuccess?: (plan: "month" | "quarter" | "year") => void;
   onClose?: () => void;
   message?: string;
 }
@@ -57,7 +58,7 @@ export default function USDPaymentPlan({
   }
 
   // 2️⃣ Payment handler
-  const handlePayment = async (plan: "monthly" | "quarterly" | "yearly") => {
+  const handlePayment = async (plan: "month" | "quarter" | "year") => {
     setLoading(true);
     setError(null);
 
@@ -80,9 +81,9 @@ export default function USDPaymentPlan({
       // update your local Supabase record
       const now = new Date();
       let endDate = new Date();
-      if (plan === "monthly") endDate.setMonth(now.getMonth() + 1);
-      if (plan === "quarterly") endDate.setMonth(now.getMonth() + 3);
-      if (plan === "yearly") endDate.setFullYear(now.getFullYear() + 1);
+      if (plan === "month") endDate.setMonth(now.getMonth() + 1);
+      if (plan === "quarter") endDate.setMonth(now.getMonth() + 3);
+      if (plan === "year") endDate.setFullYear(now.getFullYear() + 1);
 
       const { error: updateError } = await supabase
         .from("users")
@@ -144,8 +145,8 @@ export default function USDPaymentPlan({
 
   return (
     <div className="fixed inset-0 flex items-start sm:items-center justify-center bg-black bg-opacity-30 z-50">
-      <div className="relative bg-white h-full sm:h-auto sm:rounded-[4rem] p-3 sm:p-4 md:p-6 shadow-xl w-full sm:max-w-4xl overflow-y-auto sm:max-h-[90vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <h2 className="text-sm sm:text-lg md:text-xl text-black font-thin m-3 sm:m-4 text-center">
+      <div className="relative bg-white h-full p-3 sm:p-4 md:p-6 shadow-xl w-full sm:max-w-full overflow-y-auto sm:max-h-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <h2 className="text-sm sm:text-base md:text-xl text-black font-thin m-3 sm:m-2 text-center">
           {message ||
             "Your subscription has expired. Please choose a payment plan."}
         </h2>
@@ -155,43 +156,11 @@ export default function USDPaymentPlan({
           </p>
         )}
 
-        <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 max-w-4xl mx-auto">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                onClick={() =>
-                  handlePayment(
-                    plan.name.toLowerCase() as
-                      | "monthly"
-                      | "quarterly"
-                      | "yearly"
-                  )
-                }
-                className={`cursor-pointer transition-all h-full duration-300 ${
-                  loading
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:scale-102 sm:hover:scale-105"
-                }`}
-              >
-                <div className="h-full">
-                  <PlanCard
-                    title={plan.name}
-                    price={plan.price}
-                    originalPrice={plan.originalPrice}
-                    symbol={plan.symbol}
-                    period={plan.period}
-                    features={plan.features}
-                    backgroundImage={plan.backgroundImage}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Get 80% Refund */}
+        <DiscountCard className="mb-4 mt-4 mx-auto" />
 
         {/* Coupon + Check button */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4 px-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-3 px-2">
           <input
             type="text"
             value={discountCode}
@@ -224,6 +193,44 @@ export default function USDPaymentPlan({
             {errorMsg}
           </p>
         )}
+
+        {/* price cards */}
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 max-w-4xl mx-auto">
+            {plans.map((plan) => (
+              <div
+                key={plan.name}
+                onClick={() =>
+                  handlePayment(
+                    plan.name.toLowerCase() as
+                      | "month"
+                      | "quarter"
+                      | "year"
+                  )
+                }
+                className={`cursor-pointer transition-all h-full duration-300 ${
+                  loading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:scale-102 sm:hover:scale-105"
+                }`}
+              >
+                <div className="h-full">
+                  <PlanCard
+                    title={plan.name}
+                    price={plan.price}
+                    originalPrice={plan.originalPrice}
+                    symbol={plan.symbol}
+                    period={plan.period}
+                    features={plan.features}
+                    backgroundImage={plan.backgroundImage}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        
 
         <div className="mt-4 text-center pb-4 sm:pb-0">
           <button
