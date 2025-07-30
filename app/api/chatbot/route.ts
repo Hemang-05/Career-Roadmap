@@ -55,7 +55,7 @@ export async function POST(request: Request) {
        FINAL_CAREER: [Chosen Career]
        
        IMPORTANT: 
-       - The FINAL_CAREER line should be on its own line at the very end
+       - The FINAL_CAREER line should be on its own line at the very end with brief luxury-and-benefits blurb on the next line.
        - Do NOT include any JSON formatting or additional text after FINAL_CAREER
        - The career name should be clean (e.g., "Data Scientist", "Software Engineer")
        - Do NOT add any confirmation messages or buttons after FINAL_CAREER - the system will handle this automatically
