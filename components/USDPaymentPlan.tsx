@@ -9,7 +9,7 @@ import DiscountCard from '@/components/ui/discountCard';
 
 interface USDPaymentPlanProps {
   clerk_id: string;
-  onSuccess?: (plan: "month" | "quarter" | "year") => void;
+  onSuccess?: (plan: "monthly" | "quarterly" | "yearly") => void;
   onClose?: () => void;
   message?: string;
 }
@@ -58,7 +58,7 @@ export default function USDPaymentPlan({
   }
 
   // 2️⃣ Payment handler
-  const handlePayment = async (plan: "month" | "quarter" | "year") => {
+  const handlePayment = async (plan: "monthly" | "quarterly" | "yearly") => {
     setLoading(true);
     setError(null);
 
@@ -81,9 +81,9 @@ export default function USDPaymentPlan({
       // update your local Supabase record
       const now = new Date();
       let endDate = new Date();
-      if (plan === "month") endDate.setMonth(now.getMonth() + 1);
-      if (plan === "quarter") endDate.setMonth(now.getMonth() + 3);
-      if (plan === "year") endDate.setFullYear(now.getFullYear() + 1);
+      if (plan === "monthly") endDate.setMonth(now.getMonth() + 1);
+      if (plan === "quarterly") endDate.setMonth(now.getMonth() + 3);
+      if (plan === "yearly") endDate.setFullYear(now.getFullYear() + 1);
 
       const { error: updateError } = await supabase
         .from("users")
@@ -203,9 +203,9 @@ export default function USDPaymentPlan({
                 onClick={() =>
                   handlePayment(
                     plan.name.toLowerCase() as
-                      | "month"
-                      | "quarter"
-                      | "year"
+                      | "monthly"
+                      | "quarterly"
+                      | "yearly"
                   )
                 }
                 className={`cursor-pointer transition-all h-full duration-300 ${

@@ -18,12 +18,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Map your subscription plans to the corresponding product IDs from your dodopayments dashboard.
 const productIds: Record<string, string> = {
-  monthly: process.env.PRODUCT_ID_MONTHLY || "pdt_monthly_default",
-  quarterly: process.env.PRODUCT_ID_QUARTERLY || "pdt_quarterly_default",
-  yearly: process.env.PRODUCT_ID_YEARLY || "pdt_yearly_default",
-  month: process.env.PRODUCT_ID_MONTH || "pdt_monthly_default",
-  quarter: process.env.PRODUCT_ID_QUARTER || "pdt_quarterly_default",
-  year: process.env.PRODUCT_ID_YEAR || "pdt_yearly_default",
+  monthly: process.env.PRODUCT_ID_MONTH || "pdt_monthly_default",
+  quarterly: process.env.PRODUCT_ID_QUARTER || "pdt_quarterly_default",
+  yearly: process.env.PRODUCT_ID_YEAR || "pdt_yearly_default",
+  // month: process.env.PRODUCT_ID_MONTH || "pdt_monthly_default",
+  // quarter: process.env.PRODUCT_ID_QUARTER || "pdt_quarterly_default",
+  // year: process.env.PRODUCT_ID_YEAR || "pdt_yearly_default",
 };
 
 export async function POST(request: Request) {
