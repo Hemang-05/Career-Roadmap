@@ -12,6 +12,7 @@ import ProgressBar from "@/components/ProgressBar";
 import PaymentPlan from "@/components/PaymentPlan";
 import { calculateWeightProgress } from "@/utils/calcWeightProgress";
 import Footer from "@/components/Footer";
+import DiscountGenerator from "@/components/DiscountGenerator";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -451,6 +452,16 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Discount generator section */}
+        {user?.primaryEmailAddress?.emailAddress && (
+          <div className="mt-12 p-8 rounded-3xl border border-green-100">
+            <h2 className="text-xl font-semibold text-slate-800 mb-4">
+              Your Referral Discount
+            </h2>
+            <DiscountGenerator email={user.primaryEmailAddress.emailAddress} />
+          </div>
+        )}
       </div>
 
       {/* Footer with subtle info */}
