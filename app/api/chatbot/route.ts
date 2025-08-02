@@ -23,8 +23,9 @@ export async function POST(request: Request) {
     
     
     3. IMPORTANT - Format replies for better streaming:
-       • When offering choices, start your response with the message text, then add the JSON structure at the end:
-         
+       • Write your conversational message first as plain text
+       -  Then add the JSON structure at the very end:
+
          Your conversational message here.
          
          \\\`json
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
          \\\`json
          {"message": "Your text"}
          \\\`
+
+         Keep conversational text separate from JSON to avoid streaming artifacts
+        -  Avoid mixing formatted content with the main message
     
     4. Only after you've covered enough ground, suggest 1–3 careers:
        

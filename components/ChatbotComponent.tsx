@@ -12,28 +12,31 @@ interface ChatbotComponentProps {
 export default function ChatbotComponent({ user, onComplete }: ChatbotComponentProps) {
   const [finalCareer, setFinalCareer] = useState("");
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [isAnalysing, setIsAnalysing] = useState(false);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
     api: "/api/chatbot",
     onError: (error) => {
       console.error("Chat error:", error);
     },
-    onFinish: (message) => {
+    onFinish: async(message) => {
       if (message.content.includes("FINAL_CAREER:") && !awaitingConfirmation) {
+        // start analysing loader
+            setIsAnalysing(true);
         // Updated regex to be more precise and stop at line breaks or JSON characters
         const careerMatch = message.content.match(/FINAL_CAREER:\s*([^\n\r\]}"]+)/);
         if (careerMatch) {
           const career = careerMatch[1].trim();
           setFinalCareer(career);
-          setAwaitingConfirmation(true);
-          
-          // Add confirmation message to chat with a slight delay to avoid flickering
-          setTimeout(() => {
-            append({
-              role: "assistant",
-              content: `\`\`\`json\n{"message": "Perfect! Your final career choice is: ${career}. Click confirm to start the roadmap generation process.", "buttons": ["Confirm", "Not Sure, show me other options"]}\n\`\`\``
-            });
-          }, 100);
+           // Append the JSON confirm message, then stop analysing
+            await append({
+                role: "assistant",
+                content: `\`\`\`json\n{"message":"Perfect! Your final career choice is: ${career}. Click confirm to start the roadmap generation process.","buttons":["Confirm","Not Sure, show me other options"]}\n\`\`\``
+              });
+        
+        // now that it's appended, flip the flags
+        setIsAnalysing(false);
+        setAwaitingConfirmation(true);
         }
       }
     }
@@ -91,8 +94,8 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
   // Improved parsing function that handles streaming better
   const parseMessageContent = (content: string, isStreaming: boolean = false) => {
     // If still streaming and content looks incomplete, show raw content
-    if (isStreaming && !content.trim().endsWith('}')) {
-      return { message: content, buttons: [] };
+    if (isStreaming) {
+      return { message: '', buttons: [] };
     }
 
     // Try to extract JSON from various formats
@@ -173,8 +176,13 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
         {messages
           .filter((m, i) => !(i === 0 && m.role === 'user'))
           .map((m) => {
-            const isUser = m.role === "user";
-            const isCurrentlyStreaming = isLoading && messages[messages.length - 1]?.id === m.id;
+            const lastId = messages[messages.length - 1]?.id;
+            const isStreamingAssistant =
+              isLoading && m.role === 'assistant' && m.id === lastId;
+
+              if (isStreamingAssistant) return null;
+
+              const isUser = m.role === "user";
             
             // Clean the message content by removing FINAL_CAREER line
             let cleanContent = m.content;
@@ -182,9 +190,9 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
               cleanContent = cleanContent.replace(/FINAL_CAREER:.*$/m, '').trim();
             }
             
-            const parsedContent = isUser ? 
-              { message: cleanContent } : 
-              parseMessageContent(cleanContent, isCurrentlyStreaming);
+            const parsedContent = isUser 
+              ? { message: cleanContent } 
+              : parseMessageContent(cleanContent, isStreamingAssistant);
             
             return (
               <ChatMessage
@@ -213,6 +221,25 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
           </div>
         )}
       </div>
+
+
+      {isAnalysing && (
+  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
+    <div className="flex items-center space-x-2">
+      <svg
+        className="animate-spin h-5 w-5 text-gray-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      <span className="text-gray-700">Analysing Your Career…</span>
+    </div>
+  </div>
+)}
+
 
       {/* Response Buttons - Show latest assistant message buttons above input */}
       {(() => {
@@ -272,3 +299,5 @@ export default function ChatbotComponent({ user, onComplete }: ChatbotComponentP
     </div>
   );
 }
+
+
