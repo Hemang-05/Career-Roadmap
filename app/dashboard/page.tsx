@@ -340,20 +340,46 @@ export default function Dashboard() {
     if (educationalStage === 'college' && !formFilled && residingCountry?.value === "IN") {
       setShowCollegeForm(false);
     }
-
+  
     try {
+      // API 1: Generate roadmap with existing yt-search (keeps your current logic)
       const res = await fetch("/api/generate-roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clerk_id: user?.id }),
       });
-      await res.json();
+      
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Roadmap generation failed');
+      
+      // API 2: Enhance videos with RAG (background process)
+      try {
+        const ragRes = await fetch("/api/yt-video-rag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            clerk_id: user?.id,
+            yearIndex: 0, // ✅ NEW: Only process Year 1 initially
+            userContext: {
+              educational_stage: educationalStage,
+              difficulty: difficulty,
+              preferred_learning_style: preferredLearningStyle,
+              desired_career: desiredCareer
+            }
+          }),
+        });
+      } catch (ragError) {
+        console.warn("RAG enhancement failed:", ragError);
+        // Don't break the flow - user still has functional roadmap
+      }
+  
       setApiDone(true);
     } catch (err) {
-      console.error(err);
+      console.error("Roadmap generation failed:", err);
       setGenerating(false);
     }
   };
+  
 
   // const handleCollegeFormSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault();
