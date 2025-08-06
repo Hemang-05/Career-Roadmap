@@ -3,13 +3,7 @@ import React from "react";
 function Crumbs() {
   return (
     <div className="min-h-screen p-8">
-      {/* <p className="text-center text-sm text-gray-500 mb-16">
-        Backed by the most trustworthy authority, i.e.{" "}
-        <span className="text-gray-900 font-semibold">
-          the Science and the Data.
-        </span>
-      </p> */}
-      <h3 className=" sm:text-6xl md:text-7xl lg:text-7xl font-semibold text-gray-900 max-w-6xl mx-auto px-4 sm:px-4 lg:px-4 mb-16">
+      <h3 className=" sm:text-6xl md:text-7xl lg:text-7xl text-6xl font-semibold text-gray-900 max-w-6xl mx-auto px-4 sm:px-4 lg:px-4 mb-16">
         Backed by: Science and Data
       </h3>
       <div className="max-w-6xl mx-auto">

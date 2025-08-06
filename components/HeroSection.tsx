@@ -113,7 +113,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-[80vh] flex items-center justify-center overflow-hidden mx-[5%] rounded-[4rem]"
+      className="relative min-h-[50vh] sm:min-h-[80vh] flex items-center justify-center overflow-hidden mx-[5%] rounded-[4rem]"
       style={{
         backgroundImage:
           "url('https://res.cloudinary.com/ditn9req1/image/upload/v1753625003/17_irdmsq.jpg')", // Replace with your image

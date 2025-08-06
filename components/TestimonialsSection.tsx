@@ -102,7 +102,7 @@ const TestimonialsSection: React.FC = () => {
   const testimonials = [
     {
       testimonial:
-        "Career Roadmap has transformed my career planning. The personalized insights and real-time updates keep me ahead without the hefty price of traditional counseling.",
+        "Career Roadmap has transformed my career planning. I've pivoted so many times, but now I don't have to worry about changes in the job market.",
       name: "Harshit",
       role: "IIT-D Sophomore",
       image:
@@ -110,7 +110,7 @@ const TestimonialsSection: React.FC = () => {
     },
     {
       testimonial:
-        "I used to rely on self-guidance, but switching to Career Roadmap was a game changer. The tailored alerts and comprehensive planning made all the difference!",
+        "I used to rely on self-guidance, but switching to Career Roadmap was very time saving. Wish I had found about it in freshmen year!",
       name: "Joshua",
       role: "Columbia University Senior",
       image:
@@ -118,7 +118,7 @@ const TestimonialsSection: React.FC = () => {
     },
     {
       testimonial:
-        "I used to rely on self-guidance, but switching to Career Roadmap was a game changer. The tailored alerts and comprehensive planning made all the difference!",
+        "Everyone's talking about AI, but Career Roadmap is the only one that actually helps you build a career. Grateful this exists.",
       name: "Abhimanyu",
       role: "NIT-W Senior",
       image:
@@ -126,7 +126,7 @@ const TestimonialsSection: React.FC = () => {
     },
     {
       testimonial:
-        "After a few disappointing experiences with conventional career counselors, I found the AI-driven roadmap to be refreshingly innovative instant updates, proactive alerts, and truly personalized guidance.",
+        "After a few disappointing experiences with conventional career counselors, I found the AI-driven roadmap to be refreshingly innovative.",
       name: "Masahiko",
       role: "Waseda University Junior",
       image:
@@ -134,7 +134,7 @@ const TestimonialsSection: React.FC = () => {
     },
     {
       testimonial:
-        "Affordable and in-depth, Career Roadmap redefined my career journey. The real-time updates and ultra tailored guidance mean I'm always on track for success!",
+        "Nah man, when I first heard about Career Roadmap, I thought it was just another AI gimmick. But after using it, I realized it's a must for anyone serious about their career.",
       name: "Peter",
       role: "Cornell University Graduate",
       image:
@@ -142,7 +142,7 @@ const TestimonialsSection: React.FC = () => {
     },
     {
       testimonial:
-        "The AI-powered insights are incredible. I never thought career planning could be this personalized and effective.",
+        "The AI-powered insights are incredible. I never thought career planning could be this personal",
       name: "Jurgen",
       role: "Heidelberg University Sophomore",
       image:
