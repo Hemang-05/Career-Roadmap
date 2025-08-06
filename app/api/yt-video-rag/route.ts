@@ -349,48 +349,45 @@ export async function POST(request: Request) {
 
     const roadmap = careerInfo.roadmap;
 
-// Step 2: Collect ONLY tasks from the specified year
-const tasksWithVideos: Array<{
-    task: any;
-    context: TaskContext;
-    yearIndex: number;
-    phaseIndex: number;
-    milestoneIndex: number;
-    taskIndex: number;
-  }> = [];
-  
-  // ✅ FIXED: Get the specific year and iterate over its phases
-  const selectedYear = roadmap.yearly_roadmap[yearIndex];
-  if (!selectedYear) {
-    return NextResponse.json({ 
-      error: `Year ${yearIndex} not found in roadmap` 
-    }, { status: 404 });
-  }
-  
-  selectedYear.phases?.forEach((phase: any, phaseIndex: number) => {
-    phase.milestones?.forEach((milestone: any, milestoneIndex: number) => {
-      milestone.tasks?.forEach((task: any, taskIndex: number) => {
-        if (task.video?.url) {
-          tasksWithVideos.push({
-            task,
-            context: {
-              task_title: task.task_title,
-              description: task.description,
-              phase_name: phase.phase_name,
-              milestone_name: milestone.name
-            },
-            yearIndex, // Use the original yearIndex parameter
-            phaseIndex,
-            milestoneIndex,
-            taskIndex
-          });
-        }
+    // Step 2: Collect ONLY tasks from the specified year
+    const tasksWithVideos: Array<{
+      task: any;
+      context: TaskContext;
+      yearIndex: number;
+      phaseIndex: number;
+      milestoneIndex: number;
+      taskIndex: number;
+    }> = [];
+    
+    // ✅ FIXED: Get the specific year and iterate over its phases
+    const selectedYear = roadmap.yearly_roadmap[yearIndex];
+    if (!selectedYear) {
+      return NextResponse.json({ 
+        error: `Year ${yearIndex} not found in roadmap` 
+      }, { status: 404 });
+    }
+    
+    selectedYear.phases?.forEach((phase: any, phaseIndex: number) => {
+      phase.milestones?.forEach((milestone: any, milestoneIndex: number) => {
+        milestone.tasks?.forEach((task: any, taskIndex: number) => {
+          if (task.video?.url) {
+            tasksWithVideos.push({
+              task,
+              context: {
+                task_title: task.task_title,
+                description: task.description,
+                phase_name: phase.phase_name,
+                milestone_name: milestone.name
+              },
+              yearIndex, // Use the original yearIndex parameter
+              phaseIndex,
+              milestoneIndex,
+              taskIndex
+            });
+          }
+        });
       });
     });
-  });
-  
-
-
 
     // ✅ UPDATED: Process tasks sequentially to avoid rate limits
     let processedCount = 0;
@@ -399,7 +396,6 @@ const tasksWithVideos: Array<{
       const { task, context, yearIndex, phaseIndex, milestoneIndex, taskIndex } = tasksWithVideos[i];
       
       try {
-        
         const enhancedVideos = await enhanceTaskVideos(task, context, userContext);
         
         if (enhancedVideos.length > 0) {
@@ -416,9 +412,8 @@ const tasksWithVideos: Array<{
         
         processedCount++;
         
-        
       } catch (error) {
-        console.error(` Failed:`, error);
+        console.error(`Failed:`, error);
       }
     }
 
@@ -435,7 +430,6 @@ const tasksWithVideos: Array<{
       console.error('Error updating enhanced roadmap:', updateError);
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
-
 
     return NextResponse.json({ 
       success: true,

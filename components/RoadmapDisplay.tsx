@@ -556,7 +556,7 @@ function YouTubeEmbed({
         {/* Refresh button */}
         {videos && videos.length > 1 && (
           <div className="flex items-center mb-2">
-            
+            <Tooltip label={`Switch video (${(currentIndex || 0) + 1}/${videos.length})`}>
               <button
                 onClick={handleRefresh}
                 disabled={isSwitching}
@@ -568,7 +568,7 @@ function YouTubeEmbed({
                   Watch another video
                 </span>
               </button>
-          
+            </Tooltip>
           </div>
         )}
 
@@ -683,8 +683,10 @@ export default function RoadmapDisplay({
 
             {unlocked && isOpen ? (
               <>
-                
-                
+                {/* ✅ UPDATED: Show year completion progress */}
+                {/* <div className="bg-blue-50 p-3 rounded-lg mb-6">
+                  
+                </div> */}
 
                 {(yearItem.phases || []).map((phaseItem: any, pIdx: number) => (
                   <div
