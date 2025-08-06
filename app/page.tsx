@@ -167,11 +167,6 @@ export default function LandingPage() {
               <HeroSection />
             </section>
 
-            {/* Carousel Section */}
-            <section aria-label="User country carousel">
-              <AutoCarouselSlider />
-            </section>
-
             {/* Features Section */}
             <section aria-label="Platform features" id="features">
               <FeaturesSection />
@@ -190,6 +185,11 @@ export default function LandingPage() {
             {/* Pricing Plans */}
             <section aria-label="Pricing plans" id="pricing">
               <Plans />
+            </section>
+
+            {/* Carousel Section */}
+            <section aria-label="User country carousel">
+              <AutoCarouselSlider />
             </section>
 
             {/* Testimonials */}
