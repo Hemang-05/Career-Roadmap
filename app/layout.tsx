@@ -21,11 +21,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Career Roadmap",
   description:
-    "A personalized career roadmap ai platform for students—get step-by-step guidance, study resources, and event updates to reach your dream profession with ease.",
+    "AI-driven career roadmap that adapts in real time, turning your passions into a clear, ever-evolving roadmap.",
   openGraph: {
     title: "Career Roadmap",
     description:
-      "A personalized career roadmap ai platform for students—get step-by-step guidance, study resources, and event updates to reach your dream profession with ease.",
+      "AI-driven career roadmap that adapts in real time, turning your passions into a clear, ever-evolving roadmap.",
     url: "https://careeroadmap.com",
     siteName: "Career Roadmap",
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Career Roadmap",
     description:
-      "A personalized career roadmap ai platform for students—get step-by-step guidance, study resources, and event updates to reach your dream profession with ease.",
+      "AI-driven career roadmap that adapts in real time, turning your passions into a clear, ever-evolving roadmap.",
     images: [
       {
         url: "/og-image.png",
