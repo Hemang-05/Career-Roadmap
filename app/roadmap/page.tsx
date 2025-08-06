@@ -1222,8 +1222,8 @@ export default function RoadmapPage() {
                     className="text-lg text-black font-semibold"
                   >
                     {enhancingYear !== null 
-                      ? `Enhancing Year ${enhancingYear + 1} videos with AI...`
-                      : "Updating roadmap with AI..."
+                      ? `Updating Roadmap with Current Trends and Skills`
+                      : "Updating Roadmap with Current Trends and Skills"
                     }
                   </p>
                 </div>
