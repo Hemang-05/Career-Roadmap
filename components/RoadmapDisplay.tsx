@@ -447,6 +447,7 @@
 import { useState } from "react";
 import { Youtube, ExternalLink, Lightbulb, RotateCcw } from "lucide-react";
 import Tooltip from "@/components/ui/Tooltip";
+import RoadmapProofs from "@/components/RoadmapProofs"; // <-- NEW import
 
 // Helper function to check if a year is complete
 export function isYearComplete(yearItem: any): boolean {
@@ -459,6 +460,18 @@ export function isYearComplete(yearItem: any): boolean {
       for (const task of milestone.tasks) {
         if (!task.completed) return false;
       }
+    }
+  }
+  return true;
+}
+
+// NEW: helper to check if a phase is complete
+function isPhaseComplete(phaseItem: any): boolean {
+  if (!phaseItem?.milestones) return true;
+  for (const milestone of phaseItem.milestones) {
+    if (!milestone?.tasks) continue;
+    for (const task of milestone.tasks) {
+      if (!task.completed) return false;
     }
   }
   return true;
@@ -564,8 +577,8 @@ function YouTubeEmbed({
                 aria-label="Switch to next video option"
               >
                 <RotateCcw className={`w-4 h-4 mr-2`} />
-                <span className="text-sm">
-                  Watch another video
+                <span className="sm:text-sm text-xs font-thin">
+                  Switch video
                 </span>
               </button>
             </Tooltip>
@@ -683,11 +696,6 @@ export default function RoadmapDisplay({
 
             {unlocked && isOpen ? (
               <>
-                {/* ✅ UPDATED: Show year completion progress */}
-                {/* <div className="bg-blue-50 p-3 rounded-lg mb-6">
-                  
-                </div> */}
-
                 {(yearItem.phases || []).map((phaseItem: any, pIdx: number) => (
                   <div
                     key={phaseItem.phase_name || pIdx}
@@ -917,6 +925,21 @@ export default function RoadmapDisplay({
                         </div>
                       )
                     )}
+
+                    {/* === NEW: Show proofs UI when this phase is complete === */}
+                    {isPhaseComplete(phaseItem) && (
+                      <div className="mt-4">
+                        <RoadmapProofs
+                         ownerUserId={roadmapData.user_id}
+                         ownerClerkId={roadmapData.clerk_id}
+                         yearIndex={yearIndex}
+                         phaseIndex={pIdx}
+                         skillName={phaseItem.phase_name}
+                        />
+                      </div>
+                    )}
+                    {/* === end proofs UI === */}
+
                   </div>
                 ))}
               </>
