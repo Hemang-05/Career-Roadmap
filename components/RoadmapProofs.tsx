@@ -601,14 +601,15 @@ export default function RoadmapProofs({
           />
         ))}
         <div className="flex gap-2 mt-2">
-          <button
+        <button
             type="button"
             onClick={addInput}
-            className="px-1.5 border border-gray-300 rounded-full text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+            className="w-4 h-4 border flex items-center justify-center border-gray-300 rounded-full text-xs text-gray-700 hover:bg-gray-200 transition-colors"
             disabled={loading}
-          >
+            >
             +
-          </button>
+        </button>
+
         </div>
         {message && (
           <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-700 bg-gray-50 p-2 rounded">
