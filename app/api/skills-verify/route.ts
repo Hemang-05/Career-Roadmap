@@ -316,7 +316,7 @@
 //     `OUTPUT EXAMPLE:`
 //   );
 //   inputs.push(
-//     `{"verification_status":"verified","proof_weightage":75,"verification_reason":"Strong practical demonstration through problem-solving practice."}`
+//     `{"verification_status":"verified","proof_weightagereeCodeCam":75,"verification_reason":"Strong practical demonstration through problem-solving practice."}`
 //   );
 
 //   return inputs.join("\n");
@@ -1203,7 +1203,7 @@ async function readGoogleDriveContent(url: string): Promise<string | null> {
   }
 }
 
-// Extract phase context from roadmap
+// Extract phase context from roadmap (now includes skill_name and context)
 function extractPhaseFromRoadmap(roadmap: any, proofRow: any) {
   try {
     if (!roadmap || typeof roadmap !== "object") {
@@ -1218,13 +1218,18 @@ function extractPhaseFromRoadmap(roadmap: any, proofRow: any) {
       
       if (p != null && year.phases?.[p]) {
         const phase = year.phases[p];
-        
-        return {
+
+        const phaseContext = {
           year_label: year.year || null,
           year_overview: year.overview || null,
           full_phase: phase,
-          current_task_index: proofRow.task_index || null
+          current_task_index: proofRow.task_index || null,
+          // Extract skill_name and context directly from roadmap
+          skill_name: phase.skill_name || 'General Programming',
+          context: phase.context || 'Learning phase context not available'
         };
+        
+        return phaseContext;
       }
     }
 
@@ -1235,110 +1240,7 @@ function extractPhaseFromRoadmap(roadmap: any, proofRow: any) {
   }
 }
 
-// Get or generate skill name for phase (LLM decides from phase context)
-async function getOrGeneratePhaseSkill(userId: string, phaseIndex: number, phaseContext: any): Promise<string> {
-  try {
-    // Check if we already have proofs for this phase with a skill name
-    const { data: existingProofs, error } = await supabase
-      .from("proofs")
-      .select("skill_name")
-      .eq("user_id", userId)
-      .eq("phase_index", phaseIndex)
-      .not("skill_name", "is", null)
-      .limit(1);
-
-    if (error) {
-      console.error('Error checking existing proofs:', error);
-    }
-
-    // If we found an existing proof with skill_name for this phase, reuse it
-    if (existingProofs && existingProofs.length > 0 && existingProofs[0].skill_name) {
-      console.log('Reusing existing skill name for phase:', existingProofs[0].skill_name);
-      return existingProofs[0].skill_name;
-    }
-
-    // No existing skill for this phase - generate one using LLM
-    console.log('No existing skill found for phase, generating new skill name via LLM...');
-    
-    if (!phaseContext?.full_phase) {
-      return 'General Programming';
-    }
-
-    const skillGenerationPrompt = buildSkillGenerationPrompt(phaseContext);
-    
-    const apiKey = process.env.GEMINI_API_KEY;
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const requestBody = {
-      contents: [{ parts: [{ text: skillGenerationPrompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 200
-      }
-    };
-
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!res.ok) {
-      console.error('Failed to generate skill name via LLM');
-      return 'General Programming';
-    }
-
-    const data = await res.json();
-    const skillText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    
-    if (skillText) {
-      console.log('Generated new skill name for phase:', skillText);
-      return skillText;
-    }
-
-    return 'General Programming';
-    
-  } catch (error) {
-    console.error('Error in getOrGeneratePhaseSkill:', error);
-    return 'General Programming';
-  }
-}
-
-// Build skill generation prompt (LLM analyzes phase context)
-function buildSkillGenerationPrompt(phaseContext: any): string {
-  const inputs: string[] = [];
-
-  inputs.push(`SKILL NAME GENERATION FROM LEARNING PHASE`);
-  inputs.push(`\nTASK: Analyze the following learning phase and generate a concise, descriptive skill name that represents what students learn in this phase.`);
-  
-  if (phaseContext.year_label) {
-    inputs.push(`\nAcademic Year: ${phaseContext.year_label}`);
-  }
-  
-  if (phaseContext.year_overview) {
-    inputs.push(`Year Overview: ${phaseContext.year_overview}`);
-  }
-
-  inputs.push(`\nPHASE DETAILS:`);
-  const phaseJson = JSON.stringify(phaseContext.full_phase, null, 2);
-  inputs.push(phaseJson);
-
-  inputs.push(`\nGUIDELINES:`);
-  inputs.push(`- Generate a skill name that captures the MAIN learning objective of this phase`);
-  inputs.push(`- Keep it concise (2-6 words max)`);
-  inputs.push(`- Focus on the primary skills/technologies being learned`);
-  inputs.push(`- Make it professional and descriptive`);
-  inputs.push(`- Examples: "Python Programming Fundamentals", "Data Structures & Algorithms", "Web Development Basics"`);
-
-  inputs.push(`\nOUTPUT:`);
-  inputs.push(`Respond with ONLY the skill name, no additional text or explanation.`);
-
-  return inputs.join("\n");
-}
-
-// Build comprehensive analysis prompt (without skill detection)
+// Build comprehensive analysis prompt (enhanced with roadmap context)
 function buildComprehensiveAnalysisPrompt(proofUrl: string, phaseContext: any, extractedContent?: string | null, skillName?: string): string {
   const inputs: string[] = [];
 
@@ -1347,6 +1249,11 @@ function buildComprehensiveAnalysisPrompt(proofUrl: string, phaseContext: any, e
   
   if (skillName) {
     inputs.push(`\nSKILL CONTEXT: This proof is for the skill "${skillName}" which is predetermined for this learning phase.`);
+  }
+  
+  // Add context from roadmap
+  if (phaseContext?.context) {
+    inputs.push(`\nPHASE CONTEXT: ${phaseContext.context}`);
   }
   
   if (extractedContent) {
@@ -1453,7 +1360,7 @@ function buildComprehensiveAnalysisPrompt(proofUrl: string, phaseContext: any, e
   inputs.push(`- Analyze actual content to determine the specific skill/platform involved`);
 
   inputs.push(`\nTASK 4 - INTELLIGENT SUGGESTIONS:`);
-  inputs.push(`Based on the phase context and current proof analysis, provide 3-4 contextual suggestions for future proof submissions.`);
+  inputs.push(`Based on the phase context analysis, provide 3-4 contextual suggestions not more than a line, for future proof submissions.`);
 
   inputs.push(`\nOUTPUT REQUIREMENTS:`);
   inputs.push(`Respond with ONLY a valid JSON object in this exact format:`);
@@ -1477,11 +1384,13 @@ function buildComprehensiveAnalysisPrompt(proofUrl: string, phaseContext: any, e
 }
 
 // Extract JSON from markdown response
+// Extract JSON from markdown response
 function extractJsonFromMarkdown(rawText: string): string | null {
   let cleaned = rawText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
+
+  // Remove markdown code fences with optional 'json' language tag
   cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '');
   cleaned = cleaned.replace(/\s*```$/g, '');
-  cleaned = cleaned.trim();
   
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
@@ -1530,18 +1439,25 @@ export async function POST(request: Request) {
       .single();
 
     const roadmap = careerErr || !careerInfo ? null : careerInfo.roadmap;
-    const phaseContext = extractPhaseFromRoadmap(roadmap, proofRow);
+    const phaseContextData = extractPhaseFromRoadmap(roadmap, proofRow);
     
-    // Get or generate skill name for this phase
+    // Get skill name and context directly from roadmap
     let skillName = 'General Programming';
-    
+    let phaseContext = phaseContextData?.context || 'Learning phase context not available';
+
     if (proofRow.phase_index !== null && proofRow.phase_index !== undefined) {
-      skillName = await getOrGeneratePhaseSkill(proofRow.user_id, proofRow.phase_index, phaseContext);
+      if (phaseContextData && phaseContextData.skill_name) {
+        skillName = phaseContextData.skill_name;
+        console.log('Using skill name from roadmap:', skillName);
+        console.log('Phase context:', phaseContext);
+      } else {
+        console.log('No skill_name found in roadmap phase, using default');
+      }
     } else {
       console.log('No phase_index found, using default skill name');
     }
 
-    console.log('Using skill name for this proof:', skillName);
+    console.log('Final skill name for this proof:', skillName);
     
     // Try Google Drive API first
     let extractedContent: string | null = null;
@@ -1564,8 +1480,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    // Build prompt with predetermined skill name
-    const prompt = buildComprehensiveAnalysisPrompt(proofRow.url, phaseContext, extractedContent, skillName);
+    // Build prompt with predetermined skill name and context from roadmap
+    const prompt = buildComprehensiveAnalysisPrompt(
+      proofRow.url, 
+      phaseContextData, 
+      extractedContent, 
+      skillName
+    );
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const requestBody = {
@@ -1654,7 +1575,7 @@ export async function POST(request: Request) {
     const proof_weightage = Math.round(Math.max(30, Math.min(100, 
       typeof parsed.proof_weightage === "number" ? parsed.proof_weightage : 50
     )));
-    const skill_detected = skillName; // Use predetermined skill name
+    const skill_detected = skillName; // Use skill name from roadmap
     const proof_type = parsed.proof_type || 'other';
     const phase_relevance = parsed.phase_relevance || 'Analyzed independently';
     const content_summary = parsed.content_summary || 'Content analyzed';
@@ -1667,17 +1588,18 @@ export async function POST(request: Request) {
     const metadata = {
       phase_relevance: phase_relevance,
       content_summary: content_summary,
-      assessed_with_phase_context: !!phaseContext,
+      assessed_with_phase_context: !!phaseContextData,
+      phase_context: phaseContextData?.context || null,
       url_context_used: !extractedContent,
       google_drive_api_used: !!extractedContent,
       analysis_method: extractedContent ? "google_drive_api_extraction" : "url_context_tool",
       suggestions_generated: true,
       future_suggestions: future_suggestions,
       ai_detected_type: proof_type,
-      skill_source: proofRow.phase_index !== null ? "phase_context" : "default"
+      skill_source: "roadmap_phase"
     };
     
-    // Update database with predetermined skill name
+    // Update database with skill name from roadmap
     const { error: updateErr } = await supabase
       .from("proofs")
       .update({
@@ -1708,7 +1630,7 @@ export async function POST(request: Request) {
       content_summary,
       verification_reason,
       future_suggestions,
-      context_enhanced: !!phaseContext,
+      context_enhanced: !!phaseContextData,
       analysis_method: extractedContent ? "google_drive_api_extraction" : "url_context_tool",
       google_drive_used: !!extractedContent
     });

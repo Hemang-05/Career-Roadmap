@@ -340,10 +340,7 @@ export default function RoadmapProofs({
     
     // Default suggestions if no LLM suggestions available
     return [
-      "Submit course completion certificates relevant to this phase",
-      "Share GitHub repositories with projects from this learning phase", 
-      "Include practical applications of skills being learned",
-      "Add certificates from online platforms like Coursera, Udemy, or FreeCodeCamp"
+      "Add Proofs",
     ];
   };
 
