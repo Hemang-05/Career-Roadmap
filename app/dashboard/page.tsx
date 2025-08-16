@@ -34,7 +34,7 @@ export default function Dashboard() {
 
   // ============ NAVIGATION STATE ============
   const [currentComponent, setCurrentComponent] = useState<0 | 1 | 2>(0);
-  const [userPath, setUserPath] = useState<'aware' | 'confused' | null>(null);
+  const [userPath, setUserPath] = useState<"aware" | "confused" | null>(null);
   const [chatbotComplete, setChatbotComplete] = useState<boolean>(false);
   const [determinedCareer, setDeterminedCareer] = useState<string>("");
 
@@ -43,7 +43,8 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState<boolean>(false);
   const [showGenerateModal, setShowGenerateModal] = useState<boolean>(false);
   const [showPaymentPlans, setShowPaymentPlans] = useState<boolean>(false);
-  const [showUSDPaymentPlans, setShowUSDPaymentPlans] = useState<boolean>(false);
+  const [showUSDPaymentPlans, setShowUSDPaymentPlans] =
+    useState<boolean>(false);
   const [showCollegeForm, setShowCollegeForm] = useState<boolean>(false);
   const [showNotification, setShowNotification] = useState<boolean>(false);
 
@@ -59,14 +60,21 @@ export default function Dashboard() {
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
   // ============ ACTIVE FORM STATE (SIMPLIFIED) ============
-  const [residingCountry, setResidingCountry] = useState<OptionType | null>(null);
+  const [residingCountry, setResidingCountry] = useState<OptionType | null>(
+    null
+  );
   const [spendingCapacity, setSpendingCapacity] = useState<string>("");
   const [parentEmail, setParentEmail] = useState<string>("");
-  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<boolean | null>(false);
+  const [willingToMoveAbroad, setWillingToMoveAbroad] = useState<
+    boolean | null
+  >(false);
   const [moveAbroad, setMoveAbroad] = useState<"yes" | "suggest">("suggest");
-  const [preferredAbroadCountry, setPreferredAbroadCountry] = useState<OptionType | null>(null);
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
-  
+  const [preferredAbroadCountry, setPreferredAbroadCountry] =
+    useState<OptionType | null>(null);
+  const [difficulty, setDifficulty] = useState<
+    "easy" | "medium" | "hard" | null
+  >(null);
+
   // ✅ CAREER FIELD - Simple like other fields
   const [desiredCareer, setDesiredCareer] = useState<string>("");
 
@@ -78,14 +86,20 @@ export default function Dashboard() {
   const [collegeDegree, setCollegeDegree] = useState<string>("");
   const [practicalExperience, setPracticalExperience] = useState<string>("");
   const [academicStrengths, setAcademicStrengths] = useState<string>("");
-  const [extracurricularActivities, setExtracurricularActivities] = useState<string>("");
-  const [industryKnowledgeLevel, setIndustryKnowledgeLevel] = useState<string>("");
-  const [preferredLearningStyle, setPreferredLearningStyle] = useState<string>("");
+  const [extracurricularActivities, setExtracurricularActivities] =
+    useState<string>("");
+  const [industryKnowledgeLevel, setIndustryKnowledgeLevel] =
+    useState<string>("");
+  const [preferredLearningStyle, setPreferredLearningStyle] =
+    useState<string>("");
   const [roleModelInfluences, setRoleModelInfluences] = useState<string>("");
-  const [culturalFamilyExpectations, setCulturalFamilyExpectations] = useState<string>("");
-  const [mentorshipAndNetworkStatus, setMentorshipAndNetworkStatus] = useState<string>("");
+  const [culturalFamilyExpectations, setCulturalFamilyExpectations] =
+    useState<string>("");
+  const [mentorshipAndNetworkStatus, setMentorshipAndNetworkStatus] =
+    useState<string>("");
   const [preferredLanguage, setPreferredLanguage] = useState<string>("");
-  const [preferredWorkEnvironment, setPreferredWorkEnvironment] = useState<string>("");
+  const [preferredWorkEnvironment, setPreferredWorkEnvironment] =
+    useState<string>("");
   const [longTermAspirations, setLongTermAspirations] = useState<string>("");
 
   // ============ COLLEGE FORM ============
@@ -99,49 +113,115 @@ export default function Dashboard() {
     highestCTC: "",
     avgCTC: "",
   });
-  const [selectedUniversityId, setSelectedUniversityId] = useState<number | null>(null);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<
+    number | null
+  >(null);
   const [uniInputValue, setUniInputValue] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
   // ============ HELPER FUNCTIONS ============
-  const isSouthAsianCountry = (code: string) => ["IN", "PK", "BD"].includes(code);
-  
+  const isSouthAsianCountry = (code: string) =>
+    ["IN", "PK", "BD"].includes(code);
+
   const getCountryOption = (countryCode: string): OptionType | null => {
     const countryOptions = countryList().getData() as OptionType[];
-    return countryOptions.find((option) => option.value === countryCode) || null;
+    return (
+      countryOptions.find((option) => option.value === countryCode) || null
+    );
   };
 
   // ============ NAVIGATION HANDLERS ============
   const handleAwareClick = () => {
-    setUserPath('aware');
-    setCurrentComponent(2);
+    // If user already knows their career, send them to the demo dashboard
+    setUserPath("aware");
+    router.push("/onboarding");
   };
 
   const handleConfusedClick = () => {
-    setUserPath('confused');
+    setUserPath("confused");
     setCurrentComponent(1);
   };
 
-  const handleChatbotComplete = (career: string) => {
+  const handleChatbotComplete = async (career: string) => {
     setDeterminedCareer(career);
     setDesiredCareer(career);
     setChatbotComplete(true);
-    setCurrentComponent(2);
+
+    if (!user || !user.id) {
+      router.push("/");
+      return;
+    }
+
+    try {
+      const clerkId = user.id;
+
+      // Get internal user id from users table
+      let userId = dbUserId;
+      if (!userId) {
+        const { data: u, error: uErr } = await supabase
+          .from("users")
+          .select("id")
+          .eq("clerk_id", clerkId)
+          .maybeSingle();
+        if (!uErr && u) {
+          userId = u.id;
+          setDbUserId(userId);
+        }
+      }
+
+      // Only proceed if we have the internal user ID
+      if (userId) {
+        const { data: existing, error: existingErr } = await supabase
+          .from("career_info")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (existingErr) throw existingErr;
+
+        if (existing) {
+          await supabase
+            .from("career_info")
+            .update({
+              desired_career: career,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+        } else {
+          await supabase.from("career_info").insert({
+            user_id: userId,
+            desired_career: career,
+          });
+        }
+      }
+
+      fetch("/api/assign-career-tag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clerk_id: clerkId, desired_career: career }),
+      }).catch(() => {});
+    } catch (err) {
+    } finally {
+      router.push("/onboarding");
+    }
   };
 
   // ============ EDUCATIONAL STAGE CLEANUP ============
   useEffect(() => {
-    if (educationalStage === 'school') {
-      setCollegeYear('');
-      setCollegeDegree('');
-    } else if (educationalStage === 'college') {
-      setSchoolGrade('');
-      setSchoolStream('');
-    } else if (educationalStage === 'self-taught' || educationalStage === 'working') {
-      setSchoolGrade('');
-      setSchoolStream('');
-      setCollegeYear('');
-      setCollegeDegree('');
+    if (educationalStage === "school") {
+      setCollegeYear("");
+      setCollegeDegree("");
+    } else if (educationalStage === "college") {
+      setSchoolGrade("");
+      setSchoolStream("");
+    } else if (
+      educationalStage === "self-taught" ||
+      educationalStage === "working"
+    ) {
+      setSchoolGrade("");
+      setSchoolStream("");
+      setCollegeYear("");
+      setCollegeDegree("");
     }
   }, [educationalStage]);
 
@@ -153,22 +233,24 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isLoaded || !user) return;
     let mounted = true;
-    
+
     (async () => {
       try {
         const { data: u, error: uErr } = await supabase
           .from("users")
-          .select("id, subscription_status, subscription_plan, subscription_end")
+          .select(
+            "id, subscription_status, subscription_plan, subscription_end"
+          )
           .eq("clerk_id", user.id)
           .single();
-          
+
         if (uErr || !u) throw uErr || new Error("User not found");
         if (!mounted) return;
-        
+
         setDbUserId(u.id);
         setSubscriptionStatus(u.subscription_status);
         setSubscriptionPlan(u.subscription_plan);
-        
+
         if (u.subscription_end && new Date(u.subscription_end) < new Date()) {
           await supabase
             .from("users")
@@ -182,7 +264,7 @@ export default function Dashboard() {
           .select("*")
           .eq("user_id", u.id)
           .maybeSingle();
-          
+
         if (cErr) throw cErr;
         if (!mounted) return;
 
@@ -195,8 +277,10 @@ export default function Dashboard() {
 
         // ✅ SIMPLIFIED DATA LOADING
         if (c) {
-          if (c.residing_country) setResidingCountry(getCountryOption(c.residing_country));
-          if (c.spending_capacity) setSpendingCapacity(c.spending_capacity.toString());
+          if (c.residing_country)
+            setResidingCountry(getCountryOption(c.residing_country));
+          if (c.spending_capacity)
+            setSpendingCapacity(c.spending_capacity.toString());
           if (c.parent_email) setParentEmail(c.parent_email);
           if (c.move_abroad !== null) setWillingToMoveAbroad(c.move_abroad);
           if (c.preferred_abroad_country) {
@@ -204,7 +288,9 @@ export default function Dashboard() {
               setMoveAbroad("suggest");
             } else {
               setMoveAbroad("yes");
-              setPreferredAbroadCountry(getCountryOption(c.preferred_abroad_country));
+              setPreferredAbroadCountry(
+                getCountryOption(c.preferred_abroad_country)
+              );
             }
           }
           if (c.difficulty) setDifficulty(c.difficulty);
@@ -216,17 +302,26 @@ export default function Dashboard() {
           if (c.school_stream) setSchoolStream(c.school_stream);
           if (c.college_year) setCollegeYear(c.college_year);
           if (c.college_degree) setCollegeDegree(c.college_degree);
-          if (c.practical_experience) setPracticalExperience(c.practical_experience);
+          if (c.practical_experience)
+            setPracticalExperience(c.practical_experience);
           if (c.academic_strengths) setAcademicStrengths(c.academic_strengths);
-          if (c.extracurricular_activities) setExtracurricularActivities(c.extracurricular_activities);
-          if (c.industry_knowledge_level) setIndustryKnowledgeLevel(c.industry_knowledge_level);
-          if (c.preferred_learning_style) setPreferredLearningStyle(c.preferred_learning_style);
-          if (c.role_model_influences) setRoleModelInfluences(c.role_model_influences);
-          if (c.cultural_family_expectations) setCulturalFamilyExpectations(c.cultural_family_expectations);
-          if (c.mentorship_and_network_status) setMentorshipAndNetworkStatus(c.mentorship_and_network_status);
+          if (c.extracurricular_activities)
+            setExtracurricularActivities(c.extracurricular_activities);
+          if (c.industry_knowledge_level)
+            setIndustryKnowledgeLevel(c.industry_knowledge_level);
+          if (c.preferred_learning_style)
+            setPreferredLearningStyle(c.preferred_learning_style);
+          if (c.role_model_influences)
+            setRoleModelInfluences(c.role_model_influences);
+          if (c.cultural_family_expectations)
+            setCulturalFamilyExpectations(c.cultural_family_expectations);
+          if (c.mentorship_and_network_status)
+            setMentorshipAndNetworkStatus(c.mentorship_and_network_status);
           if (c.preferred_language) setPreferredLanguage(c.preferred_language);
-          if (c.preferred_work_environment) setPreferredWorkEnvironment(c.preferred_work_environment);
-          if (c.long_term_aspirations) setLongTermAspirations(c.long_term_aspirations);
+          if (c.preferred_work_environment)
+            setPreferredWorkEnvironment(c.preferred_work_environment);
+          if (c.long_term_aspirations)
+            setLongTermAspirations(c.long_term_aspirations);
 
           // If user has existing data, skip to form component
           if (c.desired_career || c.residing_country || c.educational_stage) {
@@ -240,14 +335,15 @@ export default function Dashboard() {
         setDataLoaded(true);
       }
     })();
-    
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [isLoaded, user?.id]);
 
-
   const handleRewindToStart = () => {
-    setShowNotification(false);   // hide the “you already have a roadmap” modal
-    setCurrentComponent(0);       // send the user back to component 0
+    setShowNotification(false); // hide the “you already have a roadmap” modal
+    setCurrentComponent(0); // send the user back to component 0
     // Intentionally *do not* clear any of the form state
   };
   // ============ ADDITIONAL EFFECTS ============
@@ -262,12 +358,11 @@ export default function Dashboard() {
       .catch(console.error);
   }, [showCollegeForm]);
 
-
   // ============ SIMPLIFIED FORM HANDLER ============
   const handleMainFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     const payload: any = {
       clerk_id: user?.id,
       desired_career: desiredCareer, // ✅ Direct field
@@ -326,7 +421,6 @@ export default function Dashboard() {
           desired_career: payload.desired_career,
         }),
       }).catch(console.error);
-      
     } catch (error) {
       console.log("Error saving career info:", error);
     } finally {
@@ -336,11 +430,15 @@ export default function Dashboard() {
 
   const handleGenerateRoadmap = async () => {
     setGenerating(true);
-    
-    if (educationalStage === 'college' && !formFilled && residingCountry?.value === "IN") {
+
+    if (
+      educationalStage === "college" &&
+      !formFilled &&
+      residingCountry?.value === "IN"
+    ) {
       setShowCollegeForm(false);
     }
-  
+
     try {
       // API 1: Generate roadmap with existing yt-search (keeps your current logic)
       const res = await fetch("/api/generate-roadmap", {
@@ -348,43 +446,42 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clerk_id: user?.id }),
       });
-      
+
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Roadmap generation failed');
-      
+      if (!res.ok) throw new Error(result.error || "Roadmap generation failed");
+
       // API 2: Enhance videos with RAG (background process)
       try {
         const ragRes = await fetch("/api/yt-video-rag", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             clerk_id: user?.id,
             yearIndex: 0, // ✅ NEW: Only process Year 1 initially
             userContext: {
               educational_stage: educationalStage,
               difficulty: difficulty,
               preferred_learning_style: preferredLearningStyle,
-              desired_career: desiredCareer
-            }
+              desired_career: desiredCareer,
+            },
           }),
         });
       } catch (ragError) {
         console.warn("RAG enhancement failed:", ragError);
         // Don't break the flow - user still has functional roadmap
       }
-  
+
       setApiDone(true);
     } catch (err) {
       console.error("Roadmap generation failed:", err);
       setGenerating(false);
     }
   };
-  
 
   // const handleCollegeFormSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault();
   //   if (!dbUserId || !selectedUniversityId) return;
-    
+
   //   try {
   //     await supabase.from("university_ratings").insert({
   //       user_id: dbUserId,
@@ -397,12 +494,12 @@ export default function Dashboard() {
   //       highestCTC: parseInt(collegeFormData.highestCTC) || null,
   //       avgCTC: parseInt(collegeFormData.avgCTC) || null,
   //     });
-      
+
   //     await supabase
   //       .from("career_info")
   //       .update({ form_filled: true })
   //       .eq("user_id", dbUserId);
-        
+
   //     setFormFilled(true);
   //     setShowCollegeForm(false);
   //   } catch (err) {
@@ -413,10 +510,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (apiDone) {
       setGenerating(false);
-      router.push("/roadmap");   // add form_filled
+      router.push("/roadmap"); // add form_filled
     }
   }, [apiDone]);
-
 
   const dashboardLinks = [
     { href: "/roadmap", label: "Roadmap" },
@@ -433,7 +529,7 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -469,10 +565,7 @@ export default function Dashboard() {
         )}
 
         {currentComponent === 1 && (
-          <ChatbotComponent
-            user={user}
-            onComplete={handleChatbotComplete}
-          />
+          <ChatbotComponent user={user} onComplete={handleChatbotComplete} />
         )}
 
         {currentComponent === 2 && (
@@ -563,7 +656,6 @@ export default function Dashboard() {
         />
       )}
 
-
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-3xl shadow-lg">
@@ -590,7 +682,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
 
       {/* <CollegeForm
         show={showCollegeForm}
