@@ -8,8 +8,6 @@ import Select from "react-select";
 import { Info } from "lucide-react";
 
 import FloatingNavbar from "@/components/Navbar";
-import PaymentPlan from "@/components/PaymentPlan";
-import USDPaymentPlan from "@/components/USDPaymentPlan";
 
 import { supabase } from "@/utils/supabase/supabaseClient";
 
@@ -34,26 +32,35 @@ function Progress({ step, total }: { step: number; total: number }) {
   );
 }
 
-function StatsCard({
-  stats,
-}: {
-  stats: Array<{ stat: string; impact: string }>;
-}) {
+function StatsCard({ stats }: { stats: string[] }) {
   return (
-    <div className="mt-6 p-4  border border-red-200 rounded-3xl">
+    // <div className="mt-6 p-4  border border-red-200 rounded-3xl">
+    //   <h3 className="text-gray-800 font-medium mb-3">
+    //     Your Career Reality Check
+    //   </h3>
+    //   <div className="space-y-3">
+    //     {stats.map((item, index) => (
+    //       <div key={index} className="flex items-start gap-3">
+    //         <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+    //         <div>
+    //           <div className="text-red-900 font-medium text-sm">
+    //             {item.stat}
+    //           </div>
+    //           {/* <div className="text-green-800 text-xs">{item.impact}</div> */}
+    //         </div>
+    //       </div>
+    //     ))}
+    //   </div>
+    // </div>
+    <div className="mt-6 p-4 border border-red-200 rounded-3xl">
       <h3 className="text-gray-800 font-medium mb-3">
         Your Career Reality Check
       </h3>
       <div className="space-y-3">
-        {stats.map((item, index) => (
+        {stats.map((line, index) => (
           <div key={index} className="flex items-start gap-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-            <div>
-              <div className="text-red-900 font-medium text-sm">
-                {item.stat}
-              </div>
-              <div className="text-green-800 text-xs">{item.impact}</div>
-            </div>
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+            <div className="text-sm text-red-900 font-medium">{line}</div>
           </div>
         ))}
       </div>
@@ -61,7 +68,7 @@ function StatsCard({
   );
 }
 
-export default function DashboardDemo() {
+export default function onboarding() {
   useSyncUser();
   const router = useRouter();
   const { user, isLoaded, isSignedIn } = useUser();
@@ -89,11 +96,11 @@ export default function DashboardDemo() {
   const [timeToAct, setTimeToAct] = useState<string>("");
 
   // Stats state
-  const [stats, setStats] = useState<Array<{ stat: string; impact: string }>>(
-    []
-  );
+  const [stats, setStats] = useState<string[]>([]);
   const [showStats, setShowStats] = useState<boolean>(false);
   const [isCheckingReality, setIsCheckingReality] = useState<boolean>(false);
+  const [insights, setInsights] = useState<string[]>([]);
+  const [insightsLoading, setInsightsLoading] = useState<boolean>(false);
 
   const [desiredCareer, setDesiredCareer] = useState<string>("");
   const [longTermAspirations, setLongTermAspirations] = useState<string>("");
@@ -147,6 +154,34 @@ export default function DashboardDemo() {
     if (isLoaded && !isSignedIn) router.push("/");
   }, [isLoaded, isSignedIn]);
 
+  // Load desired_career from Supabase for this user so demo form auto-fills
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const { data: u, error: uErr } = await supabase
+          .from("users")
+          .select("id")
+          .eq("clerk_id", user.id)
+          .single();
+        if (uErr || !u) return;
+        const { data: c, error: cErr } = await supabase
+          .from("career_info")
+          .select("desired_career")
+          .eq("user_id", u.id)
+          .maybeSingle();
+        if (cErr || !mounted) return;
+        if (c && c.desired_career) setDesiredCareer(c.desired_career);
+      } catch (err) {
+        // noop
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [isLoaded, user?.id]);
+
   // load subscription
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -191,10 +226,114 @@ export default function DashboardDemo() {
     }
   }, [educationalStage]);
 
+  // Modified section in onboarding component
+
+  // Generate AI insights automatically when user reaches step 5 - UPDATED TO INCLUDE PROFILING
+  useEffect(() => {
+    if (step !== 5) return;
+    let mounted = true;
+    (async () => {
+      try {
+        setInsightsLoading(true);
+        const res = await fetch("/api/generate-insights", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            // EXISTING profile fields (Steps 2-5)
+            desiredCareer,
+            longTermAspirations,
+            roleModelInfluences,
+            educationalStage,
+            schoolGrade,
+            schoolStream,
+            collegeYear,
+            collegeDegree,
+            practicalExperience,
+            academicStrengths,
+            extracurricularActivities,
+            industryKnowledgeLevel,
+            preferredWorkEnvironment,
+            preferredLearningStyle,
+            difficulty,
+            mentorshipAndNetworkStatus,
+            culturalFamilyExpectations,
+
+            // NEW: Profiling data from Step 1
+            profiling: {
+              missedOpportunities,
+              hoursWasted,
+              followingRoadmap,
+              careerConfidence,
+              competitionLevel,
+              timeToAct,
+            },
+          }),
+        });
+        const data = await res.json();
+        if (!mounted) return;
+        setInsights(Array.isArray(data?.insights) ? data.insights : []);
+      } catch (e) {
+        if (!mounted) return;
+        setInsights([]);
+      } finally {
+        if (mounted) setInsightsLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [step]);
+
+  // const handleProfilingSubmit = async () => {
+  //   setIsCheckingReality(true);
+  //   try {
+  //     const res = await fetch("/api/onboarding-outcome", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         answers: {
+  //           missedOpportunities,
+  //           hoursWasted,
+  //           followingRoadmap,
+  //           careerConfidence,
+  //           competitionLevel,
+  //           timeToAct,
+  //         },
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+  //     setStats(data.stats || []);
+  //     setShowStats(true);
+  //   } catch (error) {
+  //     setStats([
+  //       {
+  //         stat: "78% of students miss career opportunities",
+  //         impact: "due to lack of proper guidance",
+  //       },
+  //       {
+  //         stat: "Average career delay costs $45,000",
+  //         impact: "in lost earning potential",
+  //       },
+  //       {
+  //         stat: "Only 23% follow structured roadmaps",
+  //         impact: "while 77% struggle with direction",
+  //       },
+  //       {
+  //         stat: "Students waste 15+ hours weekly",
+  //         impact: "on ineffective learning methods",
+  //       },
+  //     ]);
+  //     setShowStats(true);
+  //   } finally {
+  //     setIsCheckingReality(false);
+  //   }
+  // };
+
   const handleProfilingSubmit = async () => {
     setIsCheckingReality(true);
     try {
-      const res = await fetch("/api/dashboarddemo-outcome", {
+      const res = await fetch("/api/onboarding-outcome", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -210,26 +349,17 @@ export default function DashboardDemo() {
       });
 
       const data = await res.json();
-      setStats(data.stats || []);
+      // expect { stats: string[] }
+      setStats(
+        Array.isArray(data.stats) ? data.stats.slice(0, 4).map(String) : []
+      );
       setShowStats(true);
     } catch (error) {
       setStats([
-        {
-          stat: "78% of students miss career opportunities",
-          impact: "due to lack of proper guidance",
-        },
-        {
-          stat: "Average career delay costs $45,000",
-          impact: "in lost earning potential",
-        },
-        {
-          stat: "Only 23% follow structured roadmaps",
-          impact: "while 77% struggle with direction",
-        },
-        {
-          stat: "Students waste 15+ hours weekly",
-          impact: "on ineffective learning methods",
-        },
+        "You’re losing momentum — a clear roadmap now will recover months of progress.",
+        "Without targeted guidance, your current approach will keep opportunities out of reach.",
+        "Small daily changes now will compound into major career advantage within months.",
+        "Sign up today to convert confusion into a step-by-step plan that actually works.",
       ]);
       setShowStats(true);
     } finally {
@@ -1147,6 +1277,35 @@ export default function DashboardDemo() {
               >
                 {isSubmitting ? "Saving..." : "Check"}
               </button>
+            </div>
+
+            {/* AI insights: automatically generated, no reveal button */}
+            <div className="mt-6">
+              <h3 className="text-gray-800 font-medium mb-2">
+                Your Career Insights
+              </h3>
+              {insightsLoading ? (
+                <div className="text-sm text-gray-500">
+                  Generating insights…
+                </div>
+              ) : (
+                <div className="mt-2 p-4 border rounded-3xl ">
+                  {insights.length === 0 ? (
+                    <div className="text-sm text-gray-500">
+                      No insights available.
+                    </div>
+                  ) : (
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      {insights.map((ins, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0" />
+                          <div>{ins}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
