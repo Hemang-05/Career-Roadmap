@@ -328,6 +328,94 @@ const current_year = now.getFullYear();
 // `;
 
 
+// let basePrompt = `Generate a highly personalized, year-by-year roadmap in JSON format for a student aiming to pursue a career as "${desired_career}". The student is currently at the educational stage "${educational_stage}"` 
+// + (educational_stage === 'school'
+//   ? ` (Grade: ${school_grade}, Stream: ${school_stream})`
+//   : ` (Year: ${college_year}, Degree: ${college_degree})`) 
+// + ` in "${residing_country}" with a spending capacity of "${spending_capacity}". The student` 
+// + (move_abroad
+//   ? ` plans to move abroad to ${preferred_abroad_country}`
+//   : ` does not plan to move abroad`) 
+// + ` and has practical experience: "${practical_experience}".
+
+// Include the following personal dimensions to tailor the roadmap:
+// - Academic strengths: ${academic_strengths}
+// - Extracurricular activities: ${extracurricular_activities}
+// - Industry knowledge level: ${industry_knowledge_level}
+// - Preferred learning style: ${preferred_learning_style}
+// - Role model influences: ${role_model_influences}
+// - Cultural/family expectations: ${cultural_family_expectations}
+// - Mentorship and network status: ${mentorship_and_network_status}
+// - Preferred language: ${preferred_language}
+// - Preferred work environment: ${preferred_work_environment}
+// - Long-term aspirations: ${long_term_aspirations}
+
+// The roadmap should:
+// - Cover each year (from current stage to completion) divided into four 3-month phases.
+// - Each phase must include a "skill_name" field containing a specific, resume-worthy skill being developed (e.g., "Python", "Data Structures", "React", "Machine Learning", "Digital Marketing", "DaVinci Resolve", "Capcut" etc).
+// - Each phase must include a "context" field with a concise one-liner explaining what the phase accomplishes.
+// - Adjust task difficulty and count per phase based on "${difficulty}" (easy=3-4 tasks, medium=4-6, hard=6-8).
+// - Align with local educational requirements of "${residing_country}".
+// - Suggest free or paid resources per spending capacity.
+// - Embed only working YouTube tutorial URLs (or fallback to a video_channel link).
+// - Provide platforms, importance_explanation, and maintain the exact JSON schema without extra text or markdown.
+
+// Use the date "${current_day} ${current_month} ${current_year}" as the starting reference.
+ 
+// The response must be strictly in JSON format without any additional text, markdown formatting, or backticks, and must exactly match the following structure:
+
+// {
+//   "career": "Determined Career",
+//   "roadmap_summary": "A year-by-year plan, each with four 3-month phases, guiding the student from their current class until the end of secondary education.",
+//   "yearly_roadmap": [
+//     {
+//       "year": "Year Label (e.g., 9th Grade - for school students or 1st year/2nd year for college)",
+//       "overview": "Overview for the year, describing main focus or goals",
+//       "phases": [
+//         {
+//           "phase_name": "Phase 1 (Month 1 with year - Month 3 with year  MMM YYYY – MMM YYYY)",
+//           "skill_name": "Resume-worthy skill being developed in this phase",
+//           "context": "One-liner summary of what this phase covers and achieves",
+//           "milestones": [
+//             {
+//               "name": "Milestone Name",
+//               "description": "What needs to be achieved in this milestone",
+//               "tasks": [
+//                 {
+//                   "task_title": "Task Name",
+//                   "description": "Detailed instructions for the task (at least 3-4 lines)",
+//                   "weight": "NumericValue",
+//                   "completed": false,
+//                   // optional: embed a single YouTube video
+//                   "video": {
+//                     "title": "Video Title",
+//                     "url": "https://youtu.be/VIDEO_ID",
+//                     "thumbnail": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg"
+//                   },
+//                   // OR, if it makes more sense to link a channel instead of one video:
+//                   "video_channel": {
+//                     "name": "Channel Name",
+//                     "url": "https://www.youtube.com/channel/CHANNEL_ID"
+//                   },
+//                   // rest of your existing fields (e.g. platform_links, importance_explanation) follow here
+//                   "platform_links": [
+//                     { "name": "Coursera", "url": "https://coursera.org/…" }
+//                   ],
+//                   "importance_explanation": "A short 1–2-sentence rationale for this task's weight."
+//                 }
+//               ]
+//             }
+//           ]
+//         }
+//         // Additional phases (Phase 2, Phase 3, Phase 4) for the year
+//       ]
+//     }
+//     // Additional years until the end of secondary education
+//   ],
+//   "final_notes": "Keep track of each task's progress. Update tasks as they are completed, and use the weight values (in tens) to measure overall progress."
+// }`;
+
+
 let basePrompt = `Generate a highly personalized, year-by-year roadmap in JSON format for a student aiming to pursue a career as "${desired_career}". The student is currently at the educational stage "${educational_stage}"` 
 + (educational_stage === 'school'
   ? ` (Grade: ${school_grade}, Stream: ${school_stream})`
@@ -354,6 +442,7 @@ The roadmap should:
 - Cover each year (from current stage to completion) divided into four 3-month phases.
 - Each phase must include a "skill_name" field containing a specific, resume-worthy skill being developed (e.g., "Python", "Data Structures", "React", "Machine Learning", "Digital Marketing", "DaVinci Resolve", "Capcut" etc).
 - Each phase must include a "context" field with a concise one-liner explaining what the phase accomplishes.
+- Each phase must include a "suggestions" array with 2-3 flexible proof recommendations that give students options for demonstrating their learning from that phase. Focus on proof types rather than specific projects (e.g., "Add GitHub repositories of projects created during this phase", "Share certificates from courses completed", "Upload examples of work produced while learning these skills").
 - Adjust task difficulty and count per phase based on "${difficulty}" (easy=3-4 tasks, medium=4-6, hard=6-8).
 - Align with local educational requirements of "${residing_country}".
 - Suggest free or paid resources per spending capacity.
@@ -376,6 +465,11 @@ The response must be strictly in JSON format without any additional text, markdo
           "phase_name": "Phase 1 (Month 1 with year - Month 3 with year  MMM YYYY – MMM YYYY)",
           "skill_name": "Resume-worthy skill being developed in this phase",
           "context": "One-liner summary of what this phase covers and achieves",
+          "suggestions": [
+            "Add GitHub repositories of any projects created during this phase",
+            "Share certificates from courses or tutorials completed in this period",
+            "Upload screenshots or examples of work produced while practicing these skills"
+          ],
           "milestones": [
             {
               "name": "Milestone Name",

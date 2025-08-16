@@ -3,6 +3,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 :root {
   --background: #ffffff;
   --foreground: #ffffff;
@@ -55,6 +66,11 @@ body {
 .glassmorphism-card {
   @apply relative p-4 sm:rounded-[4rem] rounded-3xl sm:px-10 sm:py-8 backdrop-blur-xl border border-blue-100/40 w-full max-w-md min-h-[250px];
   background: linear-gradient(135deg, rgba(255, 254, 254, 0.4) 0%, rgba(245, 249, 255, 0.6) 50%, rgba(235, 238, 243) 100%);
+}
+
+.proof-glass-card {
+  @apply backdrop-blur-md border border-purple-200/10;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.368) 0%, rgba(246, 240, 255, 0.368) 50%, rgba(239, 220, 255, 0.5) 100%);
 }
 
 /* Loader.css */
