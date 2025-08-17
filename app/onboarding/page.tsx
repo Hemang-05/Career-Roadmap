@@ -489,7 +489,7 @@ export default function onboarding() {
       <div className="max-w-2xl mx-auto px-4 pt-24 pb-16">
         <h1 className="text-2xl text-gray-800">Career Setup</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Answer in 4 quick steps. No fluff. Enter to continue.
+          Answer in 5 quick steps. No fluff. Enter to continue.
         </p>
         <Progress step={step} total={totalSteps} />
 
