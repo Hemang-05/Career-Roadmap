@@ -274,10 +274,18 @@ export default function AnalyticsDashboard() {
         <h1 className="text-3xl text-slate-800 font-bold mb-2">
           Performance Analysis
         </h1>
-        <p className="text-slate-500 font-thin mb-10">
+        <p className="text-slate-500 font-light mb-4">
           Track your progress and key metrics at a glance
         </p>
 
+         <div className="bg-green-50/30 rounded-3xl p-6  mb-10"> 
+        <p className="text-gray-600 text-lg font-normal">
+        Automated profile creation from your roadmap coming soon.
+        <p className="text-gray-500 text-sm font-thin">
+        Careeroadmap records your verified milestones and will generate an editable professional role based profile behind the scenes.
+        </p>
+        </p>
+        </div>
         {errorMessage && !showPaymentPlan && (
           <div
             className="bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-lg mb-8"

@@ -162,6 +162,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, UserButton, SignInButton } from "@clerk/nextjs";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { useRouter } from "next/navigation";
 
 interface NavLink {
   href: string;
@@ -199,9 +201,75 @@ const useScrollDirection = () => {
 
 export default function Navbar({ navLinks }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isSignedIn } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
+  const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const scrollDirection = useScrollDirection();
+
+  // Check if user has roadmap when they sign in
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user) return;
+
+    async function checkUserRoadmap() {
+      setLoading(true);
+      try {
+      const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("clerk_id", user?.id)
+          .single();
+
+        if (userError || !userData) {
+          console.log("Navbar: Error fetching user data:", userError);
+          setHasRoadmap(false);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Navbar: Found internal user_id:", userData.id);
+
+        const { data: careerData, error: careerError } = await supabase
+          .from("career_info")
+          .select("roadmap")
+          .eq("user_id", userData.id)
+          .maybeSingle();
+
+        console.log("Navbar: Career data received:", careerData);
+
+        if (careerError) {
+          console.log("Navbar: Error fetching career data:", careerError);
+          setHasRoadmap(false);
+        } else {
+          const roadmapExists = !!(
+            careerData &&
+            careerData.roadmap &&
+            typeof careerData.roadmap === "object" &&
+            Object.keys(careerData.roadmap).length > 0
+          );
+          console.log("Navbar: Does roadmap exist and have content?", roadmapExists);
+          setHasRoadmap(roadmapExists);
+        }
+      } catch (error) {
+        console.error("Navbar: Unexpected error checking roadmap:", error);
+        setHasRoadmap(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkUserRoadmap();
+  }, [isLoaded, isSignedIn, user]);
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isSignedIn && user?.id) {
+      const destination = hasRoadmap ? "/roadmap" : "/dashboard";
+      console.log("Navbar: Manual navigation to:", destination);
+      router.push(destination);
+    }
+  };
 
   const defaultLinks: NavLink[] = [
     { href: "/blog", label: "Blogs" },
@@ -240,12 +308,13 @@ export default function Navbar({ navLinks }: NavbarProps) {
                 isSignedIn ? (
                   <Link
                     href={link.href}
+                    onClick={handleDashboardClick}
                     className="text-sm text-black hover:text-[#428388] font-medium"
                   >
                     {link.label}
                   </Link>
                 ) : (
-                  <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
+                  <SignInButton mode="modal">
                     <button className="text-sm text-black hover:text-[#428388] font-thin">
                       {link.label}
                     </button>
@@ -307,13 +376,16 @@ export default function Navbar({ navLinks }: NavbarProps) {
                   isSignedIn ? (
                     <Link
                       href={link.href}
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={(e) => {
+                        handleDashboardClick(e);
+                        setIsMenuOpen(false);
+                      }}
                       className="block text-black pb-2 hover:text-[#428388] font-normal"
                     >
                       {link.label}
                     </Link>
                   ) : (
-                    <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
+                    <SignInButton mode="modal">
                       <button
                         onClick={() => setIsMenuOpen(false)}
                         className="block text-black pb-2 hover:text-[#428388] font-normal"
