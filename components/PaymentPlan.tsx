@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FaSpinner } from "react-icons/fa";
 import PlanCard from "./ui/PlanCard";
 import DiscountCard from "@/components/ui/discountCard";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 // Define the Razorpay window object type to avoid TypeScript errors
 declare global {
@@ -46,6 +47,14 @@ export default function PaymentPlan({
     try {
       // 1. Call backend endpoint to initiate a Razorpay subscription
       //    (this endpoint returns { subscription_id, key_id })
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("Error fetching user:", userError);
+      }
+
       const response = await fetch("/api/initiate-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,12 +89,11 @@ export default function PaymentPlan({
           }
         },
         prefill: {
-          // You can prefill user data if you have it
-          // email: user.email,
-          // contact: user.phone
+          email: user?.email || "", // ✅ Prefill from Supabase
+          contact: "",
         },
         theme: {
-          color: "#3399cc",
+          color: "#B0D0D8",
         },
         modal: {
           ondismiss: function () {
