@@ -531,7 +531,7 @@ function maskKey(key?: string) {
 async function getUserByClerkId(clerk_id: string) {
   const { data, error } = await supabase
     .from("users")
-    .select("email, full_name, razorpay_customer_id, contact")
+    .select("email, full_name, razorpay_customer_id")
     .eq("clerk_id", clerk_id)
     .single();
   return { user: data as any, error };
@@ -601,7 +601,6 @@ async function createOrFindCustomer(clerk_id: string, user: any) {
     const created = await (razorpay.customers as any).create({
       name: user.full_name || "New User",
       email: user.email,
-      contact: user.contact || "",
     });
 
     const newId: string = created.id;
@@ -644,28 +643,28 @@ async function createOrFindCustomer(clerk_id: string, user: any) {
       }
 
       // Try by contact
-      if (user.contact) {
-        try {
-          const result2: any = await (razorpay.customers as any).all({
-            contact: user.contact,
-          } as any);
-          if (
-            result2 &&
-            Array.isArray(result2.items) &&
-            result2.items.length > 0
-          ) {
-            const existingId = result2.items[0].id;
-            const finalId = await persistCustomerIdConditionally(
-              clerk_id,
-              existingId
-            );
-            console.log("Found existing customer by contact:", finalId);
-            return finalId;
-          }
-        } catch (e) {
-          console.warn("customers.all by contact failed:", e);
-        }
-      }
+      // if (user.contact) {
+      //   try {
+      //     const result2: any = await (razorpay.customers as any).all({
+      //       contact: user.contact,
+      //     } as any);
+      //     if (
+      //       result2 &&
+      //       Array.isArray(result2.items) &&
+      //       result2.items.length > 0
+      //     ) {
+      //       const existingId = result2.items[0].id;
+      //       const finalId = await persistCustomerIdConditionally(
+      //         clerk_id,
+      //         existingId
+      //       );
+      //       console.log("Found existing customer by contact:", finalId);
+      //       return finalId;
+      //     }
+      //   } catch (e) {
+      //     console.warn("customers.all by contact failed:", e);
+      //   }
+      // }
     }
 
     // otherwise rethrow so caller can handle
