@@ -130,6 +130,7 @@ export default function RootLayout({
           {children}
           <FeedbackWidget />
           <Analytics />
+          <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         </body>
       </html>
     </ClerkProvider>
