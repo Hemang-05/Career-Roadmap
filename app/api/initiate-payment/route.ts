@@ -531,7 +531,7 @@ function maskKey(key?: string) {
 async function getUserByClerkId(clerk_id: string) {
   const { data, error } = await supabase
     .from("users")
-    .select("email, full_name, razorpay_customer_id, contact")
+    .select("email, full_name, razorpay_customer_id")
     .eq("clerk_id", clerk_id)
     .single();
   return { user: data as any, error };
@@ -601,7 +601,6 @@ async function createOrFindCustomer(clerk_id: string, user: any) {
     const created = await (razorpay.customers as any).create({
       name: user.full_name || "New User",
       email: user.email,
-      contact: user.contact || "",
     });
 
     const newId: string = created.id;
