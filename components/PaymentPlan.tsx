@@ -64,11 +64,11 @@ export default function PaymentPlan({
       const options = {
         key: key_id,
         subscription_id: subscription_id,
-        name: "Your App Name",
+        name: "Careeroadmap",
         description: `Subscription - ${
           plan.charAt(0).toUpperCase() + plan.slice(1)
         } Plan`,
-        image: "https://barely-simple-asp.ngrok-free.app/lo.png", // Optional: Add your logo URL
+        image: "https://careeroadmap.com/lo.png", // Optional: Add your logo URL
         handler: function (response: any) {
           // This handler is called on successful payment
           console.log("Payment successful:", response);
