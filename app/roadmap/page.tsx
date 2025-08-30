@@ -705,6 +705,7 @@ export default function RoadmapPage() {
   const [enhancingYear, setEnhancingYear] = useState<number | null>(null);
 
   const dashboardLinks = [
+    { href: "/overview", label: "Overview"},
     { href: "/dashboard", label: "Renew", forceDirect: true },
     { href: "/events", label: "Events" },
     { href: "/analytics", label: "User Analysis" },
