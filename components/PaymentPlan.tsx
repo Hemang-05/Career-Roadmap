@@ -199,7 +199,7 @@ export default function PaymentPlan({
 
         <div className="mt-3 text-center pb-4 sm:pb-0">
           <button
-            onClick={() => (onClose ? onClose() : router.push("/dashboard"))}
+            onClick={() => (onClose ? onClose() : router.push("/overview"))}
             className="text-gray-500 hover:text-red-600 text-xs sm:text-sm transition-colors"
           >
             Cancel
