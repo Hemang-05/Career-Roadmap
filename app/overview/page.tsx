@@ -79,37 +79,37 @@ const parseSimpleOverview = (text: string) => {
     .slice(0, 10);
 
   // Parse CareerData
-  const parsedCareerData: CareerData = {};
+  // const parsedCareerData: CareerData = {};
   
-  if (careerDataSection) {
-    const salaryIndiaMatch = careerDataSection.match(/AvgSalaryIndia:\s*"([^"]+)"/);
-    if (salaryIndiaMatch) parsedCareerData.avgSalaryIndia = salaryIndiaMatch[1];
+  // if (careerDataSection) {
+  //   const salaryIndiaMatch = careerDataSection.match(/AvgSalaryIndia:\s*"([^"]+)"/);
+  //   if (salaryIndiaMatch) parsedCareerData.avgSalaryIndia = salaryIndiaMatch[1];
 
-    const salaryGlobalMatch = careerDataSection.match(/AvgSalaryGlobal:\s*"([^"]+)"/);
-    if (salaryGlobalMatch) parsedCareerData.avgSalaryGlobal = salaryGlobalMatch[1];
+  //   const salaryGlobalMatch = careerDataSection.match(/AvgSalaryGlobal:\s*"([^"]+)"/);
+  //   if (salaryGlobalMatch) parsedCareerData.avgSalaryGlobal = salaryGlobalMatch[1];
 
-    const specializationsMatch = careerDataSection.match(/HotSpecializations:\s*\[(.*?)\]/s);
-    if (specializationsMatch) {
-      const specs = specializationsMatch[1]
-        .split('", "')
-        .map(s => s.replace(/^"|"$/g, '').trim())
-        .filter(Boolean);
-      parsedCareerData.hotSpecializations = specs;
-    }
+  //   const specializationsMatch = careerDataSection.match(/HotSpecializations:\s*\[(.*?)\]/s);
+  //   if (specializationsMatch) {
+  //     const specs = specializationsMatch[1]
+  //       .split('", "')
+  //       .map(s => s.replace(/^"|"$/g, '').trim())
+  //       .filter(Boolean);
+  //     parsedCareerData.hotSpecializations = specs;
+  //   }
 
-    const companiesMatch = careerDataSection.match(/TopHiringCompanies:\s*\[(.*?)\]/s);
-    if (companiesMatch) {
-      const companies = companiesMatch[1]
-        .split('", "')
-        .map(s => s.replace(/^"|"$/g, '').trim())
-        .filter(Boolean);
-      parsedCareerData.topHiringCompanies = companies;
-    }
-  }
+  //   const companiesMatch = careerDataSection.match(/TopHiringCompanies:\s*\[(.*?)\]/s);
+  //   if (companiesMatch) {
+  //     const companies = companiesMatch[1]
+  //       .split('", "')
+  //       .map(s => s.replace(/^"|"$/g, '').trim())
+  //       .filter(Boolean);
+  //     parsedCareerData.topHiringCompanies = companies;
+  //   }
+  // }
 
-  console.log('Parsed career data:', parsedCareerData); // Debug log
+  // console.log('Parsed career data:', parsedCareerData); // Debug log
 
-  return { overviewLines, careerData: parsedCareerData };
+  return { overviewLines };
 };
 
 
@@ -174,9 +174,9 @@ const parseSimpleOverview = (text: string) => {
         setHasExistingRoadmap(roadmapExists);
 
         // ✅ NEW: Parse simple overview
-        const { overviewLines, careerData } = parseSimpleOverview(careerInfo.overview.career_overview);
+        const { overviewLines } = parseSimpleOverview(careerInfo.overview.career_overview);
         setParsedOverview(overviewLines);
-        setCareerData(careerData);
+        
 
       } catch (err) {
         console.error("Error fetching data:", err);
