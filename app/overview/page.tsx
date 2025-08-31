@@ -63,13 +63,9 @@ export default function RoadmapOverview() {
 // ✅ CORRECTED: Parse simple Overview and CareerData
 // ✅ ENHANCED: Parse simple Overview and CareerData with debugging
 const parseSimpleOverview = (text: string) => {
-  console.log('Raw career overview text:', text); // Debug log
-
   const sections = text.split(/\*\*Part 2: CareerData\*\*|CareerData:/);
   const overviewSection = sections[0]?.replace(/\*\*Part 1: Overview\*\*/g, "").trim() || "";
   const careerDataSection = sections[1]?.trim() || "";
-
-  console.log('Career data section:', careerDataSection); // Debug log
 
   // Split overview into individual lines and clean them
   const overviewLines = overviewSection
@@ -106,8 +102,6 @@ const parseSimpleOverview = (text: string) => {
   //     parsedCareerData.topHiringCompanies = companies;
   //   }
   // }
-
-  // console.log('Parsed career data:', parsedCareerData); // Debug log
 
   return { overviewLines };
 };
@@ -233,7 +227,7 @@ const parseSimpleOverview = (text: string) => {
 
   // ============ NAVIGATION LINKS ============
   const dashboardLinks = [
-    { href: "/dashboard", label: "Dashboard", forceDirect: true },
+    { href: "/dashboard?from=overview", label: "Dashboard", forceDirect: true },
     { href: "/roadmap", label: "Roadmap" },
     { href: "/blog", label: "Blogs" },
   ];

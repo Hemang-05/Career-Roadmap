@@ -85,7 +85,7 @@ export default function PaymentPlan({
           if (onSuccess) {
             onSuccess(plan);
           } else {
-            router.push("/dashboard?status=success");
+            router.push("/overview?status=success");
           }
         },
         prefill: {
