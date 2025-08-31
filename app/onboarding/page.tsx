@@ -450,7 +450,7 @@ export default function onboarding() {
       }).catch(() => {});
 
       // Redirect to dashboard instead of payment flow
-      router.push("/dashboard");
+      router.push("/dashboard?from=onboarding");
     } catch (_) {
       // swallow
     } finally {

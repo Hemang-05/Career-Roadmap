@@ -1,3 +1,5 @@
+
+//app\dashboard\page.tsx
 "use client";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
@@ -191,7 +193,7 @@ export default function Dashboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const fromParam = urlParams.get('from');
     
-    if (fromParam === 'overview' || fromParam === 'roadmap') {
+    if (fromParam === 'overview' || fromParam === 'roadmap' || fromParam === 'onboarding') {
       setIsDirectNavigation(true);
     }
   }, []);
